@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "fastify",
+  "buildCommand": "npm run build",
+  "functions": {
+    "src/index.ts": {
+      "includeFiles": ["config/**", "migrations/**", "dist/web/**"],
+      "maxDuration": 300
+    }
+  }
+}

@@ -1,0 +1,8 @@
+node_modules
+dist
+var
+test-results
+playwright-report
+.git
+.env
+artifacts/visual-qa

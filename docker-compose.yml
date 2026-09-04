@@ -1,0 +1,27 @@
+services:
+  hisn-ot:
+    build: .
+    environment:
+      HISN_MODE: DEMO
+      HISN_PORT: 4310
+      HISN_DATABASE_PATH: /app/var/hisn-ot.db
+      HISN_POLICY_PATH: /app/config/policy.v1.json
+      HISN_SCENARIO_PATH: /app/config/scenarios.v1.json
+    ports:
+      - '4310:4310'
+    volumes:
+      - hisn-data:/app/var
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4310/readyz').then(r=>{if(!r.ok)process.exit(1)})",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  hisn-data:

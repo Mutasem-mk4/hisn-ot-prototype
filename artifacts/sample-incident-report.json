@@ -1,0 +1,857 @@
+{
+  "id": "cfcc9712-688f-4dfb-a0b8-6fcf2baa4b0e",
+  "runtimeMode": "DEMO",
+  "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
+  "generatedAt": "2026-09-04T17:36:28.727Z",
+  "timeline": [
+    {
+      "id": "68ffc09c-ff4f-4468-8b45-9e6876951c6c",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 1,
+      "eventType": "PROCESS_BASELINE_OBSERVED",
+      "workflowState": null,
+      "payload": {
+        "headline": "Normal operation verified",
+        "detail": "Primary and backup controllers are reachable; pressure and production are stable.",
+        "twin": {
+          "actualPressurePercent": 46,
+          "requestedPressurePercent": null,
+          "pumpState": "RUNNING",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
+          "activeController": "PRIMARY",
+          "gatewayAttachment": "OPERATIONAL",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "commandHistory": []
+        }
+      },
+      "previousHash": "GENESIS",
+      "integrityHash": "b1412d65be0521ea8db86049f9617803694d8ae0acc7be466888d3814a38e733",
+      "occurredAt": "2026-09-04T17:36:28.697Z"
+    },
+    {
+      "id": "3cebf3ae-f7b0-4ff6-b0b9-a4069e1ce3ec",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 2,
+      "eventType": "PRIVILEGED_COMMAND_RECEIVED",
+      "workflowState": "COMMAND_RECEIVED",
+      "payload": {
+        "headline": "Authenticated request received",
+        "detail": "Credentials are valid; authorization is deliberately not yet granted.",
+        "command": {
+          "kind": "SET_PRESSURE",
+          "requestedSetpointPercent": 88,
+          "reason": "Remote membrane recovery adjustment"
+        },
+        "credentialsValid": true,
+        "twin": {
+          "actualPressurePercent": 46.1,
+          "requestedPressurePercent": null,
+          "pumpState": "RUNNING",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4202,
+          "backupHeartbeatSequence": 9189,
+          "activeController": "PRIMARY",
+          "gatewayAttachment": "OPERATIONAL",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "commandHistory": []
+        }
+      },
+      "previousHash": "b1412d65be0521ea8db86049f9617803694d8ae0acc7be466888d3814a38e733",
+      "integrityHash": "956486c0d0fa30bd501f6a3f7878941849d67dbd5808c92f661260af4fdbf092",
+      "occurredAt": "2026-09-04T17:36:28.702Z"
+    },
+    {
+      "id": "502b7aeb-3892-45ea-a8db-294684cce6b3",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 3,
+      "eventType": "COMMAND_INTERCEPTED",
+      "workflowState": "COMMAND_HELD",
+      "payload": {
+        "headline": "Gateway holds physical command",
+        "detail": "The request has not reached the PLC or actuator.",
+        "reachedActuator": false,
+        "twin": {
+          "actualPressurePercent": 46,
+          "requestedPressurePercent": 88,
+          "pumpState": "RUNNING",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4203,
+          "backupHeartbeatSequence": 9190,
+          "activeController": "PRIMARY",
+          "gatewayAttachment": "OPERATIONAL",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "commandHistory": [
+            {
+              "kind": "SET_PRESSURE",
+              "requestedSetpointPercent": 88,
+              "outcome": "HELD",
+              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            }
+          ]
+        }
+      },
+      "previousHash": "956486c0d0fa30bd501f6a3f7878941849d67dbd5808c92f661260af4fdbf092",
+      "integrityHash": "c208623dc0eb2c45c10ccb8fc931ba1b562d0d639405fe20202237ca687057e7",
+      "occurredAt": "2026-09-04T17:36:28.703Z"
+    },
+    {
+      "id": "e88c8e95-5ef4-4ebf-b443-c0303bfa96cb",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 4,
+      "eventType": "COMMAND_RISK_CLASSIFIED",
+      "workflowState": "RISK_CLASSIFIED",
+      "payload": {
+        "headline": "CRITICAL operational consequence",
+        "detail": "May change membrane and pump pressure, affecting equipment integrity and water production.",
+        "risk": "CRITICAL",
+        "plan": {
+          "risk": "CRITICAL",
+          "consequence": "May change membrane and pump pressure, affecting equipment integrity and water production.",
+          "selectedTools": [
+            "NUMBER_VERIFICATION",
+            "SIM_SWAP",
+            "DEVICE_SWAP",
+            "LOCATION_VERIFICATION",
+            "DEVICE_REACHABILITY"
+          ],
+          "selectionReasons": {
+            "NUMBER_VERIFICATION": "Bind the session to the enrolled operator number.",
+            "SIM_SWAP": "Detect subscription takeover before privileged control.",
+            "DEVICE_SWAP": "Detect an unexpected handset or gateway change.",
+            "LOCATION_VERIFICATION": "Require presence inside the approved facility boundary.",
+            "DEVICE_REACHABILITY": "Confirm attachment to the expected mobile data network."
+          },
+          "reasoningProvenance": "SIMULATED"
+        },
+        "twin": {
+          "actualPressurePercent": 46.1,
+          "requestedPressurePercent": 88,
+          "pumpState": "RUNNING",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4204,
+          "backupHeartbeatSequence": 9191,
+          "activeController": "PRIMARY",
+          "gatewayAttachment": "OPERATIONAL",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "commandHistory": [
+            {
+              "kind": "SET_PRESSURE",
+              "requestedSetpointPercent": 88,
+              "outcome": "HELD",
+              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            }
+          ]
+        }
+      },
+      "previousHash": "c208623dc0eb2c45c10ccb8fc931ba1b562d0d639405fe20202237ca687057e7",
+      "integrityHash": "3e027cb830539379389eea5866a3aaf1f9860d1a91f62076433b5a15b2e40de9",
+      "occurredAt": "2026-09-04T17:36:28.705Z"
+    },
+    {
+      "id": "c840b7b1-f3e3-496c-aa5e-129889a30278",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 5,
+      "eventType": "ADAPTIVE_EVIDENCE_PLAN_CREATED",
+      "workflowState": "EVIDENCE_PLANNED",
+      "payload": {
+        "headline": "Minimum sufficient network proof selected",
+        "detail": "5 tools selected at runtime for CRITICAL risk.",
+        "plan": {
+          "risk": "CRITICAL",
+          "consequence": "May change membrane and pump pressure, affecting equipment integrity and water production.",
+          "selectedTools": [
+            "NUMBER_VERIFICATION",
+            "SIM_SWAP",
+            "DEVICE_SWAP",
+            "LOCATION_VERIFICATION",
+            "DEVICE_REACHABILITY"
+          ],
+          "selectionReasons": {
+            "NUMBER_VERIFICATION": "Bind the session to the enrolled operator number.",
+            "SIM_SWAP": "Detect subscription takeover before privileged control.",
+            "DEVICE_SWAP": "Detect an unexpected handset or gateway change.",
+            "LOCATION_VERIFICATION": "Require presence inside the approved facility boundary.",
+            "DEVICE_REACHABILITY": "Confirm attachment to the expected mobile data network."
+          },
+          "reasoningProvenance": "SIMULATED"
+        },
+        "twin": {
+          "actualPressurePercent": 46,
+          "requestedPressurePercent": 88,
+          "pumpState": "RUNNING",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4205,
+          "backupHeartbeatSequence": 9192,
+          "activeController": "PRIMARY",
+          "gatewayAttachment": "OPERATIONAL",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "commandHistory": [
+            {
+              "kind": "SET_PRESSURE",
+              "requestedSetpointPercent": 88,
+              "outcome": "HELD",
+              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            }
+          ]
+        }
+      },
+      "previousHash": "3e027cb830539379389eea5866a3aaf1f9860d1a91f62076433b5a15b2e40de9",
+      "integrityHash": "1112bfcf138e928f7d8757e8a2c5a379e3da31927d8b7a79afcefbde992abe8c",
+      "occurredAt": "2026-09-04T17:36:28.706Z"
+    },
+    {
+      "id": "f064d791-cdd8-41a3-8dda-5b9ff301d35f",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 6,
+      "eventType": "NETWORK_EVIDENCE_COLLECTION_STARTED",
+      "workflowState": "EVIDENCE_COLLECTING",
+      "payload": {
+        "headline": "Telecom evidence in flight",
+        "detail": "Evidence calls are separate from post-decision enforcement.",
+        "pendingTools": [
+          "NUMBER_VERIFICATION",
+          "SIM_SWAP",
+          "DEVICE_SWAP",
+          "LOCATION_VERIFICATION",
+          "DEVICE_REACHABILITY"
+        ],
+        "twin": {
+          "actualPressurePercent": 46.1,
+          "requestedPressurePercent": 88,
+          "pumpState": "RUNNING",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4206,
+          "backupHeartbeatSequence": 9193,
+          "activeController": "PRIMARY",
+          "gatewayAttachment": "OPERATIONAL",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "commandHistory": [
+            {
+              "kind": "SET_PRESSURE",
+              "requestedSetpointPercent": 88,
+              "outcome": "HELD",
+              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            }
+          ]
+        }
+      },
+      "previousHash": "1112bfcf138e928f7d8757e8a2c5a379e3da31927d8b7a79afcefbde992abe8c",
+      "integrityHash": "c851dde2f333de9b24a348e08b08787dd42ff447735c8666b2e72cff7a26288c",
+      "occurredAt": "2026-09-04T17:36:28.707Z"
+    },
+    {
+      "id": "11e0c071-94a5-486a-8b10-5bcc20b590d0",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 7,
+      "eventType": "NETWORK_EVIDENCE_COMPLETE",
+      "workflowState": "EVIDENCE_COMPLETE",
+      "payload": {
+        "headline": "Network context contradicts valid identity",
+        "detail": "5/5 evidence calls returned usable results.",
+        "evidence": [
+          {
+            "id": "2386a7bb-abf3-4535-a4c8-3b86e5082efc",
+            "tool": "NUMBER_VERIFICATION",
+            "purpose": "Confirm the active network session possesses the authorized number",
+            "requestStatus": "SUCCEEDED",
+            "redactedResult": { "verified": true, "subject": "+***-***-0184" },
+            "provenance": "SIMULATED",
+            "latencyMs": 118,
+            "timestamp": "2026-09-04T17:36:28.709Z",
+            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+          },
+          {
+            "id": "71b6e175-3bc3-4bac-8548-917e845136cc",
+            "tool": "SIM_SWAP",
+            "purpose": "Detect recent SIM reassignment associated with account takeover risk",
+            "requestStatus": "SUCCEEDED",
+            "redactedResult": { "swapped": true, "windowHours": 72 },
+            "provenance": "SIMULATED",
+            "latencyMs": 143,
+            "timestamp": "2026-09-04T17:36:28.709Z",
+            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+          },
+          {
+            "id": "c306ce7e-a280-40c3-957f-9d88393cc25f",
+            "tool": "DEVICE_SWAP",
+            "purpose": "Detect a recent change in the physical device bound to the subscription",
+            "requestStatus": "SUCCEEDED",
+            "redactedResult": { "swapped": true, "windowHours": 168 },
+            "provenance": "SIMULATED",
+            "latencyMs": 129,
+            "timestamp": "2026-09-04T17:36:28.709Z",
+            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+          },
+          {
+            "id": "7850c033-d033-44f1-844d-d1fe6ffaac8c",
+            "tool": "LOCATION_VERIFICATION",
+            "purpose": "Verify presence inside the approved facility boundary",
+            "requestStatus": "SUCCEEDED",
+            "redactedResult": {
+              "verificationResult": "FALSE",
+              "facility": "Aqaba site boundary"
+            },
+            "provenance": "SIMULATED",
+            "latencyMs": 176,
+            "timestamp": "2026-09-04T17:36:28.709Z",
+            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+          },
+          {
+            "id": "fa7d6467-1357-4aaa-b7d6-af9901314861",
+            "tool": "DEVICE_REACHABILITY",
+            "purpose": "Confirm current data reachability through the mobile network",
+            "requestStatus": "SUCCEEDED",
+            "redactedResult": { "reachable": true, "connectivity": ["DATA"] },
+            "provenance": "SIMULATED",
+            "latencyMs": 96,
+            "timestamp": "2026-09-04T17:36:28.709Z",
+            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+          }
+        ],
+        "twin": {
+          "actualPressurePercent": 46,
+          "requestedPressurePercent": 88,
+          "pumpState": "RUNNING",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4207,
+          "backupHeartbeatSequence": 9194,
+          "activeController": "PRIMARY",
+          "gatewayAttachment": "OPERATIONAL",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "commandHistory": [
+            {
+              "kind": "SET_PRESSURE",
+              "requestedSetpointPercent": 88,
+              "outcome": "HELD",
+              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            }
+          ]
+        }
+      },
+      "previousHash": "c851dde2f333de9b24a348e08b08787dd42ff447735c8666b2e72cff7a26288c",
+      "integrityHash": "6dfa7408c66e3a59222c521971c1027c4836802cdc3c6e8ea5ae4cf737517077",
+      "occurredAt": "2026-09-04T17:36:28.709Z"
+    },
+    {
+      "id": "fda3d904-5664-4097-b904-e2abd17280b9",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 8,
+      "eventType": "DETERMINISTIC_SAFETY_EVALUATED",
+      "workflowState": "SAFETY_EVALUATED",
+      "payload": {
+        "headline": "Deterministic limit failed",
+        "detail": "The AI cannot override this independent physical-safety result.",
+        "safety": {
+          "permitted": false,
+          "policyVersion": "desalination-safety-2026.1",
+          "configuredMaximumPercent": 60,
+          "requestedSetpointPercent": 88,
+          "failedLimits": ["Requested 88% exceeds configured maximum 60%"]
+        },
+        "twin": {
+          "actualPressurePercent": 46.1,
+          "requestedPressurePercent": 88,
+          "pumpState": "RUNNING",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4208,
+          "backupHeartbeatSequence": 9195,
+          "activeController": "PRIMARY",
+          "gatewayAttachment": "OPERATIONAL",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "commandHistory": [
+            {
+              "kind": "SET_PRESSURE",
+              "requestedSetpointPercent": 88,
+              "outcome": "HELD",
+              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            }
+          ]
+        }
+      },
+      "previousHash": "6dfa7408c66e3a59222c521971c1027c4836802cdc3c6e8ea5ae4cf737517077",
+      "integrityHash": "1565905e90b93797bab169bb2739db447a0cb6cfe34dde9a89dcff16c8c97238",
+      "occurredAt": "2026-09-04T17:36:28.711Z"
+    },
+    {
+      "id": "0937e5a5-4545-41d9-a644-fef24ae48537",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 9,
+      "eventType": "AUTHORITATIVE_DECISION_ISSUED",
+      "workflowState": "DECISION_ISSUED",
+      "payload": {
+        "headline": "BLOCK_AND_CONTAIN",
+        "detail": "Identity valid. Context compromised. Command blocked. Operations continued safely.",
+        "recommendation": {
+          "recommendedDecision": "BLOCK_AND_CONTAIN",
+          "summary": "BLOCK_AND_CONTAIN: 88% pressure evaluated against physical policy and 3 network-context anomaly signals.",
+          "observedSignals": [
+            "Recent SIM swap violates critical-command policy",
+            "Recent device swap violates critical-command policy",
+            "Device is outside the approved facility geofence"
+          ],
+          "containmentRationale": "Isolate only the implicated gateway while preserving the trusted backup path.",
+          "reasoningProvenance": "SIMULATED"
+        },
+        "decision": {
+          "state": "BLOCK_AND_CONTAIN",
+          "requestedAction": "Set pressure to 88%",
+          "evidenceSummary": [
+            "NUMBER_VERIFICATION: SUCCEEDED (SIMULATED)",
+            "SIM_SWAP: SUCCEEDED (SIMULATED)",
+            "DEVICE_SWAP: SUCCEEDED (SIMULATED)",
+            "LOCATION_VERIFICATION: SUCCEEDED (SIMULATED)",
+            "DEVICE_REACHABILITY: SUCCEEDED (SIMULATED)"
+          ],
+          "failedPolicies": [
+            "Recent SIM swap violates critical-command policy",
+            "Recent device swap violates critical-command policy",
+            "Device is outside the approved facility geofence"
+          ],
+          "failedLimits": ["Requested 88% exceeds configured maximum 60%"],
+          "containmentRationale": "Targeted containment is proportionate because 3 network-context controls failed while a safety-critical command was held.",
+          "recoveryRequirements": [
+            "Re-enrol the operator device and SIM",
+            "Confirm presence inside the approved facility geofence",
+            "Obtain OT security supervisor approval",
+            "Pass a fresh critical-command network proof"
+          ],
+          "authoritativeSource": "DETERMINISTIC_POLICY_ENGINE"
+        },
+        "twin": {
+          "actualPressurePercent": 46,
+          "requestedPressurePercent": 88,
+          "pumpState": "RUNNING",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4209,
+          "backupHeartbeatSequence": 9196,
+          "activeController": "PRIMARY",
+          "gatewayAttachment": "OPERATIONAL",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "commandHistory": [
+            {
+              "kind": "SET_PRESSURE",
+              "requestedSetpointPercent": 88,
+              "outcome": "HELD",
+              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            }
+          ]
+        }
+      },
+      "previousHash": "1565905e90b93797bab169bb2739db447a0cb6cfe34dde9a89dcff16c8c97238",
+      "integrityHash": "bfa7087cab0f1000c82ed65ed1bc1aacfb61b0fd39fc006bbecc4aa04e559012",
+      "occurredAt": "2026-09-04T17:36:28.714Z"
+    },
+    {
+      "id": "c378b780-e3e1-429a-aa56-903b3fb71da0",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 10,
+      "eventType": "AUTHORIZED_ENFORCEMENT_STARTED",
+      "workflowState": "ENFORCEMENT_STARTED",
+      "payload": {
+        "headline": "Targeted network containment authorized",
+        "detail": "Enforcement begins only after BLOCK_AND_CONTAIN is persisted.",
+        "authorizedDecision": "BLOCK_AND_CONTAIN",
+        "twin": {
+          "actualPressurePercent": 46.1,
+          "requestedPressurePercent": 88,
+          "pumpState": "RUNNING",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4210,
+          "backupHeartbeatSequence": 9197,
+          "activeController": "PRIMARY",
+          "gatewayAttachment": "OPERATIONAL",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "commandHistory": [
+            {
+              "kind": "SET_PRESSURE",
+              "requestedSetpointPercent": 88,
+              "outcome": "HELD",
+              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            }
+          ]
+        }
+      },
+      "previousHash": "bfa7087cab0f1000c82ed65ed1bc1aacfb61b0fd39fc006bbecc4aa04e559012",
+      "integrityHash": "bf7179ed7e0b5fbdbab31bb5772a9d91ab91cad0197a252b951ffd0eb5acacc6",
+      "occurredAt": "2026-09-04T17:36:28.716Z"
+    },
+    {
+      "id": "bf918c89-eace-4457-89f4-8d57a8bd646d",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 11,
+      "eventType": "COMPROMISED_ENDPOINT_CONTAINED",
+      "workflowState": "ENDPOINT_CONTAINED",
+      "payload": {
+        "headline": "Compromised gateway detached",
+        "detail": "Containment is scoped to the implicated network attachment.",
+        "enforcement": [
+          {
+            "id": "992077f6-44e1-4c5b-9719-cafdb560df19",
+            "action": "DETACH_GATEWAY",
+            "status": "SUCCEEDED",
+            "provenance": "SIMULATED",
+            "redactedResult": {
+              "attachment": "DETACHED",
+              "scope": "compromised-gateway-only"
+            },
+            "latencyMs": 128,
+            "timestamp": "2026-09-04T17:36:28.721Z",
+            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
+            "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:DETACH_GATEWAY"
+          }
+        ],
+        "twin": {
+          "actualPressurePercent": 46,
+          "requestedPressurePercent": 88,
+          "pumpState": "RUNNING",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4211,
+          "backupHeartbeatSequence": 9198,
+          "activeController": "BACKUP",
+          "gatewayAttachment": "DETACHED",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "PROTECTED",
+          "networkLatencyMs": 31,
+          "commandHistory": [
+            {
+              "kind": "SET_PRESSURE",
+              "requestedSetpointPercent": 88,
+              "outcome": "HELD",
+              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            }
+          ]
+        }
+      },
+      "previousHash": "bf7179ed7e0b5fbdbab31bb5772a9d91ab91cad0197a252b951ffd0eb5acacc6",
+      "integrityHash": "5f6315c0c6b5a748548406bbe8964270fa92c1900397c6531eb6c8b357508914",
+      "occurredAt": "2026-09-04T17:36:28.722Z"
+    },
+    {
+      "id": "59aa0597-3f15-4d9a-bc64-041e8e31f3c8",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 12,
+      "eventType": "SAFE_CONTINUITY_PROTECTED",
+      "workflowState": "CONTINUITY_PROTECTED",
+      "payload": {
+        "headline": "Backup continuity protected",
+        "detail": "The trusted controller enters safe-control mode while the unsafe request remains unexecuted.",
+        "enforcement": [
+          {
+            "id": "e4f89ea0-5448-4d78-b08c-a27381d3b616",
+            "action": "QUALITY_ON_DEMAND",
+            "status": "SUCCEEDED",
+            "provenance": "SIMULATED",
+            "redactedResult": {
+              "qosStatus": "AVAILABLE",
+              "profile": "MISSION_CRITICAL_CONTINUITY",
+              "durationSeconds": 300
+            },
+            "latencyMs": 164,
+            "timestamp": "2026-09-04T17:36:28.724Z",
+            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
+            "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:QUALITY_ON_DEMAND"
+          },
+          {
+            "id": "80b18cb5-3946-4a1a-9f97-fc0afdf4bc19",
+            "action": "ACTIVATE_SAFE_CONTROL",
+            "status": "SUCCEEDED",
+            "provenance": "SIMULATED",
+            "redactedResult": {
+              "controller": "trusted-backup",
+              "mode": "SAFE_CONTROL"
+            },
+            "latencyMs": 22,
+            "timestamp": "2026-09-04T17:36:28.724Z",
+            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
+            "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:ACTIVATE_SAFE_CONTROL"
+          }
+        ],
+        "continuity": {
+          "unsafeCommandsExecuted": 0,
+          "pressureStayedInsideSafeBand": true,
+          "backupHeartbeatsObserved": 11,
+          "currentActualPressurePercent": 46.1,
+          "currentFlowRateM3PerHour": 1240,
+          "networkLatencyMs": 18
+        },
+        "twin": {
+          "actualPressurePercent": 46.1,
+          "requestedPressurePercent": 88,
+          "pumpState": "SAFE_CONTROL",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4212,
+          "backupHeartbeatSequence": 9199,
+          "activeController": "BACKUP",
+          "gatewayAttachment": "DETACHED",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "PROTECTED",
+          "networkLatencyMs": 18,
+          "commandHistory": [
+            {
+              "kind": "SET_PRESSURE",
+              "requestedSetpointPercent": 88,
+              "outcome": "BLOCKED",
+              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            }
+          ]
+        }
+      },
+      "previousHash": "5f6315c0c6b5a748548406bbe8964270fa92c1900397c6531eb6c8b357508914",
+      "integrityHash": "df1bc6e5fe13fe115ea308f46651a79564c6939e5ae7c12a905511725bf3f4d4",
+      "occurredAt": "2026-09-04T17:36:28.724Z"
+    },
+    {
+      "id": "0ea47a1d-1440-4d4e-b61a-2b4f36d69f19",
+      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "sequence": 13,
+      "eventType": "INCIDENT_REPORT_GENERATED",
+      "workflowState": "INCIDENT_REPORTED",
+      "payload": {
+        "headline": "Evidence-bound incident record sealed",
+        "detail": "Timeline, provenance, decision, enforcement, and recovery requirements are persisted.",
+        "decisionState": "BLOCK_AND_CONTAIN",
+        "continuity": {
+          "unsafeCommandsExecuted": 0,
+          "pressureStayedInsideSafeBand": true,
+          "backupHeartbeatsObserved": 11,
+          "currentActualPressurePercent": 46.1,
+          "currentFlowRateM3PerHour": 1240,
+          "networkLatencyMs": 18
+        },
+        "twin": {
+          "actualPressurePercent": 46.1,
+          "requestedPressurePercent": 88,
+          "pumpState": "SAFE_CONTROL",
+          "valvePositionPercent": 47,
+          "flowRateM3PerHour": 1240,
+          "primaryHeartbeatSequence": 4212,
+          "backupHeartbeatSequence": 9199,
+          "activeController": "BACKUP",
+          "gatewayAttachment": "DETACHED",
+          "primaryAttachment": "OPERATIONAL",
+          "backupAttachment": "PROTECTED",
+          "networkLatencyMs": 18,
+          "commandHistory": [
+            {
+              "kind": "SET_PRESSURE",
+              "requestedSetpointPercent": 88,
+              "outcome": "BLOCKED",
+              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            }
+          ]
+        }
+      },
+      "previousHash": "df1bc6e5fe13fe115ea308f46651a79564c6939e5ae7c12a905511725bf3f4d4",
+      "integrityHash": "9c57685b0009df713a05849721029de86b1076c6eb451f1f67a0ec052e5f1b80",
+      "occurredAt": "2026-09-04T17:36:28.726Z"
+    }
+  ],
+  "submittedCommand": {
+    "kind": "SET_PRESSURE",
+    "requestedSetpointPercent": 88,
+    "reason": "Remote membrane recovery adjustment"
+  },
+  "identityAndNetworkEvidence": [
+    {
+      "id": "2386a7bb-abf3-4535-a4c8-3b86e5082efc",
+      "tool": "NUMBER_VERIFICATION",
+      "purpose": "Confirm the active network session possesses the authorized number",
+      "requestStatus": "SUCCEEDED",
+      "redactedResult": { "verified": true, "subject": "+***-***-0184" },
+      "provenance": "SIMULATED",
+      "latencyMs": 118,
+      "timestamp": "2026-09-04T17:36:28.709Z",
+      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+    },
+    {
+      "id": "71b6e175-3bc3-4bac-8548-917e845136cc",
+      "tool": "SIM_SWAP",
+      "purpose": "Detect recent SIM reassignment associated with account takeover risk",
+      "requestStatus": "SUCCEEDED",
+      "redactedResult": { "swapped": true, "windowHours": 72 },
+      "provenance": "SIMULATED",
+      "latencyMs": 143,
+      "timestamp": "2026-09-04T17:36:28.709Z",
+      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+    },
+    {
+      "id": "c306ce7e-a280-40c3-957f-9d88393cc25f",
+      "tool": "DEVICE_SWAP",
+      "purpose": "Detect a recent change in the physical device bound to the subscription",
+      "requestStatus": "SUCCEEDED",
+      "redactedResult": { "swapped": true, "windowHours": 168 },
+      "provenance": "SIMULATED",
+      "latencyMs": 129,
+      "timestamp": "2026-09-04T17:36:28.709Z",
+      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+    },
+    {
+      "id": "7850c033-d033-44f1-844d-d1fe6ffaac8c",
+      "tool": "LOCATION_VERIFICATION",
+      "purpose": "Verify presence inside the approved facility boundary",
+      "requestStatus": "SUCCEEDED",
+      "redactedResult": {
+        "verificationResult": "FALSE",
+        "facility": "Aqaba site boundary"
+      },
+      "provenance": "SIMULATED",
+      "latencyMs": 176,
+      "timestamp": "2026-09-04T17:36:28.709Z",
+      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+    },
+    {
+      "id": "fa7d6467-1357-4aaa-b7d6-af9901314861",
+      "tool": "DEVICE_REACHABILITY",
+      "purpose": "Confirm current data reachability through the mobile network",
+      "requestStatus": "SUCCEEDED",
+      "redactedResult": { "reachable": true, "connectivity": ["DATA"] },
+      "provenance": "SIMULATED",
+      "latencyMs": 96,
+      "timestamp": "2026-09-04T17:36:28.709Z",
+      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+    }
+  ],
+  "evidenceProvenance": [
+    { "tool": "NUMBER_VERIFICATION", "provenance": "SIMULATED" },
+    { "tool": "SIM_SWAP", "provenance": "SIMULATED" },
+    { "tool": "DEVICE_SWAP", "provenance": "SIMULATED" },
+    { "tool": "LOCATION_VERIFICATION", "provenance": "SIMULATED" },
+    { "tool": "DEVICE_REACHABILITY", "provenance": "SIMULATED" }
+  ],
+  "safetyPolicyEvaluation": {
+    "permitted": false,
+    "policyVersion": "desalination-safety-2026.1",
+    "configuredMaximumPercent": 60,
+    "requestedSetpointPercent": 88,
+    "failedLimits": ["Requested 88% exceeds configured maximum 60%"]
+  },
+  "agentRecommendation": {
+    "recommendedDecision": "BLOCK_AND_CONTAIN",
+    "summary": "BLOCK_AND_CONTAIN: 88% pressure evaluated against physical policy and 3 network-context anomaly signals.",
+    "observedSignals": [
+      "Recent SIM swap violates critical-command policy",
+      "Recent device swap violates critical-command policy",
+      "Device is outside the approved facility geofence"
+    ],
+    "containmentRationale": "Isolate only the implicated gateway while preserving the trusted backup path.",
+    "reasoningProvenance": "SIMULATED"
+  },
+  "authoritativeDecision": {
+    "state": "BLOCK_AND_CONTAIN",
+    "requestedAction": "Set pressure to 88%",
+    "evidenceSummary": [
+      "NUMBER_VERIFICATION: SUCCEEDED (SIMULATED)",
+      "SIM_SWAP: SUCCEEDED (SIMULATED)",
+      "DEVICE_SWAP: SUCCEEDED (SIMULATED)",
+      "LOCATION_VERIFICATION: SUCCEEDED (SIMULATED)",
+      "DEVICE_REACHABILITY: SUCCEEDED (SIMULATED)"
+    ],
+    "failedPolicies": [
+      "Recent SIM swap violates critical-command policy",
+      "Recent device swap violates critical-command policy",
+      "Device is outside the approved facility geofence"
+    ],
+    "failedLimits": ["Requested 88% exceeds configured maximum 60%"],
+    "containmentRationale": "Targeted containment is proportionate because 3 network-context controls failed while a safety-critical command was held.",
+    "recoveryRequirements": [
+      "Re-enrol the operator device and SIM",
+      "Confirm presence inside the approved facility geofence",
+      "Obtain OT security supervisor approval",
+      "Pass a fresh critical-command network proof"
+    ],
+    "authoritativeSource": "DETERMINISTIC_POLICY_ENGINE"
+  },
+  "networkEnforcement": [
+    {
+      "id": "992077f6-44e1-4c5b-9719-cafdb560df19",
+      "action": "DETACH_GATEWAY",
+      "status": "SUCCEEDED",
+      "provenance": "SIMULATED",
+      "redactedResult": {
+        "attachment": "DETACHED",
+        "scope": "compromised-gateway-only"
+      },
+      "latencyMs": 128,
+      "timestamp": "2026-09-04T17:36:28.721Z",
+      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
+      "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:DETACH_GATEWAY"
+    },
+    {
+      "id": "e4f89ea0-5448-4d78-b08c-a27381d3b616",
+      "action": "QUALITY_ON_DEMAND",
+      "status": "SUCCEEDED",
+      "provenance": "SIMULATED",
+      "redactedResult": {
+        "qosStatus": "AVAILABLE",
+        "profile": "MISSION_CRITICAL_CONTINUITY",
+        "durationSeconds": 300
+      },
+      "latencyMs": 164,
+      "timestamp": "2026-09-04T17:36:28.724Z",
+      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
+      "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:QUALITY_ON_DEMAND"
+    },
+    {
+      "id": "80b18cb5-3946-4a1a-9f97-fc0afdf4bc19",
+      "action": "ACTIVATE_SAFE_CONTROL",
+      "status": "SUCCEEDED",
+      "provenance": "SIMULATED",
+      "redactedResult": {
+        "controller": "trusted-backup",
+        "mode": "SAFE_CONTROL"
+      },
+      "latencyMs": 22,
+      "timestamp": "2026-09-04T17:36:28.724Z",
+      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
+      "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:ACTIVATE_SAFE_CONTROL"
+    }
+  ],
+  "continuityMeasurements": {
+    "unsafeCommandsExecuted": 0,
+    "pressureStayedInsideSafeBand": true,
+    "backupHeartbeatsObserved": 11,
+    "currentActualPressurePercent": 46.1,
+    "currentFlowRateM3PerHour": 1240,
+    "networkLatencyMs": 18
+  },
+  "recoveryRequirements": [
+    "Re-enrol the operator device and SIM",
+    "Confirm presence inside the approved facility geofence",
+    "Obtain OT security supervisor approval",
+    "Pass a fresh critical-command network proof"
+  ]
+}
