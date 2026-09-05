@@ -44,10 +44,9 @@ async function shutdown() {
 process.on('SIGINT', () => void shutdown());
 process.on('SIGTERM', () => void shutdown());
 
-try {
-  await server.listen({ host: '0.0.0.0', port: configuration.port });
-} catch (error) {
+// Let the hosting runtime finish importing the entry point before accepting requests.
+void server.listen({ host: '0.0.0.0', port: configuration.port }).catch(async (error: unknown) => {
   server.log.error(error);
   await shutdown();
   process.exitCode = 1;
-}
+});
