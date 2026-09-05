@@ -11,13 +11,20 @@ import {
 } from '../shared/contracts.js';
 import { HisnError } from '../shared/errors.js';
 
+const DEFAULT_POLICY_PATH = './config/policy.v1.json';
+const DEFAULT_SCENARIO_PATH = './config/scenarios.v1.json';
+const defaultConfigurationFiles = new Map([
+  [resolve(process.cwd(), DEFAULT_POLICY_PATH), readFileSync(DEFAULT_POLICY_PATH, 'utf8')],
+  [resolve(process.cwd(), DEFAULT_SCENARIO_PATH), readFileSync(DEFAULT_SCENARIO_PATH, 'utf8')],
+]);
+
 const EnvironmentSchema = z
   .object({
     HISN_MODE: RuntimeModeSchema.default('DEMO'),
     HISN_PORT: z.coerce.number().int().min(1024).max(65_535).default(4310),
     HISN_DATABASE_PATH: z.string().default('./var/hisn-ot.db'),
-    HISN_POLICY_PATH: z.string().default('./config/policy.v1.json'),
-    HISN_SCENARIO_PATH: z.string().default('./config/scenarios.v1.json'),
+    HISN_POLICY_PATH: z.string().default(DEFAULT_POLICY_PATH),
+    HISN_SCENARIO_PATH: z.string().default(DEFAULT_SCENARIO_PATH),
     HISN_LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
@@ -105,7 +112,9 @@ function parseEnvironment(environment: NodeJS.ProcessEnv) {
 
 function readJson<T>(path: string, workingDirectory: string, schema: z.ZodType<T>): T {
   const resolvedPath = resolve(workingDirectory, path);
-  const parsed = schema.safeParse(JSON.parse(readFileSync(resolvedPath, 'utf8')));
+  const serialized =
+    defaultConfigurationFiles.get(resolvedPath) ?? readFileSync(resolvedPath, 'utf8');
+  const parsed = schema.safeParse(JSON.parse(serialized));
   if (!parsed.success)
     throw configurationError(`Configuration validation failed for ${path}`, parsed.error.flatten());
   return parsed.data;

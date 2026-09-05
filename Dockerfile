@@ -15,4 +15,4 @@ COPY config ./config
 COPY migrations ./migrations
 RUN mkdir -p /app/var
 EXPOSE 4310
-CMD ["node", "dist/server/server/main.js"]
+CMD ["node", "dist/server/index.js"]

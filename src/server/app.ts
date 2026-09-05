@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
-import Fastify from 'fastify';
+import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import { z } from 'zod';
 import type { JudgeOrchestrator } from '../application/judge-orchestrator.js';
 import type { AppConfiguration } from '../infrastructure/configuration.js';
@@ -20,7 +20,16 @@ export async function buildServer(
   orchestrator: JudgeOrchestrator,
   eventHub: EventHub,
 ) {
-  const server = Fastify({
+  return registerApplication(
+    Fastify(fastifyOptions(configuration)),
+    configuration,
+    orchestrator,
+    eventHub,
+  );
+}
+
+export function fastifyOptions(configuration: AppConfiguration): FastifyServerOptions {
+  return {
     logger: {
       level: configuration.logLevel,
       redact: {
@@ -30,7 +39,15 @@ export async function buildServer(
     },
     bodyLimit: 32 * 1024,
     requestIdHeader: 'x-correlation-id',
-  });
+  };
+}
+
+export async function registerApplication(
+  server: FastifyInstance,
+  configuration: AppConfiguration,
+  orchestrator: JudgeOrchestrator,
+  eventHub: EventHub,
+) {
   const sessions = new SessionGuard(configuration.mode === 'LIVE');
   await server.register(rateLimit, { global: false });
   server.addHook('onSend', async (_request, reply) => {
