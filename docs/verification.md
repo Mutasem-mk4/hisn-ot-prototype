@@ -39,3 +39,14 @@ A release is complete only after checking the canonical public URL:
 ## Release evidence
 
 Record the final test counts, Git commit, CI run, Vercel deployment ID, canonical URL, and public rehearsal result here only after fresh verification. Historical results must not be presented as current verification.
+
+### 2026-09-10 judge-mode release
+
+- Judge-mode implementation commit: `741d2992b40071614661c62477579bf63ee82b10`.
+- Production-smoke harness through commit: `a84c358d5ea1143cabe0dd25c549aac183062763`.
+- Local verification: `npm run verify` passed 12 Vitest files and 76 tests; `npm run test:e2e` passed 22 tests with 2 intentional viewport-duplicate skips; `npm run audit:deps` reported 0 vulnerabilities.
+- GitHub verification passed for the implementation in run [34517943618](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34517943618) and for the final smoke harness in run [34529341417](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34529341417).
+- Production deployment at the successful public rehearsal: `dpl_CBWLtWVpainfP6aAKnwGZ38uUydS` ([deployment](https://hisn-ot-prototype-5l4fc2wxp-mutasem-mk4s-projects.vercel.app)); canonical URL: [https://hisn-ot-prototype.vercel.app](https://hisn-ot-prototype.vercel.app).
+- Public smoke run [34528193054](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34528193054) passed `/`, `/healthz`, `/readyz`, JavaScript bundle delivery, the 1440×900 overflow check, and browser-console checks. The hosted LangGraph path recorded five Nokia sandbox evidence calls, blocked the 88% request, kept accepted pressure at 46%, and reached `INCIDENT_REPORTED`.
+- A preceding public run [34527745272](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34527745272) exercised the fail-closed path: the UI reported `AI unavailable. Command held safely.`, accepted pressure stayed at 46%, and no network evidence was treated as proof.
+- The expanded three-scenario rehearsal in run [34528588025](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34528588025) was blocked before its read-only and safe-command checks because the hosted agent returned `HTTP_429` after `SAFETY_EVALUATED` on both attempts. The command remained held. This is an external model-quota limitation, so consistent hosted-provider availability and the remaining public checklist items are not claimed by this release record.
