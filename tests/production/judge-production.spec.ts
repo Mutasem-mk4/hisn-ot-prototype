@@ -1,4 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+type ProductionFrame = {
+  run: { playbackStatus: string };
+  currentEvent?: { workflowState: string; payload: Record<string, unknown> };
+};
 
 test('production deployment serves the application and completes the attack proof safely', async ({
   page,
@@ -30,8 +35,7 @@ test('production deployment serves the application and completes the attack proo
   await expect(
     page.getByRole('heading', { name: /Stop dangerous industrial commands/i }),
   ).toBeVisible();
-  const attack = page.getByRole('button', { name: /Run attack demonstration/i });
-  await expect(attack).toBeEnabled();
+  await expect(page.getByText('desalination-safety-2026.4')).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -43,37 +47,19 @@ test('production deployment serves the application and completes the attack proo
     await controls.getByText('Demo controls').click();
   }
   await page.getByLabel('Simulation playback speed').selectOption('4');
-  const rehearsalResponse = page.waitForResponse(
-    (response) =>
-      response.request().method() === 'POST' &&
-      response.url().includes('/api/v1/judge-run/rehearsal'),
+  const finalFrame = await runScenario(
+    page,
+    /Run attack demonstration/i,
+    /Unsafe command blocked\. Plant setting unchanged\./,
   );
-  const primaryAction = page.locator('button.scenario-action--primary');
-  await attack.click();
-  await expect(primaryAction).toBeDisabled();
-  const rehearsal = await rehearsalResponse;
-  expect(rehearsal.status()).toBe(200);
-  const rehearsalBody = (await rehearsal.json()) as {
-    frames: Array<{
-      run: { playbackStatus: string };
-      currentEvent?: { workflowState: string; payload: Record<string, unknown> };
-    }>;
-  };
-  const finalFrame = rehearsalBody.frames.at(-1);
-  expect(finalFrame).toBeTruthy();
-  await expect(primaryAction).toBeEnabled({ timeout: 120_000 });
-
-  const resultHeading = page.locator('#judge-result-heading');
-  await expect
-    .poll(() => resultHeading.innerText(), { timeout: 120_000 })
-    .toMatch(/Unsafe command blocked|AI unavailable\. Command held safely\./);
+  expect(finalFrame.run.playbackStatus).toBe('COMPLETE');
 
   const outcome = (await page.locator('.outcome-facts').innerText()).replaceAll('\n', ' ');
   expect(outcome).toMatch(/Requested 88%/i);
   expect(outcome).toMatch(/Physical result (Unchanged|Held)/i);
 
   const evidence = (await page.locator('.external-proof').innerText()).replaceAll('\n', ' ');
-  const headline = await resultHeading.innerText();
+  const headline = await page.locator('#judge-result-heading').innerText();
   const diagnostics = {
     playbackStatus: finalFrame?.run.playbackStatus,
     workflowState: finalFrame?.currentEvent?.workflowState,
@@ -84,5 +70,60 @@ test('production deployment serves the application and completes the attack proo
   console.log(
     `PRODUCTION_REHEARSAL ${JSON.stringify({ headline, outcome, evidence, diagnostics })}`,
   );
+
+  await page.getByRole('link', { name: 'Evidence Trace', exact: true }).click();
+  const evidenceTable = page.getByRole('table', { name: 'Pre-decision telecom evidence calls' });
+  await expect(evidenceTable).toBeVisible();
+  await expect(evidenceTable.locator('tbody tr')).toHaveCount(5);
+  await expect(
+    page.getByRole('heading', { name: 'Goal → tool → observation → adaptation' }),
+  ).toBeVisible();
+  await expect(evidenceTable).toContainText('Latency');
+  await expect(evidenceTable).toContainText('Correlation');
+  await page.getByRole('link', { name: /Open the sealed incident report/ }).click();
+  await expect(page.getByRole('link', { name: 'Export JSON' })).toBeVisible();
+  for (const heading of [
+    'Agent action trace',
+    'Network proof',
+    'Enforcement record',
+    'Recovery requirements',
+  ]) {
+    await expect(page.getByRole('heading', { name: heading })).toBeVisible();
+  }
+
+  await page.getByRole('link', { name: 'Demo', exact: true }).click();
+  const readOnlyFrame = await runScenario(
+    page,
+    /Run read-only inspection/i,
+    /Read-only inspection authorized\./,
+  );
+  expect(readOnlyFrame.run.playbackStatus).toBe('COMPLETE');
+  await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
+  await expect(page.locator('.outcome-facts')).toContainText('No change');
+
+  const safeFrame = await runScenario(page, /Run safe command/i, /Safe command authorized\./);
+  expect(safeFrame.run.playbackStatus).toBe('COMPLETE');
+  await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
+  await expect(page.locator('.outcome-facts')).toContainText('52%');
   expect(consoleErrors).toEqual([]);
 });
+
+async function runScenario(page: Page, buttonName: RegExp, expectedHeadline: RegExp) {
+  const button = page.getByRole('button', { name: buttonName });
+  await expect(button).toBeEnabled();
+  const responsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      response.url().includes('/api/v1/judge-run/rehearsal'),
+  );
+  await button.click();
+  const response = await responsePromise;
+  expect(response.status()).toBe(200);
+  const body = (await response.json()) as { frames: ProductionFrame[] };
+  const finalFrame = body.frames.at(-1);
+  expect(finalFrame).toBeTruthy();
+  await expect
+    .poll(() => page.locator('#judge-result-heading').innerText(), { timeout: 120_000 })
+    .toMatch(expectedHeadline);
+  return finalFrame!;
+}
