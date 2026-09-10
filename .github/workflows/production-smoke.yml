@@ -1,0 +1,42 @@
+name: Production smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      production_url:
+        description: Production URL to verify
+        required: true
+        default: https://hisn-ot-prototype.vercel.app
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke
+  cancel-in-progress: false
+
+jobs:
+  verify-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HISN_PRODUCTION_URL: ${{ inputs.production_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.18.0
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:production
+      - name: Upload failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: production-smoke-evidence
+          path: |
+            playwright-production-report
+            test-results
+          if-no-files-found: ignore

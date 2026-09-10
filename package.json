@@ -20,6 +20,7 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:e2e": "npm run build && playwright test",
+    "test:production": "playwright test --config=playwright.production.config.ts",
     "test:rehearsal": "vitest run tests/rehearsal",
     "visual:qa": "node scripts/capture-visuals.mjs",
     "sample:report": "tsx scripts/generate-sample-report.ts",

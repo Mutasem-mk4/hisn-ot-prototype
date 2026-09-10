@@ -3,6 +3,7 @@ dist/
 var/
 coverage/
 playwright-report/
+playwright-production-report/
 test-results/
 .vercel/
 tmp/
