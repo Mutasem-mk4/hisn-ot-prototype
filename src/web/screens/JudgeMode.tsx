@@ -37,8 +37,8 @@ export function JudgeMode({
           <span className="eyebrow">HISN-OT / Industrial safety</span>
           <h1>Stop dangerous industrial commands before they reach the plant.</h1>
           <p>
-            Valid credentials can hide a compromised device. HISN-OT checks network context before a
-            command can change the plant.
+            Valid credentials can hide a compromised device. A LangGraph agent checks Nokia/CAMARA
+            network context before a command can change the plant.
           </p>
         </div>
       </section>

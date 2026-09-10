@@ -29,7 +29,8 @@ export function ControlRail({
       <div className="scenario-launcher__intro">
         <h2 id="scenario-launcher-heading">Try a compromised command</h2>
         <p>
-          An 88% pressure request exceeds the {snapshot.setPressureMaximumPercent}% safety limit.
+          An 88% pressure request exceeds the {snapshot.setPressureMaximumPercent}% command hard
+          limit.
         </p>
       </div>
 

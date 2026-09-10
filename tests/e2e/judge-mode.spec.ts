@@ -19,7 +19,7 @@ test('explains the product immediately and exposes the primary action', async ({
   ).toBeVisible();
   await expect(page.getByRole('button', { name: /Run attack demonstration/i })).toBeVisible();
   await expect(
-    page.getByText('An 88% pressure request exceeds the 60% safety limit.'),
+    page.getByText('An 88% pressure request exceeds the 60% command hard limit.'),
   ).toBeVisible();
   const workflow = page.locator('.agent-workflow');
   await expect(workflow).toBeHidden();
