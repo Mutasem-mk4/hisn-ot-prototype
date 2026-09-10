@@ -43,9 +43,24 @@ test('production deployment serves the application and completes the attack proo
     await controls.getByText('Demo controls').click();
   }
   await page.getByLabel('Simulation playback speed').selectOption('4');
-  await attack.click();
+  const rehearsalResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      response.url().includes('/api/v1/judge-run/rehearsal'),
+  );
   const primaryAction = page.locator('button.scenario-action--primary');
+  await attack.click();
   await expect(primaryAction).toBeDisabled();
+  const rehearsal = await rehearsalResponse;
+  expect(rehearsal.status()).toBe(200);
+  const rehearsalBody = (await rehearsal.json()) as {
+    frames: Array<{
+      run: { playbackStatus: string };
+      currentEvent?: { workflowState: string; payload: Record<string, unknown> };
+    }>;
+  };
+  const finalFrame = rehearsalBody.frames.at(-1);
+  expect(finalFrame).toBeTruthy();
   await expect(primaryAction).toBeEnabled({ timeout: 120_000 });
 
   const resultHeading = page.locator('#judge-result-heading');
@@ -59,6 +74,15 @@ test('production deployment serves the application and completes the attack proo
 
   const evidence = (await page.locator('.external-proof').innerText()).replaceAll('\n', ' ');
   const headline = await resultHeading.innerText();
-  console.log(`PRODUCTION_REHEARSAL ${JSON.stringify({ headline, outcome, evidence })}`);
+  const diagnostics = {
+    playbackStatus: finalFrame?.run.playbackStatus,
+    workflowState: finalFrame?.currentEvent?.workflowState,
+    errorCode: finalFrame?.currentEvent?.payload.errorCode,
+    failureReason: finalFrame?.currentEvent?.payload.failureReason,
+    failedAfter: finalFrame?.currentEvent?.payload.failedAfter,
+  };
+  console.log(
+    `PRODUCTION_REHEARSAL ${JSON.stringify({ headline, outcome, evidence, diagnostics })}`,
+  );
   expect(consoleErrors).toEqual([]);
 });
