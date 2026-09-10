@@ -169,7 +169,7 @@ export class LangGraphEvidenceAgent {
             'The executor accepted one model-selected tool so its observation could inform the next action.',
         });
       }
-      response.tool_calls = proposedCalls.slice(0, 1).map((call) => {
+      const selectedCalls = proposedCalls.slice(0, 1).map((call) => {
         const evidenceTool = TOOL_BY_NAME[call.name];
         if (!evidenceTool) throw new TypeError(`Model requested unknown tool ${call.name}`);
         const parsedReason = z.object({ reason: z.string().min(8).max(180) }).safeParse(call.args);
@@ -184,7 +184,9 @@ export class LangGraphEvidenceAgent {
         });
         return { ...call, args: { reason } };
       });
-      return { messages: [response] };
+      return {
+        messages: [new AIMessage({ content: response.content, tool_calls: selectedCalls })],
+      };
     };
 
     const shouldContinue = (state: typeof MessagesAnnotation.State) => {
