@@ -185,7 +185,6 @@ export class LangGraphAgentReasoner implements AgentReasoner {
     try {
       return await this.graphAgent.investigate(request, initialPlan, executeTool, signal);
     } catch (error) {
-      if (!isRecoverableReasonerFailure(error)) throw error;
       throw agentUnavailable('INVESTIGATE', error);
     }
   }
@@ -418,6 +417,7 @@ function agentUnavailable(
   stage: 'PLAN' | 'INVESTIGATE' | 'RECOMMEND',
   failure?: unknown,
 ): HisnError {
+  logHostedFailure(stage, failure);
   return new HisnError(
     'AGENT_UNAVAILABLE',
     `Hosted AI ${stage.toLowerCase()} unavailable; the command remains held`,
@@ -430,7 +430,22 @@ function agentUnavailable(
   );
 }
 
+function logHostedFailure(stage: string, failure: unknown): void {
+  if (process.env.VERCEL !== '1' || !(failure instanceof Error)) return;
+  console.warn(
+    JSON.stringify({
+      event: 'HOSTED_AGENT_UNAVAILABLE',
+      stage,
+      failureType: failure.name,
+      failureReason: safeFailureReason(failure),
+      providerMessage: failure.message.replaceAll(/\s+/g, ' ').slice(0, 320),
+    }),
+  );
+}
+
 function safeFailureReason(failure: unknown): string {
+  const providerStatus = numericProperty(failure, 'status');
+  if (providerStatus !== null) return `HTTP_${providerStatus}`;
   if (failure instanceof z.ZodError) return 'INVALID_STRUCTURED_OUTPUT';
   if (failure instanceof SyntaxError) return 'INVALID_JSON';
   if (failure instanceof DOMException) return failure.name.toUpperCase();
@@ -441,6 +456,12 @@ function safeFailureReason(failure: unknown): string {
     return 'INCOMPLETE_EVIDENCE';
   }
   return 'NETWORK_OR_PROTOCOL_ERROR';
+}
+
+function numericProperty(source: unknown, key: string): number | null {
+  if (typeof source !== 'object' || source === null) return null;
+  const candidate = (source as Record<string, unknown>)[key];
+  return typeof candidate === 'number' ? candidate : null;
 }
 
 function recommendationState(
