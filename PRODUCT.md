@@ -12,7 +12,7 @@ Primary users are plant operators, OT security leaders, utility executives, and 
 
 HISN-OT is an Agentic Network-Enforced Safety Gate for Critical Infrastructure. It prevents a privileged digital command from becoming a physical action until network context and deterministic process conditions are valid. The anchor demonstration is a connected MENA desalination facility, with a product path into oil and gas, energy, ports, factories, airports, hospitals, and smart-city infrastructure.
 
-Success is a backend-driven proof: credentials are valid, context is compromised, an unsafe 88% pressure request is blocked against a versioned 60% limit, the suspect gateway is contained, and the trusted backup keeps the simulated plant stable.
+Success is a backend-driven proof: credentials are valid, context is compromised, an unsafe 88% pressure request is blocked against a versioned 60% limit, the operator-facing primary edge is isolated, and the separately enrolled backup becomes owner only after confirmed handover. An unconfirmed handover safe-stops the modeled process.
 
 ## Brand Personality
 

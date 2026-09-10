@@ -32,7 +32,7 @@ Pause on **DECISION ISSUED** and point to actual versus requested pressure.
 
 ## 1:20–1:38 — Targeted containment and continuity
 
-“Only after that decision is persisted does enforcement start. No real slice attachment exists yet, so targeted detachment is visibly simulated with that reason. The Nokia test network accepts and releases the Quality on Demand session, but its lifecycle stays REQUESTED. HISN records PENDING, withholds backup ownership, and safe-stops the model.”
+“Only after that decision is persisted does enforcement start. The contained object is the suspicious operator-facing primary edge, not the PLC. No real slice attachment exists yet, so its isolation is visibly implemented locally with that reason. The backup has a separate enrolled identity and path, never receives the operator command, and cannot become owner without confirmed handover. The Nokia test network accepts and releases the Quality on Demand session, but its lifecycle stays REQUESTED. HISN records PENDING, withholds backup ownership, and safe-stops the model.”
 
 ## 1:38–1:50 — Proof and commercial value
 

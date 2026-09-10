@@ -30,6 +30,7 @@ Open `http://127.0.0.1:4310`. DEMO is the default and needs no secrets. See [QUI
 - The digital twin is stateful. Requested pressure and actual pressure are separate fields; the held 88% command never becomes actual pressure.
 - One pausable simulation clock drives the process model, simulation timestamps, controller heartbeats, scenario cadence, and state-bound motion at 0.5×, 1×, 2×, or 4×. Provider durations and external timeouts remain wall-clock based.
 - The SVG facility view distinguishes physical water paths from digital command/evidence paths. Pump, flow, tank, valve, telemetry, isolation, and backup ownership reflect the validated twin snapshot rather than an independent frontend animation.
+- The operator-facing primary edge and separately enrolled backup edge are shown as distinct control paths. Containment isolates the implicated primary edge; it does not claim that a PLC was quarantined. The backup never receives the operator command and becomes owner only after confirmed handover.
 - Back replays persisted events; it does not invent a parallel frontend story. Refresh recovers the current run.
 - The incident report is generated from persisted events and enforcement records, then saved and exportable as JSON.
 - Every provider result carries explicit provenance. The deployed configuration labels successful Nokia test-network results `SANDBOX` and labels each deterministic fallback `SIMULATED` with a reason.

@@ -1,6 +1,7 @@
 import type { IncidentReport, RunSnapshot } from '../../application/ports.js';
 import { incidentDownloadUrl } from '../api.js';
 import { StatusMark } from '../components/StatusMark.js';
+import { statusLabel } from '../status-label.js';
 import { ScreenIntro } from './LiveOperations.js';
 
 export function IncidentReportView({
@@ -110,7 +111,7 @@ export function IncidentReportView({
                 <b>{humanize(call.action)}</b>
                 <StatusMark status={call.status} />
                 <small>
-                  {call.provenance} · {call.latencyMs} ms
+                  {statusLabel(call.provenance)} · {call.latencyMs} ms
                 </small>
               </li>
             ))}

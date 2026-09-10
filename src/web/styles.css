@@ -522,6 +522,41 @@
     margin-top: 0.35rem;
     font-size: 0.82rem;
   }
+  .external-proof {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--line);
+    background: var(--ink-1);
+  }
+  .external-proof > div {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.3rem 0.65rem;
+    min-width: 0;
+    padding: 0.55rem 0.75rem;
+  }
+  .external-proof > div + div {
+    border-left: 1px solid var(--line);
+  }
+  .external-proof > div > span:first-child {
+    color: var(--muted);
+    font: 0.57rem var(--mono);
+    text-transform: uppercase;
+  }
+  .external-proof .status-mark {
+    justify-self: end;
+  }
+  .external-proof small {
+    grid-column: 1 / -1;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 0.62rem;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .judge-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(285px, 350px);
@@ -1440,6 +1475,20 @@
     fill: var(--copper);
     font-size: 7px;
   }
+  .gateway-node .gateway-state,
+  .handover-label {
+    fill: var(--muted);
+    font-size: 6px;
+  }
+  .gateway-node.is-cut rect {
+    stroke: var(--red);
+  }
+  .gateway-node.is-cut .gateway-state {
+    fill: var(--red);
+  }
+  .handover-label {
+    letter-spacing: 0.6px;
+  }
   .controller-box.is-owner {
     fill: oklch(30% 0.07 190 / 0.55);
     stroke: var(--cyan);
@@ -1754,6 +1803,14 @@
     .judge-intro {
       grid-template-columns: 1fr 300px;
     }
+    .external-proof {
+      grid-template-columns: 1fr 1fr;
+    }
+    .external-proof > div:nth-child(3) {
+      grid-column: 1 / -1;
+      border-top: 1px solid var(--line);
+      border-left: 0;
+    }
     .judge-grid {
       grid-template-columns: 1fr;
     }
@@ -1808,6 +1865,15 @@
     }
     .takeaway {
       padding-block: 0.35rem;
+    }
+    .external-proof {
+      grid-template-columns: 1fr;
+    }
+    .external-proof > div + div,
+    .external-proof > div:nth-child(3) {
+      grid-column: auto;
+      border-top: 1px solid var(--line);
+      border-left: 0;
     }
     .control-rail {
       overflow-x: auto;

@@ -92,7 +92,7 @@ test('completes the backend workflow, exposes trace, and exports the incident', 
   await expect(
     page.getByRole('table', { name: 'Pre-decision telecom evidence calls' }),
   ).toBeVisible();
-  await expect(page.getByText('SIMULATED', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('IMPLEMENTED LOCALLY', { exact: true }).first()).toBeVisible();
   await expectNoSeriousViolations(page);
   await page.getByRole('link', { name: 'Incident' }).click();
   await expect(page.getByRole('link', { name: 'Export JSON' })).toBeVisible();

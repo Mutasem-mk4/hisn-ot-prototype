@@ -506,14 +506,21 @@ export class JudgeOrchestrator {
         AbortSignal.timeout(this.policy.providers.timeoutMs),
       ),
     );
+    const simulatedIsolation = call.provenance === 'SIMULATED';
+    const headline =
+      call.status !== 'SUCCEEDED'
+        ? 'Operator-edge containment unconfirmed'
+        : simulatedIsolation
+          ? 'Operator-edge isolation modeled locally'
+          : 'Nokia attachment detachment confirmed';
+    const enforcementLabel = simulatedIsolation
+      ? 'Digital-twin isolation'
+      : 'Network attachment detachment';
     return {
       eventType: 'COMPROMISED_ENDPOINT_CONTAINED',
       payload: {
-        headline:
-          call.status === 'SUCCEEDED'
-            ? 'Gateway detachment confirmed'
-            : 'Gateway containment unconfirmed',
-        detail: `Command remains blocked. Detachment result: ${call.status}.`,
+        headline,
+        detail: `Command remains blocked. ${enforcementLabel} result: ${call.status}.`,
         enforcement: [call],
       },
       twin: call.status === 'SUCCEEDED' ? containGateway(run.twin) : run.twin,

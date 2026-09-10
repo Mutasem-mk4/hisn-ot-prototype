@@ -23,6 +23,7 @@ export function JudgeMode({
 }) {
   const event = snapshot.currentEvent;
   const decision = snapshot.artifacts.decision;
+  const networkProof = networkProofCopy(snapshot.integration.evidenceSource);
   const progress = ['COMPLETE', 'FAILED_SAFE'].includes(snapshot.run.playbackStatus)
     ? 100
     : Math.round((snapshot.run.presentationCursor / 13) * 100);
@@ -31,16 +32,30 @@ export function JudgeMode({
       <section className="judge-intro">
         <div>
           <span className="eyebrow">
-            Connected MENA desalination facility · Judge Mode ·{' '}
-            {snapshot.integration.evidenceSource === 'NOKIA_SANDBOX_WITH_FALLBACK'
-              ? 'Nokia test network connected'
-              : 'Deterministic evidence mode'}
+            Connected MENA desalination facility · Judge Mode · {networkProof.headline}
           </span>
           <h1>No critical command becomes a physical action without network proof.</h1>
         </div>
         <div className="takeaway">
           <span>Security question</span>
           <b>Valid credentials. But should this command execute?</b>
+        </div>
+      </section>
+      <section className="external-proof" aria-label="Implementation and provider provenance">
+        <div>
+          <span>Network evidence</span>
+          <StatusMark status={snapshot.integration.evidenceSource}>{networkProof.badge}</StatusMark>
+          <small>{networkProof.detail}</small>
+        </div>
+        <div>
+          <span>Agent reasoning</span>
+          <StatusMark status={snapshot.integration.agentReasoner} />
+          <small>Structured output, deterministic authority</small>
+        </div>
+        <div>
+          <span>Industrial process</span>
+          <StatusMark status="SIMULATED">IMPLEMENTED LOCALLY</StatusMark>
+          <small>Stateful digital twin, no physical PLC claim</small>
         </div>
       </section>
       <ControlRail
@@ -109,6 +124,40 @@ export function JudgeMode({
       </div>
     </main>
   );
+}
+
+function networkProofCopy(source: RunSnapshot['integration']['evidenceSource']) {
+  const copy = {
+    SIMULATED: {
+      headline: 'Deterministic evidence mode',
+      badge: 'LOCAL EVIDENCE',
+      detail: 'Deterministic CAMARA-shaped fixtures',
+    },
+    NOKIA_SANDBOX: {
+      headline: 'Nokia test network connected',
+      badge: 'NOKIA SANDBOX API',
+      detail: 'Authenticated Nokia transport, simulator identities',
+    },
+    NOKIA_SANDBOX_WITH_FALLBACK: {
+      headline: 'Nokia test network connected',
+      badge: 'NOKIA SANDBOX API',
+      detail: 'Authenticated Nokia transport, simulator identities',
+    },
+    NOKIA_LIVE: {
+      headline: 'Nokia operator network configured',
+      badge: 'NOKIA LIVE API',
+      detail: 'Authenticated Nokia transport, configured identities',
+    },
+    UNAVAILABLE: {
+      headline: 'Network evidence unavailable',
+      badge: 'UNAVAILABLE',
+      detail: 'No telecom result is treated as proof',
+    },
+  } satisfies Record<
+    RunSnapshot['integration']['evidenceSource'],
+    { headline: string; badge: string; detail: string }
+  >;
+  return copy[source];
 }
 
 function presenterCue(state: string | null, snapshot: RunSnapshot) {

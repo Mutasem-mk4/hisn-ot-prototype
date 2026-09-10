@@ -54,8 +54,8 @@ sequenceDiagram
   Gateway->>Agent: Interpret evidence
   Agent-->>Gateway: Structured recommendation
   Gateway->>Store: Authoritative BLOCK_AND_CONTAIN
-  Gateway->>Network: Detach implicated attachment
-  Gateway->>Network: Request QoD for backup flow
+  Gateway->>Network: Detach implicated operator-edge attachment
+  Gateway->>Network: Request QoD for separately enrolled backup flow
   Gateway->>Twin: Activate backup only after confirmed handover
   Gateway->>Store: Persist continuity and incident report
   Store-->>UI: SSE snapshot from persisted state
@@ -120,7 +120,7 @@ Invalid edges throw `INVALID_TRANSITION` and are tested. Enforcement orchestrati
 - A single backend simulation clock drives fixed-step process integration, simulation timestamps, controller heartbeats, scenario cadence, and UI motion parameters. Pause freezes that local clock; resume resets the wall-clock reference so it cannot jump. Playback multipliers scale simulated elapsed time only. Provider deadlines and live-system durations remain wall-clock based.
 - The equivalence regression runs the same 10 simulated seconds at 0.5×, 1×, 2×, and 4×. Acceptance tolerances are ±0.01 pressure percentage points, ±0.1 m³/h flow, and ±0.1 tank-level percentage points.
 - Back replays immutable event observations without undoing enforcement. SSE reconnect sends the authoritative snapshot immediately.
-- Successful detachment isolates the implicated simulated path. Backup ownership is applied only after both the continuity QoD and simulated safe-control activation succeed; an unconfirmed handover safe-stops the modeled pump.
+- Successful detachment isolates the implicated operator-facing primary edge; it does not claim that Nokia has quarantined a PLC. The backup uses a separate enrolled identity and path, accepts no operator command, and becomes owner only after both continuity QoD and simulated safe-control activation succeed. An unconfirmed handover safe-stops the modeled pump.
 - A provider outage becomes `UNAVAILABLE`, and critical policy blocks. Unexpected orchestration failure enters `FAILED_SAFE` while the held command is marked blocked.
 - Server secrets never enter Vite configuration or browser responses. Structured log redaction covers authorization, cookies, and CSRF headers.
 - SQLite WAL and a hash-linked event chain support deterministic replay and audit-tamper detection. The hash chain is tamper-evident, not a digital signature or external timestamp authority.

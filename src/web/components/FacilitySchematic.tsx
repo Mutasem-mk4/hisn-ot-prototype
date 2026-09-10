@@ -10,8 +10,10 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
   const decision = snapshot.artifacts.decision?.state;
   const paused = twin.simulationPaused;
   const flowing = !paused && twin.pumpState !== 'STOPPED' && twin.flowRateM3PerHour > 0;
-  const primaryConnected = twin.gatewayAttachment === 'OPERATIONAL';
-  const backupActive = twin.activeController === 'BACKUP' && twin.backupReady;
+  const primaryConnected =
+    twin.gatewayAttachment === 'OPERATIONAL' && twin.primaryAttachment === 'OPERATIONAL';
+  const backupConnected = twin.backupAttachment === 'OPERATIONAL';
+  const backupActive = twin.activeController === 'BACKUP' && twin.backupReady && backupConnected;
   const evidencePhase = phaseIndex(workflow) >= phaseIndex('EVIDENCE_COLLECTING');
   const evidenceReturned = phaseIndex(workflow) >= phaseIndex('EVIDENCE_COMPLETE');
   const packet = packetState(workflow, decision);
@@ -50,7 +52,8 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
             <desc id="facility-svg-desc">
               Physical water moves left to right through two tanks, a pump, treatment stage and
               valve. Digital commands move above the process through the HISN gate to primary or
-              backup control.
+              backup control. The operator-facing primary edge and separately enrolled backup edge
+              are independent paths.
             </desc>
 
             <g className="digital-lane">
@@ -60,11 +63,17 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
               <path className="digital-path" d="M105 89 H280" />
               <path
                 className={primaryConnected ? 'digital-path is-live' : 'digital-path is-cut'}
-                d="M360 89 H465 M555 89 H655"
+                d="M360 89 H455 M555 89 H655"
               />
               <path
-                className={backupActive ? 'digital-path is-live' : 'digital-path'}
-                d="M515 114 V162 H655"
+                className={
+                  backupActive
+                    ? 'digital-path is-live'
+                    : backupConnected
+                      ? 'digital-path'
+                      : 'digital-path is-cut'
+                }
+                d="M320 126 V180 H455 M555 180 H655"
               />
               <path
                 className={
@@ -76,7 +85,7 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
               />
               <path
                 className={backupActive ? 'control-drop is-live' : 'control-drop'}
-                d="M700 188 V276 H390"
+                d="M700 209 V276 H390"
               />
 
               <g className="operator-node">
@@ -105,11 +114,31 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
                 </text>
               </g>
 
-              <g className="gateway-node">
-                <rect x="465" y="58" width="90" height="58" />
-                <path d="M480 94h60M490 80h40" />
-                <text x="510" y="136" textAnchor="middle">
-                  HISN GATEWAY
+              <g className={primaryConnected ? 'gateway-node' : 'gateway-node is-cut'}>
+                <rect x="455" y="58" width="100" height="58" />
+                <text x="505" y="79" textAnchor="middle">
+                  PRIMARY EDGE
+                </text>
+                <text x="505" y="94" textAnchor="middle">
+                  OPERATOR PATH
+                </text>
+                <text className="gateway-state" x="505" y="108" textAnchor="middle">
+                  {primaryConnected ? 'OPERATIONAL' : 'ISOLATED'}
+                </text>
+              </g>
+              <text className="handover-label" x="386" y="170" textAnchor="middle">
+                SYSTEM HANDOVER ONLY
+              </text>
+              <g className={backupConnected ? 'gateway-node' : 'gateway-node is-cut'}>
+                <rect x="455" y="151" width="100" height="58" />
+                <text x="505" y="172" textAnchor="middle">
+                  BACKUP EDGE
+                </text>
+                <text x="505" y="187" textAnchor="middle">
+                  SEPARATE IDENTITY
+                </text>
+                <text className="gateway-state" x="505" y="201" textAnchor="middle">
+                  {backupActive ? 'CONTROL OWNER' : 'ENROLLED STANDBY'}
                 </text>
               </g>
 
@@ -538,12 +567,13 @@ function componentDetail(key: ComponentKey, snapshot: RunSnapshot) {
       metrics: [
         ['Decision', decision],
         ['Requested', `${twin.requestedPressurePercent?.toFixed(0) ?? '—'}%`],
-        ['Gateway', twin.gatewayAttachment],
+        ['Operator edge', twin.gatewayAttachment],
       ],
     },
     control: {
       name: 'Controller pair',
-      summary: 'The backup path owns the process only after confirmed handover.',
+      summary:
+        'The separately enrolled backup path accepts only a system-authorized handover, never the operator command.',
       metrics: [
         [
           'Control owner',
@@ -553,6 +583,7 @@ function componentDetail(key: ComponentKey, snapshot: RunSnapshot) {
         ],
         ['Primary heartbeat', `#${twin.primaryHeartbeatSequence}`],
         ['Backup heartbeat', `#${twin.backupHeartbeatSequence}`],
+        ['Backup path', twin.backupAttachment],
       ],
     },
   };

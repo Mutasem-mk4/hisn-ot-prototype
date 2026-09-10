@@ -26,7 +26,7 @@ The Vite development UI is `http://127.0.0.1:4173`; it proxies `/api` to port 43
 3. At `ALLOW`, the packet is released to the primary controller. Let the simulation run briefly: pump speed becomes 52%, flow increases, pressure approaches the accepted value progressively, and tank/valve telemetry follows the same process model.
 4. Pause the simulation to inspect a tank, pump, treatment stage, valve, gate, or controller. The simulation clock and state-bound motion freeze together.
 5. Click **Submit unsafe change · 88%**. The previously accepted 52% input remains in force while the new packet is held and then blocked at the gate.
-6. Continue through `BLOCK_AND_CONTAIN`. The implicated primary path becomes isolated. The backup is marked as owner only after QoD and the simulated safe-control activation both succeed; a pending or failed handover safe-stops the modeled pump.
+6. Continue through `BLOCK_AND_CONTAIN`. The implicated operator-facing primary edge becomes isolated; the PLC is not described as quarantined. The separately enrolled backup path is marked as owner only after QoD and the simulated safe-control activation both succeed; a pending or failed handover safe-stops the modeled pump.
 7. Open **Incident**, then use **Export JSON** or **Print report**.
 
 Controls are state-safe: Run/Pause simulation, Step proof, Back, Reset, Clock speed, Explain, and Present. `Space` toggles Run/Pause. Arrow Right steps; Arrow Left replays the previous persisted event. Back does not reverse a real enforcement action.
