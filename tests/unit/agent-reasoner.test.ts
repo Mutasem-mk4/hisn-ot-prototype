@@ -205,6 +205,80 @@ describe('bounded evidence planning', () => {
     expect(executor).toHaveBeenCalledTimes(1);
   });
 
+  it('serializes parallel model suggestions into observation-driven calls', async () => {
+    const lowRequest = {
+      command: {
+        kind: 'READ_STATUS' as const,
+        requestedSetpointPercent: null,
+        reason: 'Read status only',
+      },
+      principal: scenario.principal,
+      policy,
+      twin: scenario.initialTwin,
+    };
+    const initialPlan = await new DeterministicAgentReasoner().plan(
+      lowRequest,
+      new AbortController().signal,
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          groqResponse({
+            content: null,
+            tool_calls: [
+              {
+                id: 'call-reachability-first',
+                type: 'function',
+                function: {
+                  name: 'get_device_reachability',
+                  arguments: JSON.stringify({
+                    reason: 'Collect the required current attachment signal first.',
+                  }),
+                },
+              },
+              {
+                id: 'call-number-parallel',
+                type: 'function',
+                function: {
+                  name: 'verify_operator_number',
+                  arguments: JSON.stringify({
+                    reason: 'Also verify identity in the same model turn.',
+                  }),
+                },
+              },
+            ],
+          }),
+        )
+        .mockResolvedValueOnce(groqResponse({ content: 'The required signal is reassuring.' })),
+    );
+    const reasoner = new LangGraphAgentReasoner(
+      {
+        baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
+        apiKey: 'redacted-key',
+        model: 'openai/gpt-oss-20b',
+      },
+      500,
+    );
+    const executor = vi.fn((tool) =>
+      Promise.resolve(evidenceCall(tool, { reachable: true, connectivity: ['DATA'] })),
+    );
+
+    const investigation = await reasoner.investigate(
+      lowRequest,
+      initialPlan,
+      executor,
+      new AbortController().signal,
+    );
+
+    expect(investigation.plan.selectedTools).toEqual(['DEVICE_REACHABILITY']);
+    expect(investigation.trace.map((step) => step.headline)).toContain(
+      'Parallel tool suggestions serialized',
+    );
+    expect(executor).toHaveBeenCalledTimes(1);
+  });
+
   it('accepts a policy-complete hosted plan from a chat completion', async () => {
     const deterministicPlan = await new DeterministicAgentReasoner().plan(
       {

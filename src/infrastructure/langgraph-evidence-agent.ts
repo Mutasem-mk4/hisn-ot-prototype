@@ -61,6 +61,7 @@ export class LangGraphEvidenceAgent {
     const requested = new Set<EvidenceTool>();
     const maximumToolCalls = request.policy.agent.maximumToolCalls;
     const requiredFloor = minimumEvidenceForCommand(request.command, request.policy);
+    let modelSelectedToolCount = 0;
     const appendTrace = (step: Omit<AgentTraceStep, 'sequence'>) => {
       trace.push({ ...step, sequence: trace.length + 1 });
     };
@@ -158,20 +159,31 @@ export class LangGraphEvidenceAgent {
         });
       }
       const response = await model.invoke(state.messages, { signal });
-      if ((response.tool_calls?.length ?? 0) > 1) {
-        throw new TypeError('Agent must request one evidence tool per observation cycle');
+      const proposedCalls = response.tool_calls ?? [];
+      if (proposedCalls.length > 1) {
+        appendTrace({
+          phase: 'ADAPTATION',
+          headline: 'Parallel tool suggestions serialized',
+          detail:
+            'The executor accepted one model-selected tool so its observation could inform the next action.',
+        });
       }
-      for (const call of response.tool_calls ?? []) {
+      response.tool_calls = proposedCalls.slice(0, 1).map((call) => {
         const evidenceTool = TOOL_BY_NAME[call.name];
         if (!evidenceTool) throw new TypeError(`Model requested unknown tool ${call.name}`);
-        const reason = z.object({ reason: z.string().min(8).max(180) }).parse(call.args).reason;
+        const parsedReason = z.object({ reason: z.string().min(8).max(180) }).safeParse(call.args);
+        const reason = parsedReason.success
+          ? parsedReason.data.reason
+          : `Collect ${humanize(evidenceTool)} as network evidence for the current command.`;
+        modelSelectedToolCount += 1;
         appendTrace({
           phase: 'TOOL_REQUEST',
           headline: `Agent requested ${humanize(evidenceTool)}`,
           detail: reason,
           tool: evidenceTool,
         });
-      }
+        return { ...call, args: { reason } };
+      });
       return { messages: [response] };
     };
 
@@ -212,15 +224,25 @@ export class LangGraphEvidenceAgent {
       .addEdge('require_evidence', 'agent')
       .compile();
 
-    await graph.invoke(
-      {
-        messages: [
-          new SystemMessage(systemPrompt(request, initialPlan)),
-          new HumanMessage(JSON.stringify(redactedContext(request))),
-        ],
-      },
-      { recursionLimit: maximumToolCalls * 2 + 4, signal },
-    );
+    try {
+      await graph.invoke(
+        {
+          messages: [
+            new SystemMessage(systemPrompt(request, initialPlan)),
+            new HumanMessage(JSON.stringify(redactedContext(request))),
+          ],
+        },
+        { recursionLimit: maximumToolCalls * 2 + 4, signal },
+      );
+    } catch (error) {
+      if (signal.aborted) throw error;
+      appendTrace({
+        phase: 'FALLBACK',
+        headline: 'Hosted agent turn failed safely',
+        detail:
+          'The graph retained completed observations and continued with the deterministic minimum-evidence floor.',
+      });
+    }
 
     for (const requiredTool of minimumEvidenceForCommand(request.command, request.policy)) {
       if (requested.has(requiredTool)) continue;
@@ -254,7 +276,7 @@ export class LangGraphEvidenceAgent {
             reasons.get(evidenceTool) ?? 'Selected by the bounded LangGraph evidence agent.',
           ]),
         ),
-        reasoningProvenance: 'LIVE',
+        reasoningProvenance: modelSelectedToolCount > 0 ? 'LIVE' : 'FALLBACK',
       },
       evidence,
       trace,
