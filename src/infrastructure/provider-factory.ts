@@ -23,7 +23,9 @@ export type ProviderSet = {
 };
 
 export function createProviders(configuration: AppConfiguration): ProviderSet {
-  const modelTimeoutMs = Math.min(4_000, configuration.policy.agent.maximumRuntimeMs);
+  const modelTimeoutMs = Math.floor(
+    configuration.policy.agent.maximumRuntimeMs / (configuration.policy.agent.maximumRetries + 1),
+  );
   const reasoner = configuration.llm
     ? new LangGraphAgentReasoner(
         configuration.llm,
