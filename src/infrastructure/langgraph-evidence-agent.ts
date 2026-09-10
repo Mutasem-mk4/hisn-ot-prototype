@@ -60,6 +60,7 @@ export class LangGraphEvidenceAgent {
     const trace: AgentTraceStep[] = [];
     const requested = new Set<EvidenceTool>();
     const maximumToolCalls = request.policy.agent.maximumToolCalls;
+    const maximumModelTurns = maximumToolCalls * 2 + 1;
     const requiredFloor = minimumEvidenceForCommand(request.command, request.policy);
     let modelSelectedToolCount = 0;
     const appendTrace = (step: Omit<AgentTraceStep, 'sequence'>) => {
@@ -141,7 +142,7 @@ export class LangGraphEvidenceAgent {
     let modelTurn = 0;
     const callModel = async (state: typeof MessagesAnnotation.State) => {
       signal.throwIfAborted();
-      if (modelTurn >= maximumToolCalls + 1) {
+      if (modelTurn >= maximumModelTurns) {
         appendTrace({
           phase: 'ADAPTATION',
           headline: 'Reasoning loop reached its bound',
@@ -193,7 +194,7 @@ export class LangGraphEvidenceAgent {
       const missing = requiredFloor.filter((evidenceTool) => !requested.has(evidenceTool));
       return missing.length > 0 &&
         requested.size < maximumToolCalls &&
-        modelTurn < maximumToolCalls + 1
+        modelTurn < maximumModelTurns
         ? 'require_evidence'
         : END;
     };
