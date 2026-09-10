@@ -20,7 +20,6 @@ import {
   EvidenceCallSchema,
   SafetyEvaluationSchema,
   TwinStateSchema,
-  type AgentPlan,
   type DomainEvent,
   type EnforcementCall,
   type Scenario,
@@ -40,13 +39,12 @@ import type {
 import { buildIncidentReport } from './incident-report.js';
 import { withDeadline } from './provider-deadline.js';
 import { evidencePurpose } from '../domain/evidence.js';
-import { assertPlanAssurance } from '../domain/agent-plan.js';
+import { assertPlanAssurance, minimumEvidenceForCommand } from '../domain/agent-plan.js';
 
 const PRESENTATION_STEP_MS = 7_000;
 
 export class JudgeOrchestrator {
   private busy = false;
-  private lowRiskComparison: AgentPlan | null | undefined;
 
   constructor(
     private readonly store: AuditStore,
@@ -82,7 +80,6 @@ export class JudgeOrchestrator {
       return this.snapshot(existing);
     }
     const scenario = this.scenario(scenarioId);
-    this.lowRiskComparison = undefined;
     const now = new Date().toISOString();
     const run: RunRecord = {
       id: randomUUID(),
@@ -186,7 +183,11 @@ export class JudgeOrchestrator {
     const events = this.store.eventsForRun(run.id);
     const visibleEvents = events.slice(0, run.presentationCursor);
     const scenario = this.scenario(run.scenarioId);
-    const lowRiskComparison = await this.compareLowRisk(scenario);
+    const comparisonCommand = {
+      kind: 'READ_STATUS' as const,
+      requestedSetpointPercent: null,
+      reason: 'Judge comparison',
+    };
     return {
       run,
       events,
@@ -197,40 +198,16 @@ export class JudgeOrchestrator {
       safePressureBand: this.policy.safePressureBand,
       setPressureMaximumPercent: requireConfiguredSetpointMaximum(this.policy),
       integration: await this.readiness(),
-      lowRiskComparison,
+      lowRiskComparison: {
+        risk: this.policy.commands.READ_STATUS.risk,
+        selectedTools: minimumEvidenceForCommand(comparisonCommand, this.policy),
+        basis: 'POLICY_MINIMUM',
+      },
       presentationTwin:
         run.presentationCursor === events.length ? run.twin : visibleTwin(visibleEvents, scenario),
       artifacts: artifactsFrom(visibleEvents),
       incidentAvailable: this.store.incidentForRun(run.id) !== null,
     };
-  }
-
-  private async compareLowRisk(scenario: Scenario): Promise<AgentPlan | null> {
-    if (this.lowRiskComparison !== undefined) return this.lowRiskComparison;
-    if (this.reasoner.mode === 'UNAVAILABLE') {
-      this.lowRiskComparison = null;
-      return null;
-    }
-    try {
-      this.lowRiskComparison = await this.reasoner.plan(
-        {
-          command: {
-            kind: 'READ_STATUS',
-            requestedSetpointPercent: null,
-            reason: 'Judge comparison',
-          },
-          principal: scenario.principal,
-          policy: this.policy,
-          twin: scenario.initialTwin,
-        },
-        AbortSignal.timeout(this.policy.agent.maximumRuntimeMs),
-      );
-      return this.lowRiskComparison;
-    } catch (error) {
-      if (!(error instanceof HisnError) || error.code !== 'AGENT_UNAVAILABLE') throw error;
-      this.lowRiskComparison = null;
-      return null;
-    }
   }
 
   incident(runId: string) {

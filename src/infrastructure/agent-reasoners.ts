@@ -417,7 +417,6 @@ function agentUnavailable(
   stage: 'PLAN' | 'INVESTIGATE' | 'RECOMMEND',
   failure?: unknown,
 ): HisnError {
-  logHostedFailure(stage, failure);
   return new HisnError(
     'AGENT_UNAVAILABLE',
     `Hosted AI ${stage.toLowerCase()} unavailable; the command remains held`,
@@ -427,19 +426,6 @@ function agentUnavailable(
       failureType: failure instanceof Error ? failure.name : 'NOT_CONFIGURED',
       failureReason: safeFailureReason(failure),
     },
-  );
-}
-
-function logHostedFailure(stage: string, failure: unknown): void {
-  if (process.env.VERCEL !== '1' || !(failure instanceof Error)) return;
-  console.warn(
-    JSON.stringify({
-      event: 'HOSTED_AGENT_UNAVAILABLE',
-      stage,
-      failureType: failure.name,
-      failureReason: safeFailureReason(failure),
-      providerMessage: failure.message.replaceAll(/\s+/g, ' ').slice(0, 320),
-    }),
   );
 }
 

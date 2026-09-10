@@ -137,7 +137,7 @@ export class LangGraphEvidenceAgent {
       timeout: this.timeoutMs,
       maxRetries: this.maximumRetries,
       reasoningEffort: 'low',
-    }).bindTools(tools, { tool_choice: 'auto', parallel_tool_calls: false });
+    }).bindTools(tools, { tool_choice: 'auto', parallel_tool_calls: true });
 
     let modelTurn = 0;
     const callModel = async (state: typeof MessagesAnnotation.State) => {
@@ -164,12 +164,12 @@ export class LangGraphEvidenceAgent {
       if (proposedCalls.length > 1) {
         appendTrace({
           phase: 'ADAPTATION',
-          headline: 'Parallel tool suggestions serialized',
-          detail:
-            'The executor accepted one model-selected tool so its observation could inform the next action.',
+          headline: 'Independent evidence calls batched',
+          detail: `${Math.min(proposedCalls.length, maximumToolCalls - requested.size)} model-selected calls will execute within the shared tool budget.`,
         });
       }
-      const selectedCalls = proposedCalls.slice(0, 1).map((call) => {
+      const remainingBudget = maximumToolCalls - requested.size;
+      const selectedCalls = proposedCalls.slice(0, remainingBudget).map((call) => {
         const evidenceTool = TOOL_BY_NAME[call.name];
         if (!evidenceTool) throw new TypeError(`Model requested unknown tool ${call.name}`);
         const parsedReason = z.object({ reason: z.string().min(8).max(180) }).safeParse(call.args);
@@ -268,7 +268,7 @@ function systemPrompt(request: AgentPlanRequest, initialPlan: AgentPlan): string
   return [
     'You are the bounded HISN-OT network-evidence agent running inside LangGraph.',
     'Choose and call Nokia CAMARA tools as trusted real-time data sources for the supplied command.',
-    'Call one tool at a time, inspect its observation, and then decide whether another tool is useful.',
+    'Batch independent required signals when useful, inspect their observations, and then decide whether another tool is justified.',
     `The server-enforced authorization floor requires these signals: ${required.join(', ')}.`,
     'Collect the required floor before optional evidence. If those observations are reassuring, stop unless a concrete result justifies escalation.',
     `You may add contextually useful tools, but may make at most ${request.policy.agent.maximumToolCalls} calls.`,

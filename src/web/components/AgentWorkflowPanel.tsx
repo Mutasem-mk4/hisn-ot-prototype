@@ -39,9 +39,7 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
   const hasAgentOutput =
     plan?.reasoningProvenance === 'LIVE' || recommendation?.reasoningProvenance === 'LIVE';
   const agentUnavailable =
-    snapshot.integration.agentReasoner === 'UNAVAILABLE' ||
-    (snapshot.lowRiskComparison === null && !hasAgentOutput) ||
-    agentFailed;
+    snapshot.integration.agentReasoner === 'UNAVAILABLE' || (agentFailed && !hasAgentOutput);
   const failureCode = textPayload(snapshot.currentEvent?.payload.errorCode, 'FAILED SAFE');
   const failureReason = textPayload(snapshot.currentEvent?.payload.failureReason, 'UNAVAILABLE');
   const failureDetail = textPayload(

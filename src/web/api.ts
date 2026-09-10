@@ -83,7 +83,13 @@ const RunSnapshotSchema: z.ZodType<RunSnapshot> = z
         agentReasoner: z.enum(['DETERMINISTIC', 'LANGGRAPH', 'UNAVAILABLE']),
       })
       .strict(),
-    lowRiskComparison: AgentPlanSchema.nullable(),
+    lowRiskComparison: z
+      .object({
+        risk: AgentPlanSchema.shape.risk,
+        selectedTools: AgentPlanSchema.shape.selectedTools,
+        basis: z.literal('POLICY_MINIMUM'),
+      })
+      .strict(),
     presentationTwin: TwinStateSchema,
     artifacts: z
       .object({

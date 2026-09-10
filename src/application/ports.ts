@@ -97,7 +97,11 @@ export type RunSnapshot = {
   safePressureBand: Policy['safePressureBand'];
   setPressureMaximumPercent: number;
   integration: IntegrationReadiness;
-  lowRiskComparison: AgentPlan | null;
+  lowRiskComparison: {
+    risk: RiskLevel;
+    selectedTools: EvidenceTool[];
+    basis: 'POLICY_MINIMUM';
+  };
   presentationTwin: TwinState;
   artifacts: WorkflowArtifacts;
   incidentAvailable: boolean;

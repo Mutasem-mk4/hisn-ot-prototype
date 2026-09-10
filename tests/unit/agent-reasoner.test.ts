@@ -242,7 +242,7 @@ describe('bounded evidence planning', () => {
     expect(executor).not.toHaveBeenCalled();
   });
 
-  it('serializes parallel model suggestions into observation-driven calls', async () => {
+  it('executes bounded parallel model suggestions', async () => {
     const lowRequest = {
       command: {
         kind: 'READ_STATUS' as const,
@@ -309,11 +309,14 @@ describe('bounded evidence planning', () => {
       new AbortController().signal,
     );
 
-    expect(investigation.plan.selectedTools).toEqual(['DEVICE_REACHABILITY']);
+    expect(investigation.plan.selectedTools).toEqual([
+      'DEVICE_REACHABILITY',
+      'NUMBER_VERIFICATION',
+    ]);
     expect(investigation.trace.map((step) => step.headline)).toContain(
-      'Parallel tool suggestions serialized',
+      'Independent evidence calls batched',
     );
-    expect(executor).toHaveBeenCalledTimes(1);
+    expect(executor).toHaveBeenCalledTimes(2);
   });
 
   it('accepts a policy-complete hosted plan from a chat completion', async () => {
