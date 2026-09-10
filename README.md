@@ -16,7 +16,7 @@ The industrial plant is a clearly labeled digital twin. Nokia responses show the
 
 ### [Open Judge Mode](https://hisn-ot-prototype.vercel.app/#judge)
 
-1. Run **Read-only inspection**. The agent needs one Device Reachability signal and does not change process state.
+1. Run **Read-only inspection**. Its minimum scope is Device Reachability; the agent may add a justified check and never changes process state.
 2. Submit the safe **52%** pressure change. The in-band command requires identity, location, and reachability evidence before it can reach `ALLOW`.
 3. Submit the unsafe **88%** pressure change. The out-of-band context escalates the minimum plan with SIM Swap and Device Swap. The independent **60% hard maximum** prevents execution.
 4. Open **Evidence Trace** to inspect the LangGraph goal, each model-requested tool, Nokia observation, adaptation, recommendation, and authoritative policy result.

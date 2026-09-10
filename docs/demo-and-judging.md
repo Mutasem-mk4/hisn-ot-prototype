@@ -8,7 +8,7 @@
 
 ### 0:20–0:40 — Prove adaptive scope
 
-Run the read-only inspection. Show `LANGGRAPH AGENT`, one Device Reachability call, no setpoint change, and no enforcement.
+Run the read-only inspection. Show `LANGGRAPH AGENT`, the one-signal Device Reachability minimum, any additional model-selected check, no setpoint change, and no enforcement.
 
 ### 0:40–1:05 — Prove safe control
 

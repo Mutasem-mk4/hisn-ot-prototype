@@ -138,6 +138,73 @@ describe('bounded evidence planning', () => {
     expect(fetchMock.mock.calls[0]?.[0]).toBe('https://api.groq.com/openai/v1/chat/completions');
   });
 
+  it('returns control to the model when it stops before the evidence floor', async () => {
+    const lowRequest = {
+      command: {
+        kind: 'READ_STATUS' as const,
+        requestedSetpointPercent: null,
+        reason: 'Read status only',
+      },
+      principal: scenario.principal,
+      policy,
+      twin: scenario.initialTwin,
+    };
+    const initialPlan = await new DeterministicAgentReasoner().plan(
+      lowRequest,
+      new AbortController().signal,
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(groqResponse({ content: 'No tool is needed.' }))
+        .mockResolvedValueOnce(
+          groqResponse({
+            content: null,
+            tool_calls: [
+              {
+                id: 'call-reachability-after-reminder',
+                type: 'function',
+                function: {
+                  name: 'get_device_reachability',
+                  arguments: JSON.stringify({
+                    reason: 'Complete the required reachability floor before concluding.',
+                  }),
+                },
+              },
+            ],
+          }),
+        )
+        .mockResolvedValueOnce(groqResponse({ content: 'Required evidence is complete.' })),
+    );
+    const reasoner = new LangGraphAgentReasoner(
+      {
+        baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
+        apiKey: 'redacted-key',
+        model: 'openai/gpt-oss-20b',
+      },
+      500,
+    );
+    const executor = vi.fn((tool) =>
+      Promise.resolve(evidenceCall(tool, { reachable: true, connectivity: ['DATA'] })),
+    );
+
+    const investigation = await reasoner.investigate(
+      lowRequest,
+      initialPlan,
+      executor,
+      new AbortController().signal,
+    );
+
+    expect(investigation.framework).toBe('LANGGRAPH');
+    expect(investigation.plan.selectedTools).toEqual(['DEVICE_REACHABILITY']);
+    expect(investigation.trace.map((step) => step.phase)).not.toContain('FALLBACK');
+    expect(investigation.trace.map((step) => step.headline)).toContain(
+      'Agent identified an incomplete evidence floor',
+    );
+    expect(executor).toHaveBeenCalledTimes(1);
+  });
+
   it('accepts a policy-complete hosted plan from a chat completion', async () => {
     const deterministicPlan = await new DeterministicAgentReasoner().plan(
       {
