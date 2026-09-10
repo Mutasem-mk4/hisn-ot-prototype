@@ -30,7 +30,7 @@ This is a prototype safety argument, not an IEC 61508/62443 certification, a saf
 - Authoritative result: `BLOCK_AND_CONTAIN`
 - Unsafe executions: 0
 - Gateway after enforcement: detached in DEMO simulation
-- Backup: active, protected, heartbeat sequence increasing
+- Backup: simulated safe control; heartbeat observations advance with elapsed time when ready
 
 ## Authority model
 
@@ -43,7 +43,11 @@ The agent interprets consequence, selects allowlisted tools, and emits a structu
 - Evidence outage becomes `UNAVAILABLE` and blocks a critical request.
 - Malformed model output uses a marked deterministic fallback.
 - Unexpected orchestration failure transitions to `FAILED_SAFE`; a held command is marked blocked.
-- Failed detachment does not claim `ENDPOINT_CONTAINED`.
+- The legacy workflow stage `ENDPOINT_CONTAINED` records completion of the containment attempt, not its success. The event headline, enforcement status, twin attachment and lattice distinguish unconfirmed detachment from confirmed simulated detachment. QoD and backup readiness are independent outcomes.
+
+Pressure percentages, the 60% command limit and the 42–52% normal band are prototype engineering assumptions, not certified limits. The twin approaches an accepted target with an eight-second first-order time constant; a stopped pump decays toward zero. Flow is a simple pressure/valve proxy, not a calibrated desalination model. The incident captures observations available when it was generated; zero-duration manual stepping is not proof of sustained continuity.
+
+STEP_UP leaves the command held. No approval endpoint exists, so expired/reused approval-token behavior cannot be claimed as implemented. Unknown evidence is distinct from confirmed failed controls and cannot by itself authorize containment. An uncertain enforcement intent is retained across restart and is not blindly repeated; automatic operator-state reconciliation remains unimplemented.
 
 ## Production assurance needed
 

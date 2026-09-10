@@ -6,7 +6,7 @@ import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastif
 import { z } from 'zod';
 import type { JudgeOrchestrator } from '../application/judge-orchestrator.js';
 import type { AppConfiguration } from '../infrastructure/configuration.js';
-import { ControlRequestSchema } from '../shared/contracts.js';
+import { ControlRequestSchema, TwinStateSchema } from '../shared/contracts.js';
 import { HisnError } from '../shared/errors.js';
 import type { EventHub } from './event-hub.js';
 import { SessionGuard } from './session-guard.js';
@@ -14,6 +14,7 @@ import { SessionGuard } from './session-guard.js';
 const NewRunSchema = z
   .object({ scenarioId: z.string().min(3), idempotencyKey: z.string().uuid() })
   .strict();
+const RehearsalRequestSchema = NewRunSchema.extend({ continuingTwin: TwinStateSchema.optional() });
 
 export async function buildServer(
   configuration: AppConfiguration,
@@ -48,8 +49,18 @@ export async function registerApplication(
   orchestrator: JudgeOrchestrator,
   eventHub: EventHub,
 ) {
-  const sessions = new SessionGuard(configuration.mode === 'LIVE');
+  const sessions = new SessionGuard(configuration.sessionSecret, configuration.secureCookies);
   await server.register(rateLimit, { global: false });
+  server.addHook('onRequest', (request, _reply, done) => {
+    if (configuration.mode !== 'DEMO' && request.url.startsWith('/api/')) {
+      throw new HisnError(
+        'AUTHORIZATION_DENIED',
+        'Interactive control is DEMO-only. Operator authentication and gateway identity binding are required for external operation.',
+        403,
+      );
+    }
+    done();
+  });
   server.addHook('onSend', async (_request, reply) => {
     reply
       .header('x-content-type-options', 'nosniff')
@@ -121,6 +132,43 @@ export async function registerApplication(
     },
   );
   server.post(
+    '/api/v1/judge-run/command',
+    { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
+    async (request) => {
+      sessions.verifyMutation(request);
+      const body = NewRunSchema.parse(request.body);
+      return orchestrator.submitCommand(body.scenarioId, body.idempotencyKey);
+    },
+  );
+  server.post(
+    '/api/v1/judge-run/rehearsal',
+    { config: { rateLimit: { max: 12, timeWindow: '1 minute' } } },
+    async (request) => {
+      sessions.verifyMutation(request);
+      const body = RehearsalRequestSchema.parse(request.body);
+      const frames = [
+        await orchestrator.createRun(body.scenarioId, body.idempotencyKey, body.continuingTwin),
+      ];
+      for (let step = 0; step < 16; step += 1) {
+        const current = frames.at(-1)!;
+        if (['COMPLETE', 'FAILED_SAFE'].includes(current.run.playbackStatus)) break;
+        frames.push(await orchestrator.control('NEXT'));
+      }
+      const finalFrame = frames.at(-1)!;
+      if (!['COMPLETE', 'FAILED_SAFE'].includes(finalFrame.run.playbackStatus)) {
+        throw new HisnError('INVALID_TRANSITION', 'Rehearsal exceeded its workflow bound', 500);
+      }
+      if (finalFrame.artifacts.decision?.state === 'ALLOW') {
+        frames.push(await orchestrator.control('PLAY'));
+        for (let sample = 0; sample < 12; sample += 1) {
+          frames.push(await orchestrator.simulate(250));
+        }
+        frames.push(await orchestrator.control('PAUSE'));
+      }
+      return { frames, incident: orchestrator.incident(finalFrame.run.id) };
+    },
+  );
+  server.post(
     '/api/v1/judge-run/control',
     { config: { rateLimit: { max: 120, timeWindow: '1 minute' } } },
     async (request) => {
@@ -146,6 +194,7 @@ export async function registerApplication(
   );
   server.get('/api/v1/events', async (request, reply) => {
     sessions.authorize(request);
+    const initial = await orchestrator.ensureRun();
     reply.hijack();
     reply.raw.writeHead(200, {
       'Content-Type': 'text/event-stream',
@@ -153,8 +202,9 @@ export async function registerApplication(
       Connection: 'keep-alive',
     });
     reply.raw.write(': connected\n\n');
+    reply.raw.write(`event: snapshot\ndata: ${JSON.stringify(initial)}\n\n`);
     const unsubscribe = eventHub.subscribe(reply.raw);
-    request.raw.on('close', unsubscribe);
+    reply.raw.on('close', unsubscribe);
   });
 
   const webRoot = resolve(process.cwd(), 'dist/web');

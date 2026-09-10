@@ -6,7 +6,7 @@ HISN-OT is a TypeScript modular monolith. The prototype needs one transactional 
 
 ```mermaid
 flowchart TB
-  UI[React presentation<br/>Network Proof Lattice] -->|validated /api/v1 + SSE| API[Fastify API<br/>session · CSRF · rate limit]
+  UI[React presentation<br/>state-bound facility schematic] -->|validated /api/v1 + SSE| API[Fastify API<br/>session · CSRF · rate limit]
   API --> APP[Incident Orchestrator<br/>backend playback · cancellation]
   APP --> GATE[Command Gateway]
   APP --> PLAN[Risk & Evidence Planner]
@@ -15,7 +15,7 @@ flowchart TB
   APP --> AUDIT[(SQLite Event & Incident Store)]
   PLAN --> REASONER{AgentReasoner port}
   REASONER --> SIMAI[Deterministic reasoner]
-  REASONER --> LLMAI[Structured HTTP reasoner<br/>validated output + fallback]
+  REASONER --> LLMAI[Groq-compatible hosted reasoner<br/>validated output + fallback]
   APP --> EVIDENCE{EvidenceProvider port}
   EVIDENCE --> SIME[DEMO fixtures]
   EVIDENCE --> NAC[Nokia NaC SDK / CAMARA APIs]
@@ -43,6 +43,7 @@ sequenceDiagram
   UI->>Gateway: POST validated command control
   Gateway->>Store: COMMAND_RECEIVED
   Gateway->>Twin: Hold request; do not change actual pressure
+  Gateway->>Safety: Reject unsafe numeric input immediately
   Twin->>Store: COMMAND_HELD
   Gateway->>Agent: Classify consequence and plan tools
   Agent-->>Gateway: CRITICAL + five allowlisted tools
@@ -55,7 +56,7 @@ sequenceDiagram
   Gateway->>Store: Authoritative BLOCK_AND_CONTAIN
   Gateway->>Network: Detach implicated attachment
   Gateway->>Network: Request QoD for backup flow
-  Gateway->>Twin: Activate safe-control backup
+  Gateway->>Twin: Activate backup only after confirmed handover
   Gateway->>Store: Persist continuity and incident report
   Store-->>UI: SSE snapshot from persisted state
 ```
@@ -106,7 +107,7 @@ Invalid edges throw `INVALID_TRANSITION` and are tested. Enforcement orchestrati
 | Nokia enforcement                       | same                                                            | Specialized Network detach and QoD session                                                                                                              |
 | Digital Twin                            | `src/domain/digital-twin.ts`                                    | Process state and continuity measurements                                                                                                               |
 | Audit store                             | `src/infrastructure/sqlite-audit-store.ts`                      | Hash-linked events, idempotent enforcement, reports                                                                                                     |
-| Authentication / authorization          | `src/server/session-guard.ts`                                   | Demo session, supervisor role, CSRF token                                                                                                               |
+| Authentication / authorization          | `src/server/session-guard.ts`                                   | HMAC-signed demo session, supervisor role, CSRF token                                                                                                   |
 | Observability                           | Fastify structured logs, correlation IDs, `/healthz`, `/readyz` | Redacted operational diagnostics                                                                                                                        |
 
 ## Reliability and security mechanics
@@ -114,10 +115,16 @@ Invalid edges throw `INVALID_TRANSITION` and are tested. Enforcement orchestrati
 - Zod schemas validate environment, JSON configuration, HTTP input, agent output, provider output, and persisted domain data.
 - Commands and enforcement use correlation IDs; enforcement records are unique by idempotency key.
 - Nokia SDK calls use bounded timeouts, retries, and abort signals. Unknown failures do not become evidence.
+- Side-effecting Nokia calls have retries disabled. The orchestrator persists an intent before invoking enforcement and retains unknown outcomes across restart. Run state and its transition event commit in one SQLite transaction. This is single-process coordination, not distributed exactly-once execution.
+- The baseline event retains the full policy and principal fixture. Resuming under changed policy fails safe. Audit reads validate hash links and payload hashes; they do not provide independently anchored tamper resistance.
+- A single backend simulation clock drives fixed-step process integration, simulation timestamps, controller heartbeats, scenario cadence, and UI motion parameters. Pause freezes that local clock; resume resets the wall-clock reference so it cannot jump. Playback multipliers scale simulated elapsed time only. Provider deadlines and live-system durations remain wall-clock based.
+- The equivalence regression runs the same 10 simulated seconds at 0.5×, 1×, 2×, and 4×. Acceptance tolerances are ±0.01 pressure percentage points, ±0.1 m³/h flow, and ±0.1 tank-level percentage points.
+- Back replays immutable event observations without undoing enforcement. SSE reconnect sends the authoritative snapshot immediately.
+- Successful detachment isolates the implicated simulated path. Backup ownership is applied only after both the continuity QoD and simulated safe-control activation succeed; an unconfirmed handover safe-stops the modeled pump.
 - A provider outage becomes `UNAVAILABLE`, and critical policy blocks. Unexpected orchestration failure enters `FAILED_SAFE` while the held command is marked blocked.
 - Server secrets never enter Vite configuration or browser responses. Structured log redaction covers authorization, cookies, and CSRF headers.
 - SQLite WAL and a hash-linked event chain support deterministic replay and audit-tamper detection. The hash chain is tamper-evident, not a digital signature or external timestamp authority.
 
 ## Production path
 
-Replace the in-memory demo session with the operator's identity provider and durable authorization store; provide Nokia NaC application authorization, operator consent, network identifiers, QoS profile, and slice attachment; replace the twin-only safe-control adapter with a certified, site-specific OT gateway integration; use managed storage and externally anchored audit signatures. These gaps are intentionally not disguised by DEMO mode.
+Replace the anonymous signed demo session with the operator's identity provider and durable authorization store; provide Nokia NaC application authorization, operator consent, network identifiers, QoS profile, and slice attachment; replace the twin-only safe-control adapter with a certified, site-specific OT gateway integration; use managed storage and externally anchored audit signatures. These gaps are intentionally not disguised by DEMO mode.

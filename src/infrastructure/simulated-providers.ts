@@ -15,8 +15,10 @@ import {
 
 export class SimulatedEvidenceProvider implements EvidenceProvider {
   readonly mode = 'DEMO' as const;
+  readonly source = 'SIMULATED' as const;
 
   async collect(tool: EvidenceTool, context: EvidenceContext, signal: AbortSignal) {
+    const started = performance.now();
     signal.throwIfAborted();
     const fixture = context.scenario.evidence[tool];
     await Promise.resolve();
@@ -28,7 +30,7 @@ export class SimulatedEvidenceProvider implements EvidenceProvider {
       requestStatus: fixture.status,
       redactedResult: fixture.redacted,
       provenance: fixture.status === 'UNAVAILABLE' ? 'UNAVAILABLE' : 'SIMULATED',
-      latencyMs: fixture.latencyMs,
+      latencyMs: Math.round(performance.now() - started),
       timestamp: new Date().toISOString(),
       correlationId: context.correlationId,
     });
@@ -41,6 +43,7 @@ export class SimulatedEvidenceProvider implements EvidenceProvider {
 
 export class SimulatedEnforcementProvider implements EnforcementProvider {
   readonly mode = 'DEMO' as const;
+  readonly source = 'SIMULATED' as const;
 
   async detachGateway(context: EnforcementContext, signal: AbortSignal) {
     signal.throwIfAborted();
@@ -75,7 +78,7 @@ export class SimulatedEnforcementProvider implements EnforcementProvider {
         status: 'SUCCEEDED',
         provenance: 'SIMULATED',
         redactedResult,
-        latencyMs: action === 'DETACH_GATEWAY' ? 128 : 164,
+        latencyMs: 0,
         timestamp: new Date().toISOString(),
         correlationId: context.correlationId,
         idempotencyKey: `${context.correlationId}:${action}`,

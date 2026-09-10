@@ -9,18 +9,38 @@ import {
 } from '../../src/infrastructure/simulated-providers.js';
 import { SqliteAuditStore } from '../../src/infrastructure/sqlite-audit-store.js';
 import { testPolicy, testScenario } from './fixtures.js';
+import type {
+  AgentReasoner,
+  EnforcementProvider,
+  EvidenceProvider,
+} from '../../src/application/ports.js';
+import type { Scenario } from '../../src/shared/contracts.js';
 
-export function createHarness(scenarioId = 'judge-valid-credentials-compromised-context') {
+export function createHarness(
+  scenarioId = 'judge-valid-credentials-compromised-context',
+  overrides: {
+    scenario?: Scenario;
+    enforcement?: EnforcementProvider;
+    evidence?: EvidenceProvider;
+    reasoner?: AgentReasoner;
+  } = {},
+) {
   const directory = mkdtempSync(join(tmpdir(), 'hisn-ot-test-'));
   const store = new SqliteAuditStore(join(directory, 'test.db'), resolve('migrations'));
   store.migrate();
   const orchestrator = new JudgeOrchestrator(
     store,
     testPolicy(),
-    [testScenario(), testScenario('judge-degraded-provider')],
-    new SimulatedEvidenceProvider(),
-    new SimulatedEnforcementProvider(),
-    new DeterministicAgentReasoner(),
+    overrides.scenario
+      ? [overrides.scenario]
+      : [
+          testScenario(),
+          testScenario('judge-safe-operating-change'),
+          testScenario('judge-degraded-provider'),
+        ],
+    overrides.evidence ?? new SimulatedEvidenceProvider(),
+    overrides.enforcement ?? new SimulatedEnforcementProvider(),
+    overrides.reasoner ?? new DeterministicAgentReasoner(),
   );
   return {
     store,

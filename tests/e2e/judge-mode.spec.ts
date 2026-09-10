@@ -1,10 +1,15 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { startScenario } from '../../scripts/browser-scenario.mjs';
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, context, baseURL }) => {
   await page.goto('/');
-  await expect(page.getByRole('button', { name: /Reset/i })).toBeVisible();
-  await page.getByRole('button', { name: /Reset/i }).click();
+  await startScenario(
+    context,
+    page,
+    baseURL ?? 'http://127.0.0.1:4321',
+    'judge-valid-credentials-compromised-context',
+  );
   await expect(page.getByRole('button', { name: 'Advance one backend event' })).toBeEnabled();
 });
 
@@ -12,10 +17,8 @@ test('explains the product immediately and exposes the primary action', async ({
   await expect(
     page.getByRole('heading', { name: /No critical command becomes a physical action/i }),
   ).toBeVisible();
-  await expect(page.getByRole('button', { name: /Run Judge Scenario/i })).toBeVisible();
-  await expect(
-    page.getByText('The attacker had valid credentials—and still failed.'),
-  ).toBeVisible();
+  await expect(page.getByRole('button', { name: /Run simulation/i })).toBeVisible();
+  await expect(page.getByText('Valid credentials. But should this command execute?')).toBeVisible();
 });
 
 test('supports keyboard stepping while keeping requested and actual pressure distinct', async ({
@@ -28,10 +31,49 @@ test('supports keyboard stepping while keeping requested and actual pressure dis
   await step.focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Gateway holds physical command' })).toBeVisible();
-  const instrument = page.getByRole('heading', { name: 'Physical state' }).locator('..');
+  const instrument = page.getByRole('heading', { name: 'Simulated process' }).locator('..');
   await expect(instrument).toContainText('46.0%');
   await expect(instrument).toContainText('88%');
-  await expect(instrument).toContainText('Held at HISN Gateway');
+  await expect(instrument).toContainText('BLOCKED');
+});
+
+test('shows an allowed plant response followed by an intercepted unsafe command', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !['desktop', 'projector'].includes(testInfo.project.name),
+    'The full judge interaction is exercised at the presentation viewports.',
+  );
+  await page.getByRole('button', { name: /Submit safe change/ }).click();
+  await page.getByRole('button', { name: 'Pause simulation' }).click();
+  await page.getByLabel('Simulation playback speed').selectOption('4');
+  await stepProof(page, 9);
+  await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
+  const process = page.getByRole('heading', { name: 'Simulated process' }).locator('..');
+  await expect(process).toContainText('Accepted setpoint52%');
+  await expect(process).toContainText('EXECUTED');
+
+  await page.getByRole('button', { name: 'Run simulation' }).click();
+  const pressure = process
+    .locator('.pressure-readout > div')
+    .filter({ hasText: 'Actual pressure' })
+    .locator('strong');
+  await expect.poll(async () => Number.parseFloat(await pressure.innerText())).toBeGreaterThan(46);
+  await page.getByRole('button', { name: 'Pause simulation' }).click();
+  await expect(page.getByRole('button', { name: 'Run simulation' })).toBeEnabled();
+  const pausedClock = await page.locator('.facility__clock b').innerText();
+  await page.waitForTimeout(400);
+  await expect(page.locator('.facility__clock b')).toHaveText(pausedClock);
+
+  await page.getByRole('button', { name: /Submit unsafe change/ }).click();
+  await page.getByRole('button', { name: 'Pause simulation' }).click();
+  await stepProof(page, 12);
+  await expect(page.getByText('BLOCK AND CONTAIN', { exact: true }).first()).toBeVisible();
+  await expect(process).toContainText('Accepted setpoint52%');
+  await expect(process).toContainText('Requested setpoint88%');
+  await expect(process).toContainText('BLOCKED');
+  await expect(process).toContainText('ControllerBACKUP');
+  await expect(process).toContainText('GatewayDETACHED');
 });
 
 test('completes the backend workflow, exposes trace, and exports the incident', async ({
@@ -85,4 +127,13 @@ async function expectNoSeriousViolations(page: Page) {
     ['serious', 'critical'].includes(violation.impact ?? ''),
   );
   expect(serious).toEqual([]);
+}
+
+async function stepProof(page: Page, steps: number) {
+  const step = page.getByRole('button', { name: 'Advance one backend event' });
+  for (let index = 0; index < steps; index += 1) {
+    await expect(step).toBeEnabled();
+    await step.click();
+    await expect(page.locator('.event-sequence')).toHaveText(String(index + 2).padStart(2, '0'));
+  }
 }

@@ -1,11 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { completeRun, createHarness } from '../helpers/harness.js';
 
 describe('complete judge workflow', () => {
   it('blocks and contains the dangerous request while continuity remains measurable', async () => {
+    vi.useFakeTimers();
     const harness = createHarness();
     try {
-      const snapshot = await completeRun(harness.orchestrator, harness.scenarioId);
+      await completeRun(harness.orchestrator, harness.scenarioId);
+      await harness.orchestrator.control('PLAY');
+      vi.advanceTimersByTime(1_000);
+      await harness.orchestrator.tick();
+      const snapshot = await harness.orchestrator.snapshot();
       expect(snapshot.run.playbackStatus).toBe('COMPLETE');
       expect(snapshot.run.workflowState).toBe('INCIDENT_REPORTED');
       expect(snapshot.artifacts.decision?.state).toBe('BLOCK_AND_CONTAIN');
@@ -20,6 +25,73 @@ describe('complete judge workflow', () => {
         'ACTIVATE_SAFE_CONTROL',
       ]);
     } finally {
+      vi.useRealTimers();
+      harness.close();
+    }
+  });
+
+  it('executes a safe setpoint, then blocks an unsafe command without changing the accepted input', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-07T12:00:00.000Z'));
+    const harness = createHarness('judge-safe-operating-change');
+    try {
+      let snapshot = await completeRun(harness.orchestrator, harness.scenarioId);
+      expect(snapshot.artifacts.decision?.state).toBe('ALLOW');
+      expect(snapshot.run.twin.acceptedPressurePercent).toBe(52);
+      expect(snapshot.run.twin.commandHistory.at(-1)?.outcome).toBe('EXECUTED');
+
+      await harness.orchestrator.control('PLAY');
+      vi.advanceTimersByTime(8_000);
+      await harness.orchestrator.tick();
+      snapshot = await harness.orchestrator.snapshot();
+      expect(snapshot.run.twin.actualPressurePercent).toBeGreaterThan(46);
+      expect(snapshot.run.twin.actualPressurePercent).toBeLessThan(52);
+
+      snapshot = await harness.orchestrator.submitCommand(
+        'judge-valid-credentials-compromised-context',
+      );
+      while (snapshot.run.playbackStatus !== 'COMPLETE') {
+        snapshot = await harness.orchestrator.control('NEXT');
+      }
+      expect(snapshot.artifacts.decision?.state).toBe('BLOCK_AND_CONTAIN');
+      expect(snapshot.run.twin.acceptedPressurePercent).toBe(52);
+      expect(snapshot.run.twin.requestedPressurePercent).toBe(88);
+      expect(snapshot.run.twin.commandHistory.at(-1)?.outcome).toBe('BLOCKED');
+      expect(snapshot.run.twin.actualPressurePercent).toBeLessThan(52);
+    } finally {
+      vi.useRealTimers();
+      harness.close();
+    }
+  });
+
+  it('uses one pausable simulation clock and applies playback speed only to simulated time', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-07T12:00:00.000Z'));
+    const harness = createHarness('judge-safe-operating-change');
+    try {
+      let snapshot = await harness.orchestrator.createRun(harness.scenarioId);
+      vi.advanceTimersByTime(2_000);
+      await harness.orchestrator.tick();
+      expect((await harness.orchestrator.snapshot()).run.twin.simulationElapsedMs).toBe(0);
+
+      await harness.orchestrator.control('PLAY');
+      vi.advanceTimersByTime(1_000);
+      await harness.orchestrator.tick();
+      snapshot = await harness.orchestrator.control('PAUSE');
+      expect(snapshot.run.twin.simulationElapsedMs).toBe(1_000);
+
+      vi.advanceTimersByTime(5_000);
+      await harness.orchestrator.tick();
+      expect((await harness.orchestrator.snapshot()).run.twin.simulationElapsedMs).toBe(1_000);
+
+      await harness.orchestrator.control('SET_SPEED', 4);
+      await harness.orchestrator.control('PLAY');
+      vi.advanceTimersByTime(500);
+      await harness.orchestrator.tick();
+      snapshot = await harness.orchestrator.control('PAUSE');
+      expect(snapshot.run.twin.simulationElapsedMs).toBe(3_000);
+    } finally {
+      vi.useRealTimers();
       harness.close();
     }
   });

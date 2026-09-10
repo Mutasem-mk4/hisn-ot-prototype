@@ -46,7 +46,7 @@
   "containment": {
     "decisionStates": ["ALLOW", "STEP_UP", "BLOCK", "BLOCK_AND_CONTAIN"],
     "criticalAnomalyCount": 2,
-    "continuityQosProfile": "MISSION_CRITICAL_CONTINUITY",
+    "continuityQosProfile": "QOS_L",
     "continuityDurationSeconds": 300,
     "recoveryRequirements": [
       "Re-enrol the operator device and SIM",

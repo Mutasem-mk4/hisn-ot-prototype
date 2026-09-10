@@ -1,4 +1,4 @@
-# Network Proof Lattice Design System
+# HISN-OT Facility Simulation Design System
 
 ## Intent
 
@@ -6,14 +6,14 @@ The interface is an industrial safety instrument combined with an editorial data
 
 ## Signature structure
 
-The Network Proof Lattice shows a held command crossing four trust layers:
+The facility schematic shows a held command crossing four trust layers while the physical process remains readable:
 
 1. Identity — credentials and number binding
 2. Presence — SIM/device change and facility location
 3. Connectivity — current reachability/attachment context
 4. Physical Safety — deterministic operating policy
 
-Waiting, verified, and failed nodes assemble from backend event state. After authorization, red and cyan topology routes show the compromised attachment severed and trusted backup path prioritized. At narrow container widths, the diagram becomes a text-first evidence sequence.
+Waiting, verified, and failed evidence states assemble from backend snapshots. After authorization, topology routes show the compromised attachment severed and the trusted backup path taking ownership only after confirmed handover. Physical water uses a solid cyan route; digital control and evidence use thin dashed routes.
 
 ## Tokens
 
@@ -35,9 +35,9 @@ One-pixel structural rules, clipped corners, orthogonal routes, and fortress-gat
 ## Components
 
 - Original HISN-OT gate mark and wordmark
-- Control Rail with Play/Pause, Back, Step, Reset, Speed, Explain, and Present
+- Control deck with separate simulation playback and pump setpoint groups
 - Event Banner sourced from the current persisted event
-- Network Proof Lattice and narrow-width proof sequence
+- Interactive desalination facility SVG with component inspector
 - Physical State instrument with independent requested/actual values
 - Adaptive Evidence comparison
 - Contract evidence table
@@ -47,15 +47,14 @@ One-pixel structural rules, clipped corners, orthogonal routes, and fortress-gat
 
 ## Motion
 
-Only state-linked motion is used: process heartbeat, pressure marker movement, progress, and containment-route travel. `prefers-reduced-motion` collapses every animation and transition to effectively zero duration without hiding state.
+Only state-linked motion is used: pump rotation, flow-marker travel, tank/valve transitions, evidence travel, progress, and containment routes. `prefers-reduced-motion` collapses every animation and transition to effectively zero duration without hiding state.
 
 ## Responsive and accessible behavior
 
 - Reference targets: 1440×900 laptop, 1280×720 projector, tablet, and 390×844 mobile.
-- Wide Judge Mode places lattice and physical instrumentation together.
-- Below 1050 px, supporting instruments follow the lattice and primary navigation becomes a persistent bottom rail.
-- Below 720 px, controls become compact, the SVG lattice becomes a semantic ordered list, and report columns stack.
-- A container query also swaps the lattice presentation based on its own available width.
+- Wide Judge Mode places digital proof and physical equipment in one schematic with an adjacent inspector.
+- Below 1050 px, control groups stack and primary navigation becomes a persistent bottom rail.
+- Below 720 px, the facility uses a labeled horizontal viewport and report columns stack.
 - All operations have accessible names, visible focus, keyboard access, textual status, and live announcements.
 - Semantic tables, headings, definition lists, progressbar semantics, and SVG alternative descriptions support assistive technology.
 - Automated axe checks reject serious or critical violations in every Playwright viewport.

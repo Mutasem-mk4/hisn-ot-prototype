@@ -152,7 +152,45 @@ export class SqliteAuditStore implements AuditStore {
     const rows = this.database
       .prepare('SELECT * FROM domain_events WHERE run_id = ? ORDER BY sequence ASC')
       .all(runId) as EventRow[];
-    return rows.map(mapEvent);
+    const events = rows.map(mapEvent);
+    let previousHash = 'GENESIS';
+    for (const [index, event] of events.entries()) {
+      const content = {
+        runId: event.runId,
+        eventType: event.eventType,
+        workflowState: event.workflowState,
+        payload: event.payload,
+        occurredAt: event.occurredAt,
+      };
+      if (
+        event.sequence !== index + 1 ||
+        event.previousHash !== previousHash ||
+        event.integrityHash !== eventHash(content, event.sequence, previousHash)
+      ) {
+        throw new Error('Audit integrity validation failed');
+      }
+      previousHash = event.integrityHash;
+    }
+    return events;
+  }
+
+  commitTransition(run: RunRecord, event: EventAppend): DomainEvent {
+    return this.database.transaction(() => {
+      const appended = this.appendEvent(event);
+      run.presentationCursor = appended.sequence;
+      this.updateRun(run);
+      return appended;
+    })();
+  }
+
+  completeEnforcement(call: EnforcementCall, runId: string): EnforcementCall {
+    const validated = EnforcementCallSchema.parse(call);
+    this.database
+      .prepare(
+        'UPDATE enforcement_actions SET response_json = ? WHERE idempotency_key = ? AND run_id = ?',
+      )
+      .run(JSON.stringify(validated), validated.idempotencyKey, runId);
+    return validated;
   }
 
   saveEnforcement(call: EnforcementCall, runId: string): EnforcementCall {

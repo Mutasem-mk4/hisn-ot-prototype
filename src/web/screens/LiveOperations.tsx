@@ -27,9 +27,9 @@ export function LiveOperations({ snapshot }: { snapshot: RunSnapshot }) {
           <header>
             <div>
               <span className="eyebrow">Pressure history</span>
-              <h2>Stable operating envelope</h2>
+              <h2>Recorded operating envelope</h2>
             </div>
-            <StatusMark status="AVAILABLE">Event stream live</StatusMark>
+            <StatusMark status="SIMULATED">Simulated observations</StatusMark>
           </header>
           <svg
             viewBox="0 0 720 250"
@@ -65,8 +65,8 @@ export function LiveOperations({ snapshot }: { snapshot: RunSnapshot }) {
               <b>{twin.backupHeartbeatSequence}</b>
             </div>
             <div>
-              <span>Path latency</span>
-              <b>{twin.networkLatencyMs} ms</b>
+              <span>Maximum observation gap</span>
+              <b>{twin.maximumHeartbeatGapMs} ms</b>
             </div>
           </div>
         </section>
@@ -94,7 +94,7 @@ export function ScreenIntro({
 }
 
 function sparkPath(values: number[]) {
-  const points = values.length > 1 ? values : [46, 46];
+  const points = values;
   return points
     .map((value, index) => {
       const x = (index / Math.max(1, points.length - 1)) * 720;

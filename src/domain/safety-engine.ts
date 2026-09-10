@@ -8,14 +8,22 @@ export function evaluatePhysicalSafety(command: Command, policy: Policy): Safety
     configuredMaximum !== null &&
     requestedSetpoint !== null &&
     requestedSetpoint > configuredMaximum;
+  const invalid =
+    command.kind === 'SET_PRESSURE' &&
+    (requestedSetpoint === null ||
+      !Number.isFinite(requestedSetpoint) ||
+      requestedSetpoint < 0 ||
+      configuredMaximum === null);
 
   return {
-    permitted: !exceedsMaximum,
+    permitted: !invalid && !exceedsMaximum,
     policyVersion: policy.policyVersion,
     configuredMaximumPercent: configuredMaximum,
     requestedSetpointPercent: requestedSetpoint,
-    failedLimits: exceedsMaximum
-      ? [`Requested ${requestedSetpoint}% exceeds configured maximum ${configuredMaximum}%`]
-      : [],
+    failedLimits: invalid
+      ? ['SET_PRESSURE requires a finite nonnegative setpoint and configured maximum']
+      : exceedsMaximum
+        ? [`Requested ${requestedSetpoint}% exceeds configured maximum ${configuredMaximum}%`]
+        : [],
   };
 }

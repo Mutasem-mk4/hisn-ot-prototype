@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { setTimeout as delay } from 'node:timers/promises';
 import {
   NetworkAsCodeApiClient,
   NetworkAsCodeApiError,
@@ -22,19 +23,11 @@ import {
 } from '../shared/contracts.js';
 import type { NacCredentials } from './configuration.js';
 
-const LocationResponseSchema = z
-  .object({
-    verificationResult: z.enum(['TRUE', 'FALSE', 'PARTIAL', 'UNKNOWN']),
-    matchRate: z.number().min(0).max(100).optional(),
-    lastLocationTime: z.string().datetime().optional(),
-    device: z.unknown().optional(),
-  })
-  .strict();
-
 type ToolResult = Record<string, unknown>;
 
 export class NokiaEvidenceProvider implements EvidenceProvider {
   readonly mode: Exclude<RuntimeMode, 'DEMO'>;
+  readonly source: 'NOKIA_SANDBOX' | 'NOKIA_LIVE';
   private readonly client: NetworkAsCodeApiClient;
   private healthy = false;
 
@@ -45,9 +38,11 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
     maximumAttempts: number,
   ) {
     this.mode = mode;
+    this.source = mode === 'LIVE' ? 'NOKIA_LIVE' : 'NOKIA_SANDBOX';
     this.client = new NetworkAsCodeApiClient({
       apiKey: credentials.apiKey,
       baseUrl: credentials.baseUrl,
+      rapidapiHost: credentials.rapidapiHost,
       timeoutInSeconds: timeoutMs / 1000,
       maxRetries: Math.max(0, maximumAttempts - 1),
     });
@@ -60,6 +55,7 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
       this.healthy = true;
       return this.call(tool, context, 'SUCCEEDED', this.mode, redactedResult, startedAt);
     } catch (error) {
+      this.healthy = false;
       if (signal.aborted) throw error;
       if (!isProviderFailure(error)) throw error;
       return this.call(
@@ -96,8 +92,11 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
   }
 
   private async verifyNumber(context: EvidenceContext, signal: AbortSignal) {
+    if (!this.credentials.accessToken) {
+      throw new TypeError('Subscriber authorization is not configured');
+    }
     const response = await this.client.numberVerification.verify(
-      { phoneNumber: this.credentials.operatorPhone },
+      { phoneNumber: this.phoneNumber(context) },
       this.requestOptions(context, signal),
     );
     return { verified: response.devicePhoneNumberVerified, subject: 'operator-number:redacted' };
@@ -106,7 +105,7 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
   private async checkSimSwap(context: EvidenceContext, signal: AbortSignal) {
     const response = await this.client.simSwap.check(
       {
-        phoneNumber: this.credentials.operatorPhone,
+        phoneNumber: this.phoneNumber(context),
         maxAge: context.policy.evidence.simSwapMaximumAgeHours,
       },
       this.requestOptions(context, signal),
@@ -120,7 +119,7 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
   private async checkDeviceSwap(context: EvidenceContext, signal: AbortSignal) {
     const response = await this.client.deviceSwap.check(
       {
-        phoneNumber: this.credentials.operatorPhone,
+        phoneNumber: this.phoneNumber(context),
         maxAge: context.policy.evidence.deviceSwapMaximumAgeHours,
       },
       this.requestOptions(context, signal),
@@ -132,43 +131,34 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
   }
 
   private async verifyLocation(context: EvidenceContext, signal: AbortSignal) {
-    const response = await this.client.fetch(
-      'location-verification/v1/verify',
+    // SDK 10.0.0's generated Area type omits the circle fields required by the API.
+    const area = {
+      areaType: 'CIRCLE',
+      center: {
+        latitude: this.credentials.geofence.latitude,
+        longitude: this.credentials.geofence.longitude,
+      },
+      radius: this.credentials.geofence.radiusMeters,
+    } as const;
+    const response = await this.client.location.verifyV1(
       {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          device: { phoneNumber: this.credentials.operatorPhone },
-          area: {
-            areaType: 'CIRCLE',
-            center: {
-              latitude: this.credentials.geofence.latitude,
-              longitude: this.credentials.geofence.longitude,
-            },
-            radius: this.credentials.geofence.radiusMeters,
-          },
-          maxAge: context.policy.evidence.locationMaximumAgeSeconds,
-        }),
+        device: { phoneNumber: this.phoneNumber(context) },
+        area,
+        maxAge: context.policy.evidence.locationMaximumAgeSeconds,
       },
       this.requestOptions(context, signal),
     );
-    if (!response.ok)
-      throw new NetworkAsCodeApiError({
-        message: 'Location verification failed',
-        statusCode: response.status,
-      });
-    const parsed = LocationResponseSchema.parse(await response.json());
     return {
-      verificationResult: parsed.verificationResult,
-      matchRate: parsed.matchRate,
+      verificationResult: response.verificationResult,
+      matchRate: response.matchRate,
       geofence: 'approved-facility:redacted',
-      lastLocationTime: parsed.lastLocationTime,
+      lastLocationTime: response.lastLocationTime,
     };
   }
 
   private async checkReachability(context: EvidenceContext, signal: AbortSignal) {
     const response = await this.client.deviceStatus.retrieveReachabilityStatus(
-      { device: { phoneNumber: this.credentials.operatorPhone } },
+      { device: { phoneNumber: this.phoneNumber(context) } },
       this.requestOptions(context, signal),
     );
     return {
@@ -183,10 +173,16 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
       abortSignal: signal,
       timeoutInSeconds: this.timeoutMs / 1000,
       headers: {
-        Authorization: `Bearer ${this.credentials.accessToken}`,
+        ...(this.credentials.accessToken
+          ? { Authorization: `Bearer ${this.credentials.accessToken}` }
+          : {}),
         'x-correlator': context.correlationId,
       },
     };
+  }
+
+  private phoneNumber(context: EvidenceContext) {
+    return context.scenario.telecomDevice?.phoneNumber ?? this.credentials.operatorPhone;
   }
 
   private call(
@@ -213,6 +209,7 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
 
 export class NokiaEnforcementProvider implements EnforcementProvider {
   readonly mode: Exclude<RuntimeMode, 'DEMO'>;
+  readonly source: 'NOKIA_SANDBOX' | 'NOKIA_LIVE';
   private readonly client: NetworkAsCodeApiClient;
   private healthy = false;
 
@@ -220,19 +217,26 @@ export class NokiaEnforcementProvider implements EnforcementProvider {
     mode: Exclude<RuntimeMode, 'DEMO'>,
     private readonly credentials: NacCredentials,
     private readonly timeoutMs: number,
-    maximumAttempts: number,
   ) {
     this.mode = mode;
+    this.source = mode === 'LIVE' ? 'NOKIA_LIVE' : 'NOKIA_SANDBOX';
     this.client = new NetworkAsCodeApiClient({
       apiKey: credentials.apiKey,
       baseUrl: credentials.baseUrl,
+      rapidapiHost: credentials.rapidapiHost,
       timeoutInSeconds: timeoutMs / 1000,
-      maxRetries: Math.max(0, maximumAttempts - 1),
+      maxRetries: 0,
     });
   }
 
   async detachGateway(context: EnforcementContext, signal: AbortSignal) {
     return this.execute(context, 'DETACH_GATEWAY', signal, async () => {
+      if (!this.credentials.operationalSliceId || !this.credentials.gatewayNai) {
+        return {
+          status: 'UNAVAILABLE' as const,
+          result: { reason: 'Specialized-network attachment is not configured' },
+        };
+      }
       const attachments = await this.client.slice.getDeviceAttachments(
         this.requestOptions(context, signal),
       );
@@ -251,7 +255,8 @@ export class NokiaEnforcementProvider implements EnforcementProvider {
         this.requestOptions(context, signal),
       );
       return {
-        status: 'SUCCEEDED' as const,
+        status:
+          response.deviceStatus === 'DETACHED' ? ('SUCCEEDED' as const) : ('UNAVAILABLE' as const),
         result: {
           attachment: response.deviceStatus ?? 'DETACH_REQUESTED',
           resource: 'gateway:redacted',
@@ -264,25 +269,46 @@ export class NokiaEnforcementProvider implements EnforcementProvider {
     return this.execute(context, 'QUALITY_ON_DEMAND', signal, async () => {
       const response = await this.client.qod.createSessionV1(
         {
-          device: {
-            ipv4Address: {
-              publicAddress: this.credentials.backupIpv4,
-              privateAddress: this.credentials.backupIpv4,
-            },
-          },
+          device: { phoneNumber: this.credentials.backupPhone },
           applicationServer: { ipv4Address: this.credentials.appServerIpv4 },
           qosProfile: context.policy.containment.continuityQosProfile,
           duration: context.policy.containment.continuityDurationSeconds,
         },
         this.requestOptions(context, signal),
       );
+      const lifecycle = [response.qosStatus];
+      let current = response;
+      for (let attempt = 0; attempt < 2 && current.qosStatus === 'REQUESTED'; attempt += 1) {
+        await delay(150, undefined, { signal });
+        current = await this.client.qod.getSessionV1(
+          { sessionId: response.sessionId },
+          this.requestOptions(context, signal),
+        );
+        lifecycle.push(current.qosStatus);
+      }
+      let cleanup: 'RELEASED' | 'FAILED' = 'RELEASED';
+      try {
+        await this.client.qod.deleteSessionV1(
+          { sessionId: response.sessionId },
+          this.requestOptions(context, AbortSignal.timeout(this.timeoutMs)),
+        );
+      } catch (error) {
+        if (!isProviderFailure(error)) throw error;
+        cleanup = 'FAILED';
+      }
       return {
         status:
-          response.qosStatus === 'UNAVAILABLE' ? ('UNAVAILABLE' as const) : ('SUCCEEDED' as const),
+          current.qosStatus === 'AVAILABLE'
+            ? ('SUCCEEDED' as const)
+            : current.qosStatus === 'REQUESTED'
+              ? ('PENDING' as const)
+              : ('UNAVAILABLE' as const),
         result: {
-          qosStatus: response.qosStatus,
+          qosStatus: current.qosStatus,
+          lifecycle,
           session: 'qod-session:redacted',
           duration: response.duration,
+          cleanup,
         },
       };
     });
@@ -297,7 +323,9 @@ export class NokiaEnforcementProvider implements EnforcementProvider {
       abortSignal: signal,
       timeoutInSeconds: this.timeoutMs / 1000,
       headers: {
-        Authorization: `Bearer ${this.credentials.accessToken}`,
+        ...(this.credentials.accessToken
+          ? { Authorization: `Bearer ${this.credentials.accessToken}` }
+          : {}),
         'x-correlator': context.correlationId,
       },
     };
@@ -307,12 +335,15 @@ export class NokiaEnforcementProvider implements EnforcementProvider {
     context: EnforcementContext,
     action: EnforcementCall['action'],
     signal: AbortSignal,
-    invoke: () => Promise<{ status: 'SUCCEEDED' | 'UNAVAILABLE'; result: ToolResult }>,
+    invoke: () => Promise<{
+      status: 'SUCCEEDED' | 'PENDING' | 'UNAVAILABLE';
+      result: ToolResult;
+    }>,
   ) {
     const startedAt = performance.now();
     try {
       const outcome = await invoke();
-      this.healthy = outcome.status === 'SUCCEEDED';
+      this.healthy = outcome.status === 'SUCCEEDED' || outcome.status === 'PENDING';
       return this.call(context, action, outcome.status, outcome.result, startedAt);
     } catch (error) {
       if (signal.aborted) throw error;
@@ -330,7 +361,7 @@ export class NokiaEnforcementProvider implements EnforcementProvider {
   private call(
     context: EnforcementContext,
     action: EnforcementCall['action'],
-    status: 'SUCCEEDED' | 'UNAVAILABLE',
+    status: 'SUCCEEDED' | 'PENDING' | 'UNAVAILABLE',
     redactedResult: ToolResult,
     startedAt: number,
   ) {
@@ -338,7 +369,7 @@ export class NokiaEnforcementProvider implements EnforcementProvider {
       id: randomUUID(),
       action,
       status,
-      provenance: status === 'SUCCEEDED' ? this.mode : 'UNAVAILABLE',
+      provenance: status === 'SUCCEEDED' || status === 'PENDING' ? this.mode : 'UNAVAILABLE',
       redactedResult,
       latencyMs: Math.round(performance.now() - startedAt),
       timestamp: new Date().toISOString(),

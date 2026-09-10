@@ -2,6 +2,64 @@
   "schemaVersion": 1,
   "scenarios": [
     {
+      "id": "judge-safe-operating-change",
+      "name": "Trusted operator, safe operating change",
+      "assetId": "asset-desalination-line-a",
+      "principal": {
+        "subjectId": "operator-redacted",
+        "role": "PRIVILEGED_OPERATOR",
+        "credentialsValid": true
+      },
+      "telecomDevice": { "phoneNumber": "+99999991001" },
+      "command": {
+        "kind": "SET_PRESSURE",
+        "requestedSetpointPercent": 52,
+        "reason": "Judge-requested production increase"
+      },
+      "initialTwin": {
+        "actualPressurePercent": 46,
+        "requestedPressurePercent": null,
+        "pumpState": "RUNNING",
+        "valvePositionPercent": 47,
+        "flowRateM3PerHour": 1240,
+        "primaryHeartbeatSequence": 4201,
+        "backupHeartbeatSequence": 9188,
+        "activeController": "PRIMARY",
+        "gatewayAttachment": "OPERATIONAL",
+        "primaryAttachment": "OPERATIONAL",
+        "backupAttachment": "OPERATIONAL",
+        "networkLatencyMs": 31,
+        "commandHistory": []
+      },
+      "evidence": {
+        "NUMBER_VERIFICATION": {
+          "status": "SUCCEEDED",
+          "redacted": { "verified": true, "subject": "+***-***-0184" },
+          "latencyMs": 118
+        },
+        "SIM_SWAP": {
+          "status": "SUCCEEDED",
+          "redacted": { "swapped": false, "windowHours": 72 },
+          "latencyMs": 143
+        },
+        "DEVICE_SWAP": {
+          "status": "SUCCEEDED",
+          "redacted": { "swapped": false, "windowHours": 168 },
+          "latencyMs": 129
+        },
+        "LOCATION_VERIFICATION": {
+          "status": "SUCCEEDED",
+          "redacted": { "verificationResult": "TRUE", "facility": "Aqaba site boundary" },
+          "latencyMs": 176
+        },
+        "DEVICE_REACHABILITY": {
+          "status": "SUCCEEDED",
+          "redacted": { "reachable": true, "connectivity": ["DATA"] },
+          "latencyMs": 96
+        }
+      }
+    },
+    {
       "id": "judge-valid-credentials-compromised-context",
       "name": "Valid credentials, compromised context",
       "assetId": "asset-desalination-line-a",
@@ -10,6 +68,7 @@
         "role": "PRIVILEGED_OPERATOR",
         "credentialsValid": true
       },
+      "telecomDevice": { "phoneNumber": "+99999991000" },
       "command": {
         "kind": "SET_PRESSURE",
         "requestedSetpointPercent": 88,
@@ -67,6 +126,7 @@
         "role": "PRIVILEGED_OPERATOR",
         "credentialsValid": true
       },
+      "telecomDevice": { "phoneNumber": "+99999991001" },
       "command": {
         "kind": "SET_PRESSURE",
         "requestedSetpointPercent": 58,

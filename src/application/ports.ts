@@ -44,8 +44,12 @@ export type EvidenceContext = {
   policy: Policy;
 };
 
+export type ProviderSource =
+  'SIMULATED' | 'NOKIA_SANDBOX' | 'NOKIA_SANDBOX_WITH_FALLBACK' | 'NOKIA_LIVE' | 'UNAVAILABLE';
+
 export interface EvidenceProvider {
   readonly mode: RuntimeMode;
+  readonly source: ProviderSource;
   collect(tool: EvidenceTool, context: EvidenceContext, signal: AbortSignal): Promise<EvidenceCall>;
   health(): Promise<'AVAILABLE' | 'DEGRADED' | 'UNAVAILABLE'>;
 }
@@ -54,6 +58,7 @@ export type EnforcementContext = EvidenceContext & { decision: DecisionRecord };
 
 export interface EnforcementProvider {
   readonly mode: RuntimeMode;
+  readonly source: ProviderSource;
   detachGateway(context: EnforcementContext, signal: AbortSignal): Promise<EnforcementCall>;
   protectBackup(context: EnforcementContext, signal: AbortSignal): Promise<EnforcementCall>;
   health(): Promise<'AVAILABLE' | 'DEGRADED' | 'UNAVAILABLE'>;
@@ -99,6 +104,8 @@ export type IntegrationReadiness = {
   scenario: 'READY' | 'NOT_READY';
   evidenceProvider: 'AVAILABLE' | 'DEGRADED' | 'UNAVAILABLE';
   enforcementProvider: 'AVAILABLE' | 'DEGRADED' | 'UNAVAILABLE';
+  evidenceSource: ProviderSource;
+  enforcementSource: ProviderSource;
   agentReasoner: 'DETERMINISTIC' | 'LIVE_LLM';
 };
 
@@ -118,8 +125,10 @@ export interface AuditStore {
   runById(runId: string): RunRecord | null;
   runByCommandIdempotencyKey(idempotencyKey: string): RunRecord | null;
   appendEvent(event: EventAppend): DomainEvent;
+  commitTransition(run: RunRecord, event: EventAppend): DomainEvent;
   eventsForRun(runId: string): DomainEvent[];
   saveEnforcement(call: EnforcementCall, runId: string): EnforcementCall;
+  completeEnforcement(call: EnforcementCall, runId: string): EnforcementCall;
   enforcementForRun(runId: string): EnforcementCall[];
   saveIncident(runId: string, correlationId: string, report: IncidentReport): void;
   incidentForRun(runId: string): IncidentReport | null;

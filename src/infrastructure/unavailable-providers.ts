@@ -14,6 +14,7 @@ import {
 
 export class UnavailableEvidenceProvider implements EvidenceProvider {
   readonly mode = 'SANDBOX' as const;
+  readonly source = 'UNAVAILABLE' as const;
 
   async collect(tool: EvidenceTool, context: EvidenceContext) {
     return Promise.resolve(
@@ -38,6 +39,7 @@ export class UnavailableEvidenceProvider implements EvidenceProvider {
 
 export class UnavailableEnforcementProvider implements EnforcementProvider {
   readonly mode = 'SANDBOX' as const;
+  readonly source = 'UNAVAILABLE' as const;
 
   detachGateway(context: EnforcementContext) {
     return this.result(context, 'DETACH_GATEWAY');

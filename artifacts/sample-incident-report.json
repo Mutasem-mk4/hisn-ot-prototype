@@ -1,20 +1,87 @@
 {
-  "id": "cfcc9712-688f-4dfb-a0b8-6fcf2baa4b0e",
+  "id": "10f76946-4c54-4490-be54-57c80be79533",
   "runtimeMode": "DEMO",
-  "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
-  "generatedAt": "2026-09-04T17:36:28.727Z",
+  "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63",
+  "generatedAt": "2026-09-09T03:43:01.293Z",
   "timeline": [
     {
-      "id": "68ffc09c-ff4f-4468-8b45-9e6876951c6c",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "f88c1a50-e65f-481e-a765-c52f52661ba6",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 1,
       "eventType": "PROCESS_BASELINE_OBSERVED",
       "workflowState": null,
       "payload": {
-        "headline": "Normal operation verified",
-        "detail": "Primary and backup controllers are reachable; pressure and production are stable.",
+        "headline": "Simulation baseline observed",
+        "detail": "Initial process conditions loaded. The local simulation clock is paused and ready.",
+        "policy": {
+          "schemaVersion": 1,
+          "policyVersion": "desalination-safety-2026.1",
+          "assetId": "asset-desalination-line-a",
+          "safePressureBand": { "minimumPercent": 42, "maximumPercent": 52 },
+          "commands": {
+            "READ_STATUS": {
+              "risk": "LOW",
+              "maximumSetpointPercent": null,
+              "requiredEvidence": ["NUMBER_VERIFICATION"]
+            },
+            "SET_PRESSURE": {
+              "risk": "CRITICAL",
+              "maximumSetpointPercent": 60,
+              "requiredEvidence": [
+                "NUMBER_VERIFICATION",
+                "SIM_SWAP",
+                "DEVICE_SWAP",
+                "LOCATION_VERIFICATION",
+                "DEVICE_REACHABILITY"
+              ]
+            }
+          },
+          "evidence": {
+            "simSwapMaximumAgeHours": 72,
+            "deviceSwapMaximumAgeHours": 168,
+            "locationMinimumMatchRate": 90,
+            "locationMaximumAgeSeconds": 60,
+            "criticalMissingEvidenceDecision": "BLOCK"
+          },
+          "agent": {
+            "maximumToolCalls": 5,
+            "maximumRetries": 1,
+            "allowedTools": [
+              "NUMBER_VERIFICATION",
+              "SIM_SWAP",
+              "DEVICE_SWAP",
+              "LOCATION_VERIFICATION",
+              "DEVICE_REACHABILITY"
+            ]
+          },
+          "providers": { "timeoutMs": 1500, "maximumAttempts": 2 },
+          "containment": {
+            "decisionStates": ["ALLOW", "STEP_UP", "BLOCK", "BLOCK_AND_CONTAIN"],
+            "criticalAnomalyCount": 2,
+            "continuityQosProfile": "MISSION_CRITICAL_CONTINUITY",
+            "continuityDurationSeconds": 300,
+            "recoveryRequirements": [
+              "Re-enrol the operator device and SIM",
+              "Confirm presence inside the approved facility geofence",
+              "Obtain OT security supervisor approval",
+              "Pass a fresh critical-command network proof"
+            ]
+          }
+        },
+        "principal": {
+          "subjectId": "operator-redacted",
+          "role": "PRIVILEGED_OPERATOR",
+          "credentialsValid": true
+        },
         "twin": {
           "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": null,
           "pumpState": "RUNNING",
           "valvePositionPercent": 47,
@@ -26,16 +93,23 @@
           "primaryAttachment": "OPERATIONAL",
           "backupAttachment": "OPERATIONAL",
           "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": []
         }
       },
       "previousHash": "GENESIS",
-      "integrityHash": "b1412d65be0521ea8db86049f9617803694d8ae0acc7be466888d3814a38e733",
-      "occurredAt": "2026-09-04T17:36:28.697Z"
+      "integrityHash": "27ad114f3fc32ba1c60f0102510acd640fdceb51477aa3857f03eeffea4fac85",
+      "occurredAt": "2026-09-09T03:43:01.235Z"
     },
     {
-      "id": "3cebf3ae-f7b0-4ff6-b0b9-a4069e1ce3ec",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "6232f3f4-2289-43c3-a4fb-f12e684a4dd9",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 2,
       "eventType": "PRIVILEGED_COMMAND_RECEIVED",
       "workflowState": "COMMAND_RECEIVED",
@@ -49,28 +123,42 @@
         },
         "credentialsValid": true,
         "twin": {
-          "actualPressurePercent": 46.1,
+          "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": null,
           "pumpState": "RUNNING",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4202,
-          "backupHeartbeatSequence": 9189,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
           "activeController": "PRIMARY",
           "gatewayAttachment": "OPERATIONAL",
           "primaryAttachment": "OPERATIONAL",
           "backupAttachment": "OPERATIONAL",
           "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": []
         }
       },
-      "previousHash": "b1412d65be0521ea8db86049f9617803694d8ae0acc7be466888d3814a38e733",
-      "integrityHash": "956486c0d0fa30bd501f6a3f7878941849d67dbd5808c92f661260af4fdbf092",
-      "occurredAt": "2026-09-04T17:36:28.702Z"
+      "previousHash": "27ad114f3fc32ba1c60f0102510acd640fdceb51477aa3857f03eeffea4fac85",
+      "integrityHash": "f1acfeee5e412ab1bb2ca62d038d63c5fa7f0cf85e4102e0fc5fd9059cc24163",
+      "occurredAt": "2026-09-09T03:43:01.241Z"
     },
     {
-      "id": "502b7aeb-3892-45ea-a8db-294684cce6b3",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "4b5c5d37-d64e-44f8-a76d-597f475d1886",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 3,
       "eventType": "COMMAND_INTERCEPTED",
       "workflowState": "COMMAND_HELD",
@@ -78,36 +166,57 @@
         "headline": "Gateway holds physical command",
         "detail": "The request has not reached the PLC or actuator.",
         "reachedActuator": false,
+        "safety": {
+          "permitted": false,
+          "policyVersion": "desalination-safety-2026.1",
+          "configuredMaximumPercent": 60,
+          "requestedSetpointPercent": 88,
+          "failedLimits": ["Requested 88% exceeds configured maximum 60%"]
+        },
         "twin": {
           "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": 88,
           "pumpState": "RUNNING",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4203,
-          "backupHeartbeatSequence": 9190,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
           "activeController": "PRIMARY",
           "gatewayAttachment": "OPERATIONAL",
           "primaryAttachment": "OPERATIONAL",
           "backupAttachment": "OPERATIONAL",
           "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": [
             {
               "kind": "SET_PRESSURE",
               "requestedSetpointPercent": 88,
-              "outcome": "HELD",
-              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+              "outcome": "BLOCKED",
+              "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
             }
           ]
         }
       },
-      "previousHash": "956486c0d0fa30bd501f6a3f7878941849d67dbd5808c92f661260af4fdbf092",
-      "integrityHash": "c208623dc0eb2c45c10ccb8fc931ba1b562d0d639405fe20202237ca687057e7",
-      "occurredAt": "2026-09-04T17:36:28.703Z"
+      "previousHash": "f1acfeee5e412ab1bb2ca62d038d63c5fa7f0cf85e4102e0fc5fd9059cc24163",
+      "integrityHash": "e8be1995dfbb90c08e706f146ee59c5becd6d28f6cb3f23a1c969ad7f7f5512d",
+      "occurredAt": "2026-09-09T03:43:01.243Z"
     },
     {
-      "id": "e88c8e95-5ef4-4ebf-b443-c0303bfa96cb",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "ad17c806-3346-4209-b52e-c4e33186b296",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 4,
       "eventType": "COMMAND_RISK_CLASSIFIED",
       "workflowState": "RISK_CLASSIFIED",
@@ -135,35 +244,49 @@
           "reasoningProvenance": "SIMULATED"
         },
         "twin": {
-          "actualPressurePercent": 46.1,
+          "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": 88,
           "pumpState": "RUNNING",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4204,
-          "backupHeartbeatSequence": 9191,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
           "activeController": "PRIMARY",
           "gatewayAttachment": "OPERATIONAL",
           "primaryAttachment": "OPERATIONAL",
           "backupAttachment": "OPERATIONAL",
           "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": [
             {
               "kind": "SET_PRESSURE",
               "requestedSetpointPercent": 88,
-              "outcome": "HELD",
-              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+              "outcome": "BLOCKED",
+              "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
             }
           ]
         }
       },
-      "previousHash": "c208623dc0eb2c45c10ccb8fc931ba1b562d0d639405fe20202237ca687057e7",
-      "integrityHash": "3e027cb830539379389eea5866a3aaf1f9860d1a91f62076433b5a15b2e40de9",
-      "occurredAt": "2026-09-04T17:36:28.705Z"
+      "previousHash": "e8be1995dfbb90c08e706f146ee59c5becd6d28f6cb3f23a1c969ad7f7f5512d",
+      "integrityHash": "d75f9ac39b2d00c99512f67e8237826f43f89535a8200cec26ee469c60c48294",
+      "occurredAt": "2026-09-09T03:43:01.247Z"
     },
     {
-      "id": "c840b7b1-f3e3-496c-aa5e-129889a30278",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "0a81a007-1ba2-4fe3-96c7-9f42eca1e10d",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 5,
       "eventType": "ADAPTIVE_EVIDENCE_PLAN_CREATED",
       "workflowState": "EVIDENCE_PLANNED",
@@ -191,34 +314,48 @@
         },
         "twin": {
           "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": 88,
           "pumpState": "RUNNING",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4205,
-          "backupHeartbeatSequence": 9192,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
           "activeController": "PRIMARY",
           "gatewayAttachment": "OPERATIONAL",
           "primaryAttachment": "OPERATIONAL",
           "backupAttachment": "OPERATIONAL",
           "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": [
             {
               "kind": "SET_PRESSURE",
               "requestedSetpointPercent": 88,
-              "outcome": "HELD",
-              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+              "outcome": "BLOCKED",
+              "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
             }
           ]
         }
       },
-      "previousHash": "3e027cb830539379389eea5866a3aaf1f9860d1a91f62076433b5a15b2e40de9",
-      "integrityHash": "1112bfcf138e928f7d8757e8a2c5a379e3da31927d8b7a79afcefbde992abe8c",
-      "occurredAt": "2026-09-04T17:36:28.706Z"
+      "previousHash": "d75f9ac39b2d00c99512f67e8237826f43f89535a8200cec26ee469c60c48294",
+      "integrityHash": "19c0520b57247a266d49bd8b375725cfaa02675e4ce01e6e52a52722b9bee772",
+      "occurredAt": "2026-09-09T03:43:01.249Z"
     },
     {
-      "id": "f064d791-cdd8-41a3-8dda-5b9ff301d35f",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "bf5d2c50-0b38-4fa1-9ff7-eb532ef56cda",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 6,
       "eventType": "NETWORK_EVIDENCE_COLLECTION_STARTED",
       "workflowState": "EVIDENCE_COLLECTING",
@@ -233,77 +370,91 @@
           "DEVICE_REACHABILITY"
         ],
         "twin": {
-          "actualPressurePercent": 46.1,
+          "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": 88,
           "pumpState": "RUNNING",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4206,
-          "backupHeartbeatSequence": 9193,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
           "activeController": "PRIMARY",
           "gatewayAttachment": "OPERATIONAL",
           "primaryAttachment": "OPERATIONAL",
           "backupAttachment": "OPERATIONAL",
           "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": [
             {
               "kind": "SET_PRESSURE",
               "requestedSetpointPercent": 88,
-              "outcome": "HELD",
-              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+              "outcome": "BLOCKED",
+              "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
             }
           ]
         }
       },
-      "previousHash": "1112bfcf138e928f7d8757e8a2c5a379e3da31927d8b7a79afcefbde992abe8c",
-      "integrityHash": "c851dde2f333de9b24a348e08b08787dd42ff447735c8666b2e72cff7a26288c",
-      "occurredAt": "2026-09-04T17:36:28.707Z"
+      "previousHash": "19c0520b57247a266d49bd8b375725cfaa02675e4ce01e6e52a52722b9bee772",
+      "integrityHash": "8b208447de95a0c12bd2891dcd95a7c7ad77889724dbecb87967778160edfb68",
+      "occurredAt": "2026-09-09T03:43:01.251Z"
     },
     {
-      "id": "11e0c071-94a5-486a-8b10-5bcc20b590d0",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "8e3c9c88-50eb-409f-8f99-8fd1fdabd677",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 7,
       "eventType": "NETWORK_EVIDENCE_COMPLETE",
       "workflowState": "EVIDENCE_COMPLETE",
       "payload": {
-        "headline": "Network context contradicts valid identity",
+        "headline": "Network evidence collected",
         "detail": "5/5 evidence calls returned usable results.",
         "evidence": [
           {
-            "id": "2386a7bb-abf3-4535-a4c8-3b86e5082efc",
+            "id": "027850ec-14bc-4542-89d1-351011c1a26c",
             "tool": "NUMBER_VERIFICATION",
             "purpose": "Confirm the active network session possesses the authorized number",
             "requestStatus": "SUCCEEDED",
             "redactedResult": { "verified": true, "subject": "+***-***-0184" },
             "provenance": "SIMULATED",
-            "latencyMs": 118,
-            "timestamp": "2026-09-04T17:36:28.709Z",
-            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            "latencyMs": 0,
+            "timestamp": "2026-09-09T03:43:01.255Z",
+            "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
           },
           {
-            "id": "71b6e175-3bc3-4bac-8548-917e845136cc",
+            "id": "720bfd16-cf61-4564-940a-6a59523604a0",
             "tool": "SIM_SWAP",
             "purpose": "Detect recent SIM reassignment associated with account takeover risk",
             "requestStatus": "SUCCEEDED",
             "redactedResult": { "swapped": true, "windowHours": 72 },
             "provenance": "SIMULATED",
-            "latencyMs": 143,
-            "timestamp": "2026-09-04T17:36:28.709Z",
-            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            "latencyMs": 1,
+            "timestamp": "2026-09-09T03:43:01.256Z",
+            "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
           },
           {
-            "id": "c306ce7e-a280-40c3-957f-9d88393cc25f",
+            "id": "839e357f-2697-4077-8766-e28e27a1dd0e",
             "tool": "DEVICE_SWAP",
             "purpose": "Detect a recent change in the physical device bound to the subscription",
             "requestStatus": "SUCCEEDED",
             "redactedResult": { "swapped": true, "windowHours": 168 },
             "provenance": "SIMULATED",
-            "latencyMs": 129,
-            "timestamp": "2026-09-04T17:36:28.709Z",
-            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            "latencyMs": 1,
+            "timestamp": "2026-09-09T03:43:01.256Z",
+            "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
           },
           {
-            "id": "7850c033-d033-44f1-844d-d1fe6ffaac8c",
+            "id": "a2dc07f2-3adc-41c0-8716-ae296f689bd5",
             "tool": "LOCATION_VERIFICATION",
             "purpose": "Verify presence inside the approved facility boundary",
             "requestStatus": "SUCCEEDED",
@@ -312,52 +463,66 @@
               "facility": "Aqaba site boundary"
             },
             "provenance": "SIMULATED",
-            "latencyMs": 176,
-            "timestamp": "2026-09-04T17:36:28.709Z",
-            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            "latencyMs": 1,
+            "timestamp": "2026-09-09T03:43:01.256Z",
+            "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
           },
           {
-            "id": "fa7d6467-1357-4aaa-b7d6-af9901314861",
+            "id": "649cba9a-71c5-46e6-948b-7c4bd3beba82",
             "tool": "DEVICE_REACHABILITY",
             "purpose": "Confirm current data reachability through the mobile network",
             "requestStatus": "SUCCEEDED",
             "redactedResult": { "reachable": true, "connectivity": ["DATA"] },
             "provenance": "SIMULATED",
-            "latencyMs": 96,
-            "timestamp": "2026-09-04T17:36:28.709Z",
-            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+            "latencyMs": 1,
+            "timestamp": "2026-09-09T03:43:01.256Z",
+            "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
           }
         ],
         "twin": {
           "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": 88,
           "pumpState": "RUNNING",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4207,
-          "backupHeartbeatSequence": 9194,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
           "activeController": "PRIMARY",
           "gatewayAttachment": "OPERATIONAL",
           "primaryAttachment": "OPERATIONAL",
           "backupAttachment": "OPERATIONAL",
           "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": [
             {
               "kind": "SET_PRESSURE",
               "requestedSetpointPercent": 88,
-              "outcome": "HELD",
-              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+              "outcome": "BLOCKED",
+              "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
             }
           ]
         }
       },
-      "previousHash": "c851dde2f333de9b24a348e08b08787dd42ff447735c8666b2e72cff7a26288c",
-      "integrityHash": "6dfa7408c66e3a59222c521971c1027c4836802cdc3c6e8ea5ae4cf737517077",
-      "occurredAt": "2026-09-04T17:36:28.709Z"
+      "previousHash": "8b208447de95a0c12bd2891dcd95a7c7ad77889724dbecb87967778160edfb68",
+      "integrityHash": "5f4ead7e56498f82dabffefc06b5eaadc93b8bb777ec796f74f5dcadd791425f",
+      "occurredAt": "2026-09-09T03:43:01.256Z"
     },
     {
-      "id": "fda3d904-5664-4097-b904-e2abd17280b9",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "6354cf4e-ef7c-4939-9e3a-e48a72b49ff7",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 8,
       "eventType": "DETERMINISTIC_SAFETY_EVALUATED",
       "workflowState": "SAFETY_EVALUATED",
@@ -372,41 +537,55 @@
           "failedLimits": ["Requested 88% exceeds configured maximum 60%"]
         },
         "twin": {
-          "actualPressurePercent": 46.1,
+          "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": 88,
           "pumpState": "RUNNING",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4208,
-          "backupHeartbeatSequence": 9195,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
           "activeController": "PRIMARY",
           "gatewayAttachment": "OPERATIONAL",
           "primaryAttachment": "OPERATIONAL",
           "backupAttachment": "OPERATIONAL",
           "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": [
             {
               "kind": "SET_PRESSURE",
               "requestedSetpointPercent": 88,
-              "outcome": "HELD",
-              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+              "outcome": "BLOCKED",
+              "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
             }
           ]
         }
       },
-      "previousHash": "6dfa7408c66e3a59222c521971c1027c4836802cdc3c6e8ea5ae4cf737517077",
-      "integrityHash": "1565905e90b93797bab169bb2739db447a0cb6cfe34dde9a89dcff16c8c97238",
-      "occurredAt": "2026-09-04T17:36:28.711Z"
+      "previousHash": "5f4ead7e56498f82dabffefc06b5eaadc93b8bb777ec796f74f5dcadd791425f",
+      "integrityHash": "86596711d942950bb316a7bb0eaa33bdfeaca37a29e41e56779ce840f247cfc6",
+      "occurredAt": "2026-09-09T03:43:01.258Z"
     },
     {
-      "id": "0937e5a5-4545-41d9-a644-fef24ae48537",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "a7618728-3422-45de-b8ed-4829b06a30ec",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 9,
       "eventType": "AUTHORITATIVE_DECISION_ISSUED",
       "workflowState": "DECISION_ISSUED",
       "payload": {
         "headline": "BLOCK_AND_CONTAIN",
-        "detail": "Identity valid. Context compromised. Command blocked. Operations continued safely.",
+        "detail": "BLOCK_AND_CONTAIN: 3 policy findings; 1 engineering limit failures.",
         "recommendation": {
           "recommendedDecision": "BLOCK_AND_CONTAIN",
           "summary": "BLOCK_AND_CONTAIN: 88% pressure evaluated against physical policy and 3 network-context anomaly signals.",
@@ -445,34 +624,48 @@
         },
         "twin": {
           "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": 88,
           "pumpState": "RUNNING",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4209,
-          "backupHeartbeatSequence": 9196,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
           "activeController": "PRIMARY",
           "gatewayAttachment": "OPERATIONAL",
           "primaryAttachment": "OPERATIONAL",
           "backupAttachment": "OPERATIONAL",
           "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": [
             {
               "kind": "SET_PRESSURE",
               "requestedSetpointPercent": 88,
-              "outcome": "HELD",
-              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+              "outcome": "BLOCKED",
+              "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
             }
           ]
         }
       },
-      "previousHash": "1565905e90b93797bab169bb2739db447a0cb6cfe34dde9a89dcff16c8c97238",
-      "integrityHash": "bfa7087cab0f1000c82ed65ed1bc1aacfb61b0fd39fc006bbecc4aa04e559012",
-      "occurredAt": "2026-09-04T17:36:28.714Z"
+      "previousHash": "86596711d942950bb316a7bb0eaa33bdfeaca37a29e41e56779ce840f247cfc6",
+      "integrityHash": "71181612cf485145f67370bb1059db36b2d026f05416c23fff1a857450130ba3",
+      "occurredAt": "2026-09-09T03:43:01.266Z"
     },
     {
-      "id": "c378b780-e3e1-429a-aa56-903b3fb71da0",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "99000d67-db71-47a3-8f93-c0553d5b0082",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 10,
       "eventType": "AUTHORIZED_ENFORCEMENT_STARTED",
       "workflowState": "ENFORCEMENT_STARTED",
@@ -481,44 +674,58 @@
         "detail": "Enforcement begins only after BLOCK_AND_CONTAIN is persisted.",
         "authorizedDecision": "BLOCK_AND_CONTAIN",
         "twin": {
-          "actualPressurePercent": 46.1,
+          "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": 88,
           "pumpState": "RUNNING",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4210,
-          "backupHeartbeatSequence": 9197,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
           "activeController": "PRIMARY",
           "gatewayAttachment": "OPERATIONAL",
           "primaryAttachment": "OPERATIONAL",
           "backupAttachment": "OPERATIONAL",
           "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": [
             {
               "kind": "SET_PRESSURE",
               "requestedSetpointPercent": 88,
-              "outcome": "HELD",
-              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+              "outcome": "BLOCKED",
+              "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
             }
           ]
         }
       },
-      "previousHash": "bfa7087cab0f1000c82ed65ed1bc1aacfb61b0fd39fc006bbecc4aa04e559012",
-      "integrityHash": "bf7179ed7e0b5fbdbab31bb5772a9d91ab91cad0197a252b951ffd0eb5acacc6",
-      "occurredAt": "2026-09-04T17:36:28.716Z"
+      "previousHash": "71181612cf485145f67370bb1059db36b2d026f05416c23fff1a857450130ba3",
+      "integrityHash": "a562be71bd777a12e1bbcd78ee392a41e54c3c223146011d0a25d3d1cbd2ff6e",
+      "occurredAt": "2026-09-09T03:43:01.277Z"
     },
     {
-      "id": "bf918c89-eace-4457-89f4-8d57a8bd646d",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "b27ab249-8121-4666-8085-3e8b43a2e2c6",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 11,
       "eventType": "COMPROMISED_ENDPOINT_CONTAINED",
       "workflowState": "ENDPOINT_CONTAINED",
       "payload": {
-        "headline": "Compromised gateway detached",
-        "detail": "Containment is scoped to the implicated network attachment.",
+        "headline": "Gateway detachment confirmed",
+        "detail": "Command remains blocked. Detachment result: SUCCEEDED.",
         "enforcement": [
           {
-            "id": "992077f6-44e1-4c5b-9719-cafdb560df19",
+            "id": "ec697c49-5642-4ee9-938a-6c89bc44d988",
             "action": "DETACH_GATEWAY",
             "status": "SUCCEEDED",
             "provenance": "SIMULATED",
@@ -526,51 +733,65 @@
               "attachment": "DETACHED",
               "scope": "compromised-gateway-only"
             },
-            "latencyMs": 128,
-            "timestamp": "2026-09-04T17:36:28.721Z",
-            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
-            "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:DETACH_GATEWAY"
+            "latencyMs": 0,
+            "timestamp": "2026-09-09T03:43:01.285Z",
+            "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63",
+            "idempotencyKey": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63:DETACH_GATEWAY"
           }
         ],
         "twin": {
           "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": 88,
           "pumpState": "RUNNING",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4211,
-          "backupHeartbeatSequence": 9198,
-          "activeController": "BACKUP",
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
+          "activeController": "PRIMARY",
           "gatewayAttachment": "DETACHED",
           "primaryAttachment": "OPERATIONAL",
-          "backupAttachment": "PROTECTED",
+          "backupAttachment": "OPERATIONAL",
           "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": [
             {
               "kind": "SET_PRESSURE",
               "requestedSetpointPercent": 88,
-              "outcome": "HELD",
-              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+              "outcome": "BLOCKED",
+              "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
             }
           ]
         }
       },
-      "previousHash": "bf7179ed7e0b5fbdbab31bb5772a9d91ab91cad0197a252b951ffd0eb5acacc6",
-      "integrityHash": "5f6315c0c6b5a748548406bbe8964270fa92c1900397c6531eb6c8b357508914",
-      "occurredAt": "2026-09-04T17:36:28.722Z"
+      "previousHash": "a562be71bd777a12e1bbcd78ee392a41e54c3c223146011d0a25d3d1cbd2ff6e",
+      "integrityHash": "fed02ab88bd6669622196d6eef2329d54e00b3b02d0889a6f2dcfea26e581762",
+      "occurredAt": "2026-09-09T03:43:01.285Z"
     },
     {
-      "id": "59aa0597-3f15-4d9a-bc64-041e8e31f3c8",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "c8a2c3fa-ac4d-4453-9ef5-922f6866c038",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 12,
       "eventType": "SAFE_CONTINUITY_PROTECTED",
       "workflowState": "CONTINUITY_PROTECTED",
       "payload": {
-        "headline": "Backup continuity protected",
-        "detail": "The trusted controller enters safe-control mode while the unsafe request remains unexecuted.",
+        "headline": "Backup safe-control active",
+        "detail": "QoD: SUCCEEDED. Safe-control activation: SUCCEEDED.",
         "enforcement": [
           {
-            "id": "e4f89ea0-5448-4d78-b08c-a27381d3b616",
+            "id": "5a3e726e-65ed-4667-a37e-010b7f201058",
             "action": "QUALITY_ON_DEMAND",
             "status": "SUCCEEDED",
             "provenance": "SIMULATED",
@@ -579,13 +800,13 @@
               "profile": "MISSION_CRITICAL_CONTINUITY",
               "durationSeconds": 300
             },
-            "latencyMs": 164,
-            "timestamp": "2026-09-04T17:36:28.724Z",
-            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
-            "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:QUALITY_ON_DEMAND"
+            "latencyMs": 0,
+            "timestamp": "2026-09-09T03:43:01.288Z",
+            "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63",
+            "idempotencyKey": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63:QUALITY_ON_DEMAND"
           },
           {
-            "id": "80b18cb5-3946-4a1a-9f97-fc0afdf4bc19",
+            "id": "e0253aa9-6820-4c28-ad25-0e972fecfaec",
             "action": "ACTIVATE_SAFE_CONTROL",
             "status": "SUCCEEDED",
             "provenance": "SIMULATED",
@@ -593,50 +814,69 @@
               "controller": "trusted-backup",
               "mode": "SAFE_CONTROL"
             },
-            "latencyMs": 22,
-            "timestamp": "2026-09-04T17:36:28.724Z",
-            "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
-            "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:ACTIVATE_SAFE_CONTROL"
+            "latencyMs": 0,
+            "timestamp": "2026-09-09T03:43:01.289Z",
+            "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63",
+            "idempotencyKey": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63:ACTIVATE_SAFE_CONTROL"
           }
         ],
         "continuity": {
+          "source": "SIMULATED_PROCESS_OBSERVATIONS",
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationDurationMs": 0,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "unsafeCommandsExecuted": 0,
-          "pressureStayedInsideSafeBand": true,
-          "backupHeartbeatsObserved": 11,
-          "currentActualPressurePercent": 46.1,
+          "pressureStayedInsideSafeBand": false,
+          "backupHeartbeatsObserved": 0,
+          "currentActualPressurePercent": 46,
           "currentFlowRateM3PerHour": 1240,
-          "networkLatencyMs": 18
+          "configuredNetworkLatencyMs": 31
         },
         "twin": {
-          "actualPressurePercent": 46.1,
+          "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": 88,
           "pumpState": "SAFE_CONTROL",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4212,
-          "backupHeartbeatSequence": 9199,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
           "activeController": "BACKUP",
           "gatewayAttachment": "DETACHED",
           "primaryAttachment": "OPERATIONAL",
-          "backupAttachment": "PROTECTED",
-          "networkLatencyMs": 18,
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": [
             {
               "kind": "SET_PRESSURE",
               "requestedSetpointPercent": 88,
               "outcome": "BLOCKED",
-              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+              "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
             }
           ]
         }
       },
-      "previousHash": "5f6315c0c6b5a748548406bbe8964270fa92c1900397c6531eb6c8b357508914",
-      "integrityHash": "df1bc6e5fe13fe115ea308f46651a79564c6939e5ae7c12a905511725bf3f4d4",
-      "occurredAt": "2026-09-04T17:36:28.724Z"
+      "previousHash": "fed02ab88bd6669622196d6eef2329d54e00b3b02d0889a6f2dcfea26e581762",
+      "integrityHash": "e468b60a304c14a062f2018693078565dc1d5e38d026c0509e109fd9b2c5491f",
+      "occurredAt": "2026-09-09T03:43:01.289Z"
     },
     {
-      "id": "0ea47a1d-1440-4d4e-b61a-2b4f36d69f19",
-      "runId": "90b9560d-be61-4640-9070-01e42d1a801a",
+      "id": "95e11900-ae35-4118-a4f7-c9ff2d1eebf5",
+      "runId": "e8ea5169-ac54-4bf1-953b-ac8c7168f3b9",
       "sequence": 13,
       "eventType": "INCIDENT_REPORT_GENERATED",
       "workflowState": "INCIDENT_REPORTED",
@@ -645,39 +885,58 @@
         "detail": "Timeline, provenance, decision, enforcement, and recovery requirements are persisted.",
         "decisionState": "BLOCK_AND_CONTAIN",
         "continuity": {
+          "source": "SIMULATED_PROCESS_OBSERVATIONS",
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationDurationMs": 0,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "unsafeCommandsExecuted": 0,
-          "pressureStayedInsideSafeBand": true,
-          "backupHeartbeatsObserved": 11,
-          "currentActualPressurePercent": 46.1,
+          "pressureStayedInsideSafeBand": false,
+          "backupHeartbeatsObserved": 0,
+          "currentActualPressurePercent": 46,
           "currentFlowRateM3PerHour": 1240,
-          "networkLatencyMs": 18
+          "configuredNetworkLatencyMs": 31
         },
         "twin": {
-          "actualPressurePercent": 46.1,
+          "actualPressurePercent": 46,
+          "acceptedPressurePercent": 46,
+          "observedAt": "2026-09-09T03:43:01.235Z",
+          "observationStartedAt": "2026-09-09T03:43:01.235Z",
+          "minimumObservedPressure": 46,
+          "maximumObservedPressure": 46,
+          "maximumHeartbeatGapMs": 0,
+          "backupReady": true,
           "requestedPressurePercent": 88,
           "pumpState": "SAFE_CONTROL",
           "valvePositionPercent": 47,
           "flowRateM3PerHour": 1240,
-          "primaryHeartbeatSequence": 4212,
-          "backupHeartbeatSequence": 9199,
+          "primaryHeartbeatSequence": 4201,
+          "backupHeartbeatSequence": 9188,
           "activeController": "BACKUP",
           "gatewayAttachment": "DETACHED",
           "primaryAttachment": "OPERATIONAL",
-          "backupAttachment": "PROTECTED",
-          "networkLatencyMs": 18,
+          "backupAttachment": "OPERATIONAL",
+          "networkLatencyMs": 31,
+          "simulationElapsedMs": 0,
+          "simulationPaused": true,
+          "scenarioStepStartedAtMs": 0,
+          "pumpSpeedPercent": 46,
+          "inletTankLevelPercent": 68,
+          "outputTankLevelPercent": 54,
+          "telemetryStatus": "LIVE",
           "commandHistory": [
             {
               "kind": "SET_PRESSURE",
               "requestedSetpointPercent": 88,
               "outcome": "BLOCKED",
-              "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+              "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
             }
           ]
         }
       },
-      "previousHash": "df1bc6e5fe13fe115ea308f46651a79564c6939e5ae7c12a905511725bf3f4d4",
-      "integrityHash": "9c57685b0009df713a05849721029de86b1076c6eb451f1f67a0ec052e5f1b80",
-      "occurredAt": "2026-09-04T17:36:28.726Z"
+      "previousHash": "e468b60a304c14a062f2018693078565dc1d5e38d026c0509e109fd9b2c5491f",
+      "integrityHash": "ee032e08ec49a80f8a836b1d1febf98d1ee55751eb4f5bc80772b0b9a5287b61",
+      "occurredAt": "2026-09-09T03:43:01.291Z"
     }
   ],
   "submittedCommand": {
@@ -687,40 +946,40 @@
   },
   "identityAndNetworkEvidence": [
     {
-      "id": "2386a7bb-abf3-4535-a4c8-3b86e5082efc",
+      "id": "027850ec-14bc-4542-89d1-351011c1a26c",
       "tool": "NUMBER_VERIFICATION",
       "purpose": "Confirm the active network session possesses the authorized number",
       "requestStatus": "SUCCEEDED",
       "redactedResult": { "verified": true, "subject": "+***-***-0184" },
       "provenance": "SIMULATED",
-      "latencyMs": 118,
-      "timestamp": "2026-09-04T17:36:28.709Z",
-      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+      "latencyMs": 0,
+      "timestamp": "2026-09-09T03:43:01.255Z",
+      "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
     },
     {
-      "id": "71b6e175-3bc3-4bac-8548-917e845136cc",
+      "id": "720bfd16-cf61-4564-940a-6a59523604a0",
       "tool": "SIM_SWAP",
       "purpose": "Detect recent SIM reassignment associated with account takeover risk",
       "requestStatus": "SUCCEEDED",
       "redactedResult": { "swapped": true, "windowHours": 72 },
       "provenance": "SIMULATED",
-      "latencyMs": 143,
-      "timestamp": "2026-09-04T17:36:28.709Z",
-      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+      "latencyMs": 1,
+      "timestamp": "2026-09-09T03:43:01.256Z",
+      "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
     },
     {
-      "id": "c306ce7e-a280-40c3-957f-9d88393cc25f",
+      "id": "839e357f-2697-4077-8766-e28e27a1dd0e",
       "tool": "DEVICE_SWAP",
       "purpose": "Detect a recent change in the physical device bound to the subscription",
       "requestStatus": "SUCCEEDED",
       "redactedResult": { "swapped": true, "windowHours": 168 },
       "provenance": "SIMULATED",
-      "latencyMs": 129,
-      "timestamp": "2026-09-04T17:36:28.709Z",
-      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+      "latencyMs": 1,
+      "timestamp": "2026-09-09T03:43:01.256Z",
+      "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
     },
     {
-      "id": "7850c033-d033-44f1-844d-d1fe6ffaac8c",
+      "id": "a2dc07f2-3adc-41c0-8716-ae296f689bd5",
       "tool": "LOCATION_VERIFICATION",
       "purpose": "Verify presence inside the approved facility boundary",
       "requestStatus": "SUCCEEDED",
@@ -729,20 +988,20 @@
         "facility": "Aqaba site boundary"
       },
       "provenance": "SIMULATED",
-      "latencyMs": 176,
-      "timestamp": "2026-09-04T17:36:28.709Z",
-      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+      "latencyMs": 1,
+      "timestamp": "2026-09-09T03:43:01.256Z",
+      "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
     },
     {
-      "id": "fa7d6467-1357-4aaa-b7d6-af9901314861",
+      "id": "649cba9a-71c5-46e6-948b-7c4bd3beba82",
       "tool": "DEVICE_REACHABILITY",
       "purpose": "Confirm current data reachability through the mobile network",
       "requestStatus": "SUCCEEDED",
       "redactedResult": { "reachable": true, "connectivity": ["DATA"] },
       "provenance": "SIMULATED",
-      "latencyMs": 96,
-      "timestamp": "2026-09-04T17:36:28.709Z",
-      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0"
+      "latencyMs": 1,
+      "timestamp": "2026-09-09T03:43:01.256Z",
+      "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63"
     }
   ],
   "evidenceProvenance": [
@@ -797,7 +1056,7 @@
   },
   "networkEnforcement": [
     {
-      "id": "992077f6-44e1-4c5b-9719-cafdb560df19",
+      "id": "ec697c49-5642-4ee9-938a-6c89bc44d988",
       "action": "DETACH_GATEWAY",
       "status": "SUCCEEDED",
       "provenance": "SIMULATED",
@@ -805,13 +1064,13 @@
         "attachment": "DETACHED",
         "scope": "compromised-gateway-only"
       },
-      "latencyMs": 128,
-      "timestamp": "2026-09-04T17:36:28.721Z",
-      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
-      "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:DETACH_GATEWAY"
+      "latencyMs": 0,
+      "timestamp": "2026-09-09T03:43:01.285Z",
+      "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63",
+      "idempotencyKey": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63:DETACH_GATEWAY"
     },
     {
-      "id": "e4f89ea0-5448-4d78-b08c-a27381d3b616",
+      "id": "5a3e726e-65ed-4667-a37e-010b7f201058",
       "action": "QUALITY_ON_DEMAND",
       "status": "SUCCEEDED",
       "provenance": "SIMULATED",
@@ -820,13 +1079,13 @@
         "profile": "MISSION_CRITICAL_CONTINUITY",
         "durationSeconds": 300
       },
-      "latencyMs": 164,
-      "timestamp": "2026-09-04T17:36:28.724Z",
-      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
-      "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:QUALITY_ON_DEMAND"
+      "latencyMs": 0,
+      "timestamp": "2026-09-09T03:43:01.288Z",
+      "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63",
+      "idempotencyKey": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63:QUALITY_ON_DEMAND"
     },
     {
-      "id": "80b18cb5-3946-4a1a-9f97-fc0afdf4bc19",
+      "id": "e0253aa9-6820-4c28-ad25-0e972fecfaec",
       "action": "ACTIVATE_SAFE_CONTROL",
       "status": "SUCCEEDED",
       "provenance": "SIMULATED",
@@ -834,19 +1093,24 @@
         "controller": "trusted-backup",
         "mode": "SAFE_CONTROL"
       },
-      "latencyMs": 22,
-      "timestamp": "2026-09-04T17:36:28.724Z",
-      "correlationId": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0",
-      "idempotencyKey": "hisn-7253de98-9105-4c83-a108-79d0d9e9c2d0:ACTIVATE_SAFE_CONTROL"
+      "latencyMs": 0,
+      "timestamp": "2026-09-09T03:43:01.289Z",
+      "correlationId": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63",
+      "idempotencyKey": "hisn-b1332962-b248-49ed-bf9f-3fc23422fb63:ACTIVATE_SAFE_CONTROL"
     }
   ],
   "continuityMeasurements": {
+    "source": "SIMULATED_PROCESS_OBSERVATIONS",
+    "observedAt": "2026-09-09T03:43:01.235Z",
+    "observationDurationMs": 0,
+    "maximumHeartbeatGapMs": 0,
+    "backupReady": true,
     "unsafeCommandsExecuted": 0,
-    "pressureStayedInsideSafeBand": true,
-    "backupHeartbeatsObserved": 11,
-    "currentActualPressurePercent": 46.1,
+    "pressureStayedInsideSafeBand": false,
+    "backupHeartbeatsObserved": 0,
+    "currentActualPressurePercent": 46,
     "currentFlowRateM3PerHour": 1240,
-    "networkLatencyMs": 18
+    "configuredNetworkLatencyMs": 31
   },
   "recoveryRequirements": [
     "Re-enrol the operator device and SIM",

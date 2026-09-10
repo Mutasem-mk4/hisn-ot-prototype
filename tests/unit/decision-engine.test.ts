@@ -25,6 +25,76 @@ const validEvidence = [
 ];
 
 describe('authoritative decisions', () => {
+  it.each([59.99, 60, 60.01])('independently evaluates the %s percent boundary', (value) => {
+    const command = { ...safeCommand, requestedSetpointPercent: value };
+    const result = issueDecision({
+      command,
+      principal,
+      evidence: validEvidence,
+      safety: { ...evaluatePhysicalSafety(safeCommand, policy), permitted: true },
+      recommendation: recommendation('ALLOW'),
+      policy,
+    });
+    expect(result.state).toBe(value <= 60 ? 'ALLOW' : 'BLOCK');
+  });
+
+  it.each(['outage', 'stale', 'duplicate', 'malformed', 'unreachable'])(
+    'treats %s evidence as a reason to block, not permission to contain',
+    (variation) => {
+      let evidence = [...validEvidence];
+      if (variation === 'outage')
+        evidence = replaceMany(evidence, [
+          evidenceCall('SIM_SWAP', {}, 'UNAVAILABLE'),
+          evidenceCall('LOCATION_VERIFICATION', {}, 'UNAVAILABLE'),
+        ]);
+      if (variation === 'stale')
+        evidence = evidence.map((call) => ({ ...call, timestamp: '2000-01-01T00:00:00.000Z' }));
+      if (variation === 'duplicate') evidence.push(evidenceCall('SIM_SWAP', { swapped: true }));
+      if (variation === 'malformed')
+        evidence = replace(evidence, evidenceCall('SIM_SWAP', { swapped: 'false' }));
+      if (variation === 'unreachable')
+        evidence = replace(evidence, evidenceCall('DEVICE_REACHABILITY', { reachable: false }));
+      const result = issueDecision({
+        command: safeCommand,
+        principal,
+        evidence,
+        safety: evaluatePhysicalSafety(safeCommand, policy),
+        recommendation: recommendation('BLOCK_AND_CONTAIN'),
+        policy,
+      });
+      expect(result.state).toBe('BLOCK');
+      expect(result.failedPolicies.length).toBeGreaterThan(0);
+    },
+  );
+
+  it('denies control to a viewer even with trusted network signals', () => {
+    expect(
+      issueDecision({
+        command: safeCommand,
+        principal: { ...principal, role: 'VIEWER' },
+        evidence: validEvidence,
+        safety: evaluatePhysicalSafety(safeCommand, policy),
+        recommendation: recommendation('ALLOW'),
+        policy,
+      }).state,
+    ).toBe('BLOCK');
+  });
+
+  it('contains a within-limit command when multiple context controls fail', () => {
+    expect(
+      issueDecision({
+        command: safeCommand,
+        principal,
+        evidence: replaceMany(validEvidence, [
+          evidenceCall('SIM_SWAP', { swapped: true }),
+          evidenceCall('LOCATION_VERIFICATION', { verificationResult: 'FALSE' }),
+        ]),
+        safety: evaluatePhysicalSafety(safeCommand, policy),
+        recommendation: recommendation('ALLOW'),
+        policy,
+      }).state,
+    ).toBe('BLOCK_AND_CONTAIN');
+  });
   it.each([
     ['ALLOW', safeCommand, validEvidence],
     [

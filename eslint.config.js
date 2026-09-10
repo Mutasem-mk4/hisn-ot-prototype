@@ -4,7 +4,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', '.vercel', 'coverage', 'playwright-report', 'test-results', 'var'] },
+  { ignores: ['dist', '.vercel', 'coverage', 'playwright-report', 'test-results', 'tmp', 'var'] },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {

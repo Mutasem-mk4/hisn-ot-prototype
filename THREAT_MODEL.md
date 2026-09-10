@@ -2,6 +2,10 @@
 
 ## Scope and trust boundaries
 
+The human operator, anonymous DEMO browser session, seeded principal, configured subscriber/gateway identifiers, in-process controller, and simulated process are distinct subjects. No production binding currently joins the authenticated human and application command to the gateway whose network evidence is queried. To avoid granting fixture authority over external resources, all interactive API routes are DEMO-only. A client cannot submit a phone number or alternate gateway through these routes.
+
+The implemented gate addresses upstream command requests in a single shared rehearsal. A compromised PLC independently issuing actuator outputs is outside its boundary; an independent SIS and secured downstream control path would be required. There is no alternate PLC route or broker in this repository because there is no physical/protocol OT endpoint at all. Local machine administrators can modify both application and SQLite; a hash chain cannot defend against an administrator rewriting and rehashing the entire history.
+
 Protected assets are physical setpoints, process availability, operator authorization, network evidence, enforcement authority, recovery controls, credentials, and the incident record. Trust boundaries exist at the browser/API boundary, agent provider, Nokia/CAMARA provider, OT gateway, policy/configuration load, and SQLite store.
 
 | Threat                   | Control in this prototype                                                                                                                               | Residual production requirement                                                                 |

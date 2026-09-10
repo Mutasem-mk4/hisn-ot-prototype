@@ -3,6 +3,20 @@ import { EnforcementCallSchema } from '../../src/shared/contracts.js';
 import { createHarness } from '../helpers/harness.js';
 
 describe('audit store', () => {
+  it('rejects modified event content even when the modified payload is valid JSON', async () => {
+    const harness = createHarness();
+    try {
+      const snapshot = await harness.orchestrator.createRun(harness.scenarioId);
+      harness.store.database
+        .prepare('UPDATE domain_events SET payload_json = ? WHERE run_id = ?')
+        .run('{"headline":"Forged success"}', snapshot.run.id);
+      expect(() => harness.store.eventsForRun(snapshot.run.id)).toThrow(
+        'Audit integrity validation failed',
+      );
+    } finally {
+      harness.close();
+    }
+  });
   it('returns the original enforcement result for a repeated idempotency key', async () => {
     const harness = createHarness();
     try {

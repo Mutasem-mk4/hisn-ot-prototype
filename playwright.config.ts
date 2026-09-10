@@ -6,12 +6,13 @@ export default defineConfig({
   workers: 1,
   retries: 1,
   reporter: [['list'], ['html', { open: 'never' }]],
-  use: { baseURL: 'http://127.0.0.1:4310', trace: 'retain-on-failure' },
+  use: { baseURL: 'http://127.0.0.1:4321', trace: 'retain-on-failure' },
   webServer: {
     command: 'npm run start',
-    url: 'http://127.0.0.1:4310/readyz',
-    reuseExistingServer: true,
-    timeout: 30_000,
+    url: 'http://127.0.0.1:4321/readyz',
+    env: { HISN_PORT: '4321', HISN_DATABASE_PATH: './var/e2e-audit.db', HISN_MODE: 'DEMO' },
+    reuseExistingServer: false,
+    timeout: 90_000,
   },
   projects: [
     {

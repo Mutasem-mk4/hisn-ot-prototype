@@ -4,23 +4,25 @@
 
 “HISN-OT is an agentic network-enforced safety gate for critical infrastructure. This connected desalination line is stable at 46% pressure, both controllers are reachable, and production is flowing. Our rule is simple: no critical command becomes a physical action without network proof.”
 
-Click **Run Judge Scenario**.
+Click **Submit safe change · 52%**, then let the proof complete.
 
-## 0:15–0:30 — Valid credentials, held command
+## 0:15–0:30 — Safe command visibly works
 
-“A privileged operator submits an 88% pressure setpoint. The credentials are valid. But identity alone is not authority. The HISN Gateway intercepts the command before the PLC. Notice the two values: 88% is requested; actual pressure remains around 46%.”
+“The request pauses at the HISN gate while authorization is pending. When policy and network proof agree, the packet reaches the primary controller. Pump speed becomes 52%, and pressure, flow, valve position, and tank levels respond from the same model.”
 
-Pause on **COMMAND HELD** if needed.
+Pause and select the pump or valve to inspect the accepted input and measured response.
 
-## 0:30–0:48 — Adaptive evidence
+## 0:30–0:48 — Unsafe command is held
 
-“The bounded agent interprets the physical consequence as critical, then selects the minimum sufficient evidence from an allowlist. A read-only status request needs one tool. This pressure-control request needs five: number verification, SIM swap, device swap, location, and reachability. That plan is generated on the backend from risk policy.”
+Click **Submit unsafe change · 88%**.
+
+“A privileged operator now submits an 88% setpoint. The credentials are valid, but identity alone is not authority. The command packet is held at the HISN gate. Notice that 88% is requested while 52% remains the accepted pump input.”
 
 Use **Explain** on the plan or evidence state.
 
 ## 0:48–1:05 — Network context fails
 
-“The number verifies and the device is reachable, but recent SIM and device changes are detected, and the device is outside the approved facility boundary. Every call shows its purpose, status, redacted result, provenance, latency, timestamp, and correlation ID. Today they are honestly labeled SIMULATED for a reliable judge run.”
+“The device is reachable, but recent SIM and device changes are detected, and the device is outside the approved facility boundary. Four checks came from Nokia's test network and say SANDBOX. Number Verification says SIMULATED with its reason: subscriber OAuth is not configured. Every record shows purpose, status, redacted result, provenance, latency, timestamp, and correlation ID.”
 
 ## 1:05–1:20 — Deterministic authority
 
@@ -30,19 +32,19 @@ Pause on **DECISION ISSUED** and point to actual versus requested pressure.
 
 ## 1:20–1:38 — Targeted containment and continuity
 
-“Only after that decision is persisted does enforcement start. HISN detaches the implicated gateway, requests Quality on Demand for the trusted backup flow, and moves the backup into safe-control mode. Containment is narrow; operations continue.”
+“Only after that decision is persisted does enforcement start. No real slice attachment exists yet, so targeted detachment is visibly simulated with that reason. The Nokia test network accepts and releases the Quality on Demand session, but its lifecycle stays REQUESTED. HISN records PENDING, withholds backup ownership, and safe-stops the model.”
 
 ## 1:38–1:50 — Proof and commercial value
 
 Open **Incident**.
 
-“The incident is generated from the event record: correlation, redacted evidence, provenance, deterministic failure, recommendation, authority, enforcement, recovery, and measurable continuity. Unsafe executions are zero; backup heartbeats continued. Desalination is our anchor, but the same gate applies to oil and gas, energy, ports, factories, airports, hospitals, and smart-city infrastructure.”
+“The incident is generated from the event record: correlation, redacted evidence, provenance, deterministic failure, recommendation, authority, enforcement, recovery, and measurable process state. Unsafe executions are zero, and the unconfirmed handover is visible. Desalination is our anchor, but the same gate applies to oil and gas, energy, ports, factories, airports, hospitals, and smart-city infrastructure.”
 
 Close with: “The attacker had valid credentials—and still failed.”
 
 ## Presenter recovery
 
-- If interrupted, click **Pause**. State is persisted.
+- If interrupted, click **Pause simulation**. Local process time and its motion freeze; state is persisted.
 - Use **Back** to revisit an event; it replays history without undoing containment.
 - Use **Reset** for a fresh run. It preserves earlier audit records.
-- If an external provider is unavailable, use DEMO; do not relabel it sandbox or live.
+- If a provider is unavailable, point to the recorded fallback reason. Do not relabel simulated evidence as sandbox or live.

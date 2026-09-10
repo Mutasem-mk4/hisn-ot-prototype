@@ -123,7 +123,7 @@
     background: var(--sand);
     color: var(--ink-0);
   }
-  .skip-link:focus {
+  .skip-link:focus-visible {
     top: 1rem;
   }
   .sr-status {
@@ -385,7 +385,15 @@
   }
   .request-value--held strong,
   .request-value--held > span:last-child {
+    color: var(--amber) !important;
+  }
+  .request-value--blocked strong,
+  .request-value--blocked > span:last-child {
     color: var(--red) !important;
+  }
+  .request-value--executed strong,
+  .request-value--executed > span:last-child {
+    color: var(--cyan) !important;
   }
   .pressure-track {
     height: 27px;
@@ -495,13 +503,13 @@
   .judge-intro h1 {
     max-width: 900px;
     margin: 0.35rem 0 0;
-    font-size: clamp(1.65rem, 3vw, 3rem);
+    font-size: 2rem;
     line-height: 1.02;
     font-weight: 540;
   }
   .takeaway {
     padding: 0.55rem 0 0.55rem 1rem;
-    border-left: 2px solid var(--copper);
+    border: 1px solid var(--line);
   }
   .takeaway span {
     display: block;
@@ -537,12 +545,11 @@
     align-items: center;
     padding: 0.8rem 1rem;
     border: 1px solid var(--line);
-    border-left: 3px solid var(--copper);
     background: var(--ink-1);
   }
   .event-banner[data-state='BLOCK_AND_CONTAIN'],
   .event-banner[data-state='FAILED_SAFE'] {
-    border-left-color: var(--red);
+    border-color: var(--red);
   }
   .event-sequence {
     align-self: stretch;
@@ -1219,6 +1226,502 @@
       list-style: none;
     }
   }
+
+  .judge-controls {
+    display: grid;
+    grid-template-columns: minmax(520px, 1.45fr) minmax(360px, 1fr) auto;
+    gap: 1px;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--line);
+    background: var(--line);
+  }
+  .control-group {
+    min-width: 0;
+    min-height: 82px;
+    display: flex;
+    align-items: end;
+    gap: 1px;
+    position: relative;
+    padding-top: 24px;
+    background: var(--ink-1);
+  }
+  .control-group__label {
+    position: absolute;
+    top: 7px;
+    left: 10px;
+    color: var(--sand);
+    font: 600 0.59rem var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .control-group button {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.75rem;
+    background: var(--ink-2);
+    color: var(--muted);
+    font-size: 0.68rem;
+  }
+  .control-group button:hover,
+  .control-group button.is-active {
+    background: var(--ink-3);
+    color: var(--text);
+  }
+  .control-group svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+  }
+  .control-group--time .control-primary {
+    min-width: 142px;
+    background: var(--sand);
+    color: var(--ink-0);
+    font-weight: 700;
+  }
+  .control-group--time .control-primary svg {
+    fill: currentColor;
+    stroke: none;
+  }
+  .control-group--time .speed-control {
+    min-height: 56px;
+    border: 0;
+    background: var(--ink-2);
+  }
+  .control-group--process {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+  .control-group--process button {
+    justify-content: space-between;
+    border-top: 2px solid var(--green);
+  }
+  .control-group--process .command-unsafe {
+    border-color: var(--red);
+  }
+  .control-group--process button span,
+  .control-group--process button b {
+    display: block;
+  }
+  .control-group--process button b {
+    color: var(--text);
+    font: 1.15rem var(--mono);
+  }
+  .control-group--process small {
+    grid-column: 1 / -1;
+    padding: 0.3rem 0.65rem;
+    color: var(--muted);
+    background: var(--ink-1);
+    font: 0.56rem/1.3 var(--mono);
+  }
+  .control-group--view {
+    display: grid;
+    grid-template-columns: repeat(2, 64px);
+  }
+  .control-group--view button {
+    flex-direction: column;
+  }
+  .event-banner {
+    margin-bottom: 0.75rem;
+  }
+  .facility {
+    border: 1px solid var(--line);
+    background: linear-gradient(145deg, var(--ink-1), oklch(15% 0.028 210));
+  }
+  .facility__header {
+    min-height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .facility__header h2 {
+    margin: 0.2rem 0 0;
+    font-size: 1.05rem;
+  }
+  .facility__clock {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: baseline;
+    gap: 0.2rem 0.8rem;
+    text-align: right;
+  }
+  .facility__clock span,
+  .facility__clock small {
+    color: var(--cyan);
+    font: 0.57rem var(--mono);
+    text-transform: uppercase;
+  }
+  .facility__clock[data-paused='true'] span {
+    color: var(--amber);
+  }
+  .facility__clock b {
+    font: 1.2rem var(--mono);
+  }
+  .facility__clock small {
+    grid-column: 1 / -1;
+    color: var(--muted);
+    text-transform: none;
+  }
+  .facility__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+  .facility__canvas {
+    min-width: 0;
+    border-right: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .facility__canvas > svg {
+    width: 100%;
+    height: min(46vw, 520px);
+    min-height: 390px;
+  }
+  .lane-title,
+  .flow-readout {
+    fill: var(--muted);
+    font: 600 10px var(--mono);
+    letter-spacing: 1.3px;
+  }
+  .digital-path,
+  .control-drop {
+    fill: none;
+    stroke: var(--line-bright);
+    stroke-width: 2;
+    stroke-dasharray: 5 7;
+  }
+  .digital-path.is-live,
+  .control-drop.is-live {
+    stroke: var(--cyan);
+  }
+  .digital-path.is-cut {
+    stroke: var(--red);
+    stroke-dasharray: 2 10;
+  }
+  .operator-node circle,
+  .gateway-node rect,
+  .controller-box,
+  .gate-node > path:first-child,
+  .evidence-services rect {
+    fill: var(--ink-2);
+    stroke: var(--line-bright);
+  }
+  .operator-node path,
+  .gateway-node path,
+  .gate-node path:not(:first-child) {
+    fill: none;
+    stroke: var(--text);
+    stroke-width: 2;
+  }
+  .operator-node text,
+  .gateway-node text,
+  .controller-node text,
+  .gate-node text,
+  .evidence-services text {
+    fill: var(--text);
+    font: 600 9px var(--mono);
+    letter-spacing: 0.4px;
+  }
+  .gate-node {
+    cursor: pointer;
+  }
+  .gate-node > path:first-child {
+    stroke: var(--copper);
+    stroke-width: 2;
+  }
+  .gate-node text:last-child {
+    fill: var(--copper);
+    font-size: 7px;
+  }
+  .controller-box.is-owner {
+    fill: oklch(30% 0.07 190 / 0.55);
+    stroke: var(--cyan);
+    stroke-width: 2;
+  }
+  .evidence-services {
+    opacity: 0.42;
+  }
+  .evidence-services.is-active {
+    opacity: 1;
+  }
+  .evidence-services circle {
+    fill: var(--muted);
+  }
+  .evidence-services.is-active circle,
+  .evidence-returned {
+    fill: var(--cyan);
+  }
+  .evidence-services .evidence-returned {
+    font-size: 6px;
+  }
+  .evidence-pulse {
+    fill: none;
+    stroke: var(--copper);
+    stroke-width: 2;
+    stroke-dasharray: 8 8;
+    animation: digital-travel 1.4s linear infinite;
+  }
+  .evidence-pulse.is-returning {
+    stroke: var(--cyan);
+  }
+  .command-packet rect {
+    fill: var(--copper);
+    stroke: var(--sand);
+  }
+  .command-packet text {
+    fill: var(--ink-0);
+    font: 700 10px var(--mono);
+  }
+  .command-packet--travelling {
+    animation: packet-enter 1.2s ease-out both;
+  }
+  .command-packet--released {
+    animation: packet-release 1.2s ease-out both;
+  }
+  .command-packet--blocked rect {
+    fill: var(--red);
+    stroke: var(--red);
+  }
+  .command-packet--blocked > path {
+    fill: none;
+    stroke: var(--text);
+    stroke-width: 4;
+  }
+  .water-pipe {
+    fill: none;
+    stroke: oklch(47% 0.11 205);
+    stroke-width: 14;
+    stroke-linecap: square;
+  }
+  .water-pipe--intake {
+    stroke-width: 9;
+  }
+  .asset-node {
+    cursor: pointer;
+  }
+  .tank-shell,
+  .treatment-node > rect,
+  .pump-shell,
+  .valve-node circle {
+    fill: var(--ink-2);
+    stroke: var(--line-bright);
+    stroke-width: 2;
+  }
+  .tank-water {
+    fill: oklch(53% 0.12 210 / 0.65);
+    transition:
+      y 0.3s linear,
+      height 0.3s linear;
+  }
+  .tank-water--clean {
+    fill: oklch(69% 0.11 190 / 0.65);
+  }
+  .tank-node path,
+  .treatment-node path,
+  .valve-node > path:not(.valve-blade) {
+    fill: none;
+    stroke: var(--line-bright);
+  }
+  .asset-node text,
+  .intake-source text {
+    fill: var(--text);
+    font: 600 10px var(--mono);
+  }
+  .asset-node .asset-value {
+    fill: var(--cyan);
+    font-size: 9px;
+  }
+  .pump-rotor {
+    transform-origin: 360px 396px;
+  }
+  .pump-rotor path,
+  .pump-rotor circle {
+    fill: none;
+    stroke: var(--cyan);
+    stroke-width: 4;
+  }
+  .pump-rotor.is-running {
+    animation: pump-spin var(--pump-duration) linear infinite;
+  }
+  .treatment-node path {
+    stroke-width: 7;
+    stroke: oklch(59% 0.08 198);
+  }
+  .valve-blade {
+    fill: none;
+    stroke: var(--sand);
+    stroke-width: 8;
+    transform-origin: 720px 396px;
+    transition: transform 0.3s linear;
+  }
+  .intake-source path {
+    fill: none;
+    stroke: var(--cyan);
+    stroke-width: 3;
+  }
+  .flow-readout {
+    fill: var(--cyan);
+  }
+  .flow-markers circle {
+    fill: var(--text);
+    opacity: 0;
+  }
+  .flow-markers.is-flowing circle {
+    opacity: 1;
+    animation: water-flow var(--flow-duration) linear infinite;
+  }
+  .is-selected > .tank-shell,
+  .pump-node.is-selected > .pump-shell,
+  .treatment-node.is-selected > rect,
+  .valve-node.is-selected > circle,
+  .controller-node.is-selected .controller-box,
+  .gate-node.is-selected > path:first-child {
+    stroke: var(--sand);
+    stroke-width: 3;
+  }
+  .facility__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    padding: 0.55rem 0.8rem;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font: 0.57rem var(--mono);
+  }
+  .facility__legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .facility__legend i {
+    width: 22px;
+    height: 3px;
+    display: inline-block;
+    background: var(--cyan);
+  }
+  .facility__legend .legend-digital {
+    height: 1px;
+    background: repeating-linear-gradient(90deg, var(--copper) 0 5px, transparent 5px 8px);
+  }
+  .facility__legend .legend-owner {
+    width: 8px;
+    height: 8px;
+    background: transparent;
+    border: 2px solid var(--cyan);
+  }
+  .facility__legend .legend-cut {
+    height: 1px;
+    background: repeating-linear-gradient(90deg, var(--red) 0 2px, transparent 2px 7px);
+  }
+  .component-inspector {
+    min-width: 0;
+    padding: 1rem;
+    background: oklch(13% 0.02 225 / 0.8);
+  }
+  .component-inspector h3 {
+    margin: 0.35rem 0 0.55rem;
+    font-size: 1rem;
+  }
+  .component-inspector > p {
+    min-height: 58px;
+    color: var(--muted);
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+  .component-inspector dl {
+    margin: 0;
+  }
+  .component-inspector dl div {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.7rem;
+    padding: 0.55rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .component-inspector dt {
+    color: var(--muted);
+    font: 0.58rem var(--mono);
+    text-transform: uppercase;
+  }
+  .component-inspector dd {
+    margin: 0;
+    color: var(--cyan);
+    font: 0.67rem var(--mono);
+    text-align: right;
+  }
+  .component-inspector__events {
+    display: grid;
+    gap: 0.45rem;
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--line);
+  }
+  .component-inspector__events b {
+    color: var(--sand);
+    font: 0.58rem var(--mono);
+    text-transform: uppercase;
+  }
+  .component-inspector__events span {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 0.45rem;
+    color: var(--muted);
+    font-size: 0.62rem;
+    line-height: 1.35;
+  }
+  .component-inspector__events time {
+    color: var(--copper);
+    font-family: var(--mono);
+  }
+  .judge-support {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  @keyframes pump-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+  @keyframes water-flow {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(72px);
+    }
+  }
+  @keyframes digital-travel {
+    to {
+      stroke-dashoffset: -32;
+    }
+  }
+  @keyframes packet-enter {
+    from {
+      transform: translateX(-90px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  @keyframes packet-release {
+    from {
+      transform: translateX(-280px);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
 }
 
 @layer responsive {
@@ -1257,6 +1760,22 @@
     .judge-side {
       grid-template-columns: 1fr 1fr;
     }
+    .judge-controls {
+      grid-template-columns: 1fr;
+    }
+    .control-group--view {
+      grid-column: auto;
+      grid-template-columns: repeat(2, 1fr);
+      padding-top: 0;
+      min-height: 48px;
+    }
+    .control-group--view button {
+      min-height: 48px;
+      flex-direction: row;
+    }
+    .facility__layout {
+      grid-template-columns: minmax(0, 1fr) 230px;
+    }
     .operations-grid {
       grid-template-columns: 1fr;
     }
@@ -1293,6 +1812,50 @@
     .control-rail {
       overflow-x: auto;
       clip-path: none;
+    }
+    .judge-controls {
+      grid-template-columns: 1fr;
+    }
+    .control-group--time {
+      overflow-x: auto;
+    }
+    .control-group--time button {
+      min-width: 62px;
+    }
+    .control-group--time .control-primary {
+      min-width: 142px;
+    }
+    .control-group--process,
+    .control-group--view {
+      grid-column: auto;
+    }
+    .control-group--process button {
+      min-height: 60px;
+    }
+    .facility__header {
+      align-items: start;
+    }
+    .facility__clock {
+      grid-template-columns: 1fr;
+    }
+    .facility__clock small {
+      display: none;
+    }
+    .facility__layout {
+      grid-template-columns: 1fr;
+    }
+    .facility__canvas {
+      overflow-x: auto;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .facility__canvas > svg {
+      width: 760px;
+      height: 430px;
+      min-height: 0;
+    }
+    .judge-support {
+      grid-template-columns: 1fr;
     }
     .control-rail button {
       min-width: 62px;

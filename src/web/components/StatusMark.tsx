@@ -11,6 +11,7 @@ function tone(status: string) {
   if (['READY', 'AVAILABLE', 'SUCCEEDED', 'ALLOW', 'LIVE'].includes(status)) return 'trusted';
   if (['BLOCK', 'BLOCK_AND_CONTAIN', 'FAILED_SAFE', 'FAILED', 'FALSE'].includes(status))
     return 'danger';
-  if (['STEP_UP', 'DEGRADED', 'UNAVAILABLE', 'PARTIAL'].includes(status)) return 'uncertain';
+  if (['STEP_UP', 'DEGRADED', 'UNAVAILABLE', 'PARTIAL', 'PENDING'].includes(status))
+    return 'uncertain';
   return 'neutral';
 }

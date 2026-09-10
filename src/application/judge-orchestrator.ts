@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import {
-  advanceHeartbeats,
+  advanceSimulation,
   containGateway,
   continuityMetrics,
   holdCommand,
+  initializeSimulation,
   protectContinuity,
   resolveHeldCommand,
 } from '../domain/digital-twin.js';
@@ -36,6 +37,9 @@ import type {
   WorkflowArtifacts,
 } from './ports.js';
 import { buildIncidentReport } from './incident-report.js';
+import { withDeadline } from './provider-deadline.js';
+import { evidencePurpose } from '../domain/evidence.js';
+import { assertPlanAssurance } from '../domain/agent-plan.js';
 
 const PRESENTATION_STEP_MS = 7_000;
 
@@ -58,7 +62,13 @@ export class JudgeOrchestrator {
     return current ? this.snapshot(current) : this.createRun(scenarioId);
   }
 
-  async createRun(scenarioId: string, commandIdempotencyKey: string = randomUUID()) {
+  async createRun(
+    scenarioId: string,
+    commandIdempotencyKey: string = randomUUID(),
+    continuingTwin?: RunRecord['twin'],
+  ) {
+    if (this.busy)
+      throw new HisnError('RUN_BUSY', 'A workflow transition is already executing', 409);
     const existing = this.store.runByCommandIdempotencyKey(commandIdempotencyKey);
     if (existing) {
       if (existing.scenarioId !== scenarioId) {
@@ -82,7 +92,14 @@ export class JudgeOrchestrator {
       playbackStatus: 'PAUSED',
       presentationCursor: 1,
       speed: 1,
-      twin: scenario.initialTwin,
+      twin: continuingTwin
+        ? {
+            ...structuredClone(continuingTwin),
+            requestedPressurePercent: null,
+            simulationPaused: true,
+            scenarioStepStartedAtMs: continuingTwin.simulationElapsedMs,
+          }
+        : initializeSimulation(structuredClone(scenario.initialTwin)),
       command: scenario.command,
       createdAt: now,
       updatedAt: now,
@@ -93,8 +110,11 @@ export class JudgeOrchestrator {
       eventType: 'PROCESS_BASELINE_OBSERVED',
       workflowState: null,
       payload: {
-        headline: 'Normal operation verified',
-        detail: 'Primary and backup controllers are reachable; pressure and production are stable.',
+        headline: 'Simulation baseline observed',
+        detail:
+          'Initial process conditions loaded. The local simulation clock is paused and ready.',
+        policy: this.policy,
+        principal: scenario.principal,
         twin: run.twin,
       },
       occurredAt: now,
@@ -104,20 +124,60 @@ export class JudgeOrchestrator {
     return snapshot;
   }
 
-  async control(action: 'PLAY' | 'PAUSE' | 'NEXT' | 'PREVIOUS' | 'RESET', speed?: number) {
+  async submitCommand(scenarioId: string, commandIdempotencyKey: string = randomUUID()) {
+    return this.createRun(scenarioId, commandIdempotencyKey, this.requireCurrentRun().twin);
+  }
+
+  async control(
+    action: 'PLAY' | 'PAUSE' | 'NEXT' | 'PREVIOUS' | 'RESET' | 'SET_SPEED' | 'TICK',
+    speed?: number,
+  ) {
+    if (action === 'TICK') {
+      await this.tick();
+      return this.snapshot();
+    }
+    if (this.busy)
+      throw new HisnError('RUN_BUSY', 'A workflow transition is already executing', 409);
     const run = this.requireCurrentRun();
     if (action === 'RESET') return this.createRun(run.scenarioId);
     if (action === 'PREVIOUS') return this.moveCursor(run, -1);
     if (action === 'PAUSE') return this.updatePlayback(run, 'PAUSED', speed);
     if (action === 'PLAY') return this.updatePlayback(run, 'PLAYING', speed);
+    if (action === 'SET_SPEED') return this.updatePlayback(run, undefined, speed);
     return this.advance(run);
   }
 
   async tick() {
+    if (this.evidenceProvider.mode !== 'DEMO') return;
     const run = this.store.currentRun();
-    if (!run || run.playbackStatus !== 'PLAYING' || this.busy) return;
-    const elapsed = Date.now() - Date.parse(run.updatedAt);
-    if (elapsed >= PRESENTATION_STEP_MS / run.speed) await this.advance(run);
+    if (!run || this.busy) return;
+    if (run.twin.simulationPaused) return;
+    const now = Date.now();
+    const wallElapsedMs = Math.max(0, now - Date.parse(run.updatedAt));
+    const twin = advanceSimulation(run.twin, wallElapsedMs * run.speed);
+    const updated = { ...run, twin, updatedAt: new Date(now).toISOString() };
+    this.store.updateRun(updated);
+    this.onChange(await this.snapshot(updated));
+    if (
+      updated.playbackStatus === 'PLAYING' &&
+      !isTerminalState(updated.workflowState) &&
+      twin.simulationElapsedMs - twin.scenarioStepStartedAtMs >= PRESENTATION_STEP_MS
+    ) {
+      await this.advance(updated);
+    }
+  }
+
+  async simulate(elapsedMs: number) {
+    const run = this.requireCurrentRun();
+    if (this.evidenceProvider.mode !== 'DEMO' || run.twin.simulationPaused) {
+      return this.snapshot(run);
+    }
+    const twin = advanceSimulation(run.twin, Math.max(0, elapsedMs) * run.speed);
+    const updated = { ...run, twin, updatedAt: new Date().toISOString() };
+    this.store.updateRun(updated);
+    const snapshot = await this.snapshot(updated);
+    this.onChange(snapshot);
+    return snapshot;
   }
 
   async snapshot(run = this.requireCurrentRun()): Promise<RunSnapshot> {
@@ -136,7 +196,8 @@ export class JudgeOrchestrator {
       setPressureMaximumPercent: requireConfiguredSetpointMaximum(this.policy),
       integration: await this.readiness(),
       lowRiskComparison,
-      presentationTwin: visibleTwin(visibleEvents, scenario),
+      presentationTwin:
+        run.presentationCursor === events.length ? run.twin : visibleTwin(visibleEvents, scenario),
       artifacts: artifactsFrom(visibleEvents),
       incidentAvailable: this.store.incidentForRun(run.id) !== null,
     };
@@ -173,6 +234,8 @@ export class JudgeOrchestrator {
       scenario: this.scenarios.length > 0 ? 'READY' : 'NOT_READY',
       evidenceProvider: await this.evidenceProvider.health(),
       enforcementProvider: await this.enforcementProvider.health(),
+      evidenceSource: this.evidenceProvider.source,
+      enforcementSource: this.enforcementProvider.source,
       agentReasoner: this.reasoner.mode,
     };
   }
@@ -185,6 +248,14 @@ export class JudgeOrchestrator {
     if (isTerminalState(run.workflowState)) return this.snapshot(run);
     this.busy = true;
     try {
+      const recordedPolicy = events[0]?.payload.policy;
+      if (recordedPolicy && JSON.stringify(recordedPolicy) !== JSON.stringify(this.policy)) {
+        throw new HisnError(
+          'CONFIGURATION_INVALID',
+          'Policy changed since this run began; start a new simulation run',
+          409,
+        );
+      }
       return await this.executeTransition(run, artifactsFrom(events));
     } catch (error) {
       if (error instanceof HisnError && error.code === 'INVALID_TRANSITION') throw error;
@@ -201,8 +272,10 @@ export class JudgeOrchestrator {
     assertTransition(run.workflowState, next);
     const scenario = this.scenario(run.scenarioId);
     const result = await this.performState(next, run, scenario, artifacts);
-    const updated = this.updateAfterEvent(run, next, result.twin ?? advanceHeartbeats(run.twin));
-    const event = this.store.appendEvent({
+    const updated = this.updateAfterEvent(run, next, result.twin ?? run.twin);
+    if (isTerminalState(next))
+      updated.playbackStatus = next === 'FAILED_SAFE' ? 'FAILED_SAFE' : 'COMPLETE';
+    const event = this.store.commitTransition(updated, {
       runId: run.id,
       eventType: result.eventType,
       workflowState: next,
@@ -210,9 +283,6 @@ export class JudgeOrchestrator {
       occurredAt: updated.updatedAt,
     });
     updated.presentationCursor = event.sequence;
-    if (isTerminalState(next))
-      updated.playbackStatus = next === 'FAILED_SAFE' ? 'FAILED_SAFE' : 'COMPLETE';
-    this.store.updateRun(updated);
     if (next === 'INCIDENT_REPORTED') this.persistReport(updated, scenario);
     const snapshot = await this.snapshot(updated);
     this.onChange(snapshot);
@@ -241,8 +311,12 @@ export class JudgeOrchestrator {
           headline: 'Gateway holds physical command',
           detail: 'The request has not reached the PLC or actuator.',
           reachedActuator: false,
+          safety: evaluatePhysicalSafety(run.command, this.policy),
         },
-        twin: holdCommand(run.twin, run.command, run.correlationId),
+        twin: resolveHeldCommand(
+          holdCommand(run.twin, run.command, run.correlationId),
+          evaluatePhysicalSafety(run.command, this.policy).permitted ? 'STEP_UP' : 'BLOCK',
+        ),
       }),
       RISK_CLASSIFIED: () => this.classifyRisk(run, scenario),
       EVIDENCE_PLANNED: () => ({
@@ -296,10 +370,18 @@ export class JudgeOrchestrator {
   }
 
   private async classifyRisk(run: RunRecord, scenario: Scenario): Promise<StateResult> {
-    const plan = await this.reasoner.plan(
-      { command: run.command, principal: scenario.principal, policy: this.policy, twin: run.twin },
-      AbortSignal.timeout(this.policy.providers.timeoutMs),
+    const plan = AgentPlanSchema.parse(
+      await this.reasoner.plan(
+        {
+          command: run.command,
+          principal: scenario.principal,
+          policy: this.policy,
+          twin: run.twin,
+        },
+        AbortSignal.timeout(this.policy.providers.timeoutMs),
+      ),
     );
+    assertPlanAssurance(plan, run.command, this.policy);
     return {
       eventType: 'COMMAND_RISK_CLASSIFIED',
       payload: {
@@ -321,18 +403,43 @@ export class JudgeOrchestrator {
       this.policy.providers.timeoutMs * this.policy.providers.maximumAttempts,
     );
     const evidence = await Promise.all(
-      plan.selectedTools.map((tool) =>
-        this.evidenceProvider.collect(
-          tool,
-          { correlationId: run.correlationId, scenario, policy: this.policy },
-          signal,
-        ),
-      ),
+      plan.selectedTools.map(async (tool) => {
+        const started = performance.now();
+        try {
+          const call = EvidenceCallSchema.parse(
+            await withDeadline(
+              this.evidenceProvider.collect(
+                tool,
+                { correlationId: run.correlationId, scenario, policy: this.policy },
+                signal,
+              ),
+              this.policy.providers.timeoutMs * this.policy.providers.maximumAttempts,
+            ),
+          );
+          if (call.tool !== tool || call.correlationId !== run.correlationId)
+            throw new Error('Evidence binding mismatch');
+          return call;
+        } catch {
+          return EvidenceCallSchema.parse({
+            id: randomUUID(),
+            tool,
+            purpose: evidencePurpose(tool),
+            requestStatus: 'UNAVAILABLE',
+            provenance: 'UNAVAILABLE',
+            redactedResult: {
+              reason: 'Evidence unavailable, malformed, timed out or not bound to this command',
+            },
+            latencyMs: Math.round(performance.now() - started),
+            timestamp: new Date().toISOString(),
+            correlationId: run.correlationId,
+          });
+        }
+      }),
     );
     return {
       eventType: 'NETWORK_EVIDENCE_COMPLETE',
       payload: {
-        headline: 'Network context contradicts valid identity',
+        headline: 'Network evidence collected',
         detail: `${evidence.filter((call) => call.requestStatus === 'SUCCEEDED').length}/${evidence.length} evidence calls returned usable results.`,
         evidence,
       },
@@ -346,16 +453,18 @@ export class JudgeOrchestrator {
   ): Promise<StateResult> {
     const evidence = requireArtifact(artifacts.evidence, 'evidence');
     const safety = requireArtifact(artifacts.safety, 'safety evaluation');
-    const recommendation = await this.reasoner.recommend(
-      {
-        command: run.command,
-        principal: scenario.principal,
-        policy: this.policy,
-        twin: run.twin,
-        evidence,
-        safety,
-      },
-      AbortSignal.timeout(this.policy.providers.timeoutMs),
+    const recommendation = AgentRecommendationSchema.parse(
+      await this.reasoner.recommend(
+        {
+          command: run.command,
+          principal: scenario.principal,
+          policy: this.policy,
+          twin: run.twin,
+          evidence,
+          safety,
+        },
+        AbortSignal.timeout(this.policy.providers.timeoutMs),
+      ),
     );
     const decision = issueDecision({
       command: run.command,
@@ -367,10 +476,10 @@ export class JudgeOrchestrator {
     });
     return {
       eventType: 'AUTHORITATIVE_DECISION_ISSUED',
+      twin: resolveHeldCommand(run.twin, decision.state === 'ALLOW' ? 'STEP_UP' : decision.state),
       payload: {
         headline: decision.state,
-        detail:
-          'Identity valid. Context compromised. Command blocked. Operations continued safely.',
+        detail: `${decision.state}: ${decision.failedPolicies.length} policy findings; ${decision.failedLimits.length} engineering limit failures.`,
         recommendation,
         decision,
       },
@@ -391,23 +500,23 @@ export class JudgeOrchestrator {
       );
     }
     const context = { correlationId: run.correlationId, scenario, policy: this.policy, decision };
-    const call = this.store.saveEnforcement(
-      await this.enforcementProvider.detachGateway(
+    const call = await this.executeEnforcement(run, 'DETACH_GATEWAY', () =>
+      this.enforcementProvider.detachGateway(
         context,
         AbortSignal.timeout(this.policy.providers.timeoutMs),
       ),
-      run.id,
     );
-    if (call.status !== 'SUCCEEDED')
-      throw new HisnError('ENFORCEMENT_UNAVAILABLE', 'Gateway detach failed safe', 503);
     return {
       eventType: 'COMPROMISED_ENDPOINT_CONTAINED',
       payload: {
-        headline: 'Compromised gateway detached',
-        detail: 'Containment is scoped to the implicated network attachment.',
+        headline:
+          call.status === 'SUCCEEDED'
+            ? 'Gateway detachment confirmed'
+            : 'Gateway containment unconfirmed',
+        detail: `Command remains blocked. Detachment result: ${call.status}.`,
         enforcement: [call],
       },
-      twin: containGateway(run.twin),
+      twin: call.status === 'SUCCEEDED' ? containGateway(run.twin) : run.twin,
     };
   }
 
@@ -418,21 +527,32 @@ export class JudgeOrchestrator {
   ): Promise<StateResult> {
     const decision = requireArtifact(artifacts.decision, 'decision');
     const context = { correlationId: run.correlationId, scenario, policy: this.policy, decision };
-    const qod = this.store.saveEnforcement(
-      await this.enforcementProvider.protectBackup(
+    const qod = await this.executeEnforcement(run, 'QUALITY_ON_DEMAND', () =>
+      this.enforcementProvider.protectBackup(
         context,
         AbortSignal.timeout(this.policy.providers.timeoutMs),
       ),
-      run.id,
     );
     const safeControl = this.store.saveEnforcement(safeControlCall(run), run.id);
-    const twin = protectContinuity(run.twin);
+    const handoverSucceeded = qod.status === 'SUCCEEDED' && safeControl.status === 'SUCCEEDED';
+    const qodStatus =
+      typeof qod.redactedResult.qosStatus === 'string' ? qod.redactedResult.qosStatus : qod.status;
+    const twin = handoverSucceeded
+      ? protectContinuity(run.twin)
+      : {
+          ...run.twin,
+          pumpState: 'STOPPED' as const,
+          pumpSpeedPercent: 0,
+          telemetryStatus:
+            run.twin.gatewayAttachment === 'OPERATIONAL' ? ('LIVE' as const) : ('STALE' as const),
+        };
     return {
       eventType: 'SAFE_CONTINUITY_PROTECTED',
       payload: {
-        headline: 'Backup continuity protected',
-        detail:
-          'The trusted controller enters safe-control mode while the unsafe request remains unexecuted.',
+        headline: handoverSucceeded
+          ? 'Backup safe-control active'
+          : 'Backup activation unconfirmed — local safe stop',
+        detail: `QoD allocation: ${qodStatus}. Safe-control activation: ${safeControl.status}.`,
         enforcement: [qod, safeControl],
         continuity: continuityMetrics(scenario.initialTwin, twin, this.policy),
       },
@@ -446,10 +566,28 @@ export class JudgeOrchestrator {
     artifacts: WorkflowArtifacts,
   ): StateResult {
     const decision = requireArtifact(artifacts.decision, 'decision');
-    const twin =
-      artifacts.decision?.state === 'BLOCK_AND_CONTAIN'
-        ? run.twin
-        : resolveHeldCommand(run.twin, decision.state);
+    if (decision.state === 'ALLOW') {
+      const freshDecision = issueDecision({
+        command: run.command,
+        principal: scenario.principal,
+        evidence: requireArtifact(artifacts.evidence, 'evidence'),
+        safety: evaluatePhysicalSafety(run.command, this.policy),
+        recommendation: requireArtifact(artifacts.recommendation, 'recommendation'),
+        policy: this.policy,
+      });
+      if (
+        freshDecision.state !== 'ALLOW' ||
+        run.twin.gatewayAttachment !== 'OPERATIONAL' ||
+        run.twin.pumpState === 'STOPPED'
+      ) {
+        throw new HisnError(
+          'AUTHORIZATION_DENIED',
+          'Dispatch revalidation failed; command remains blocked',
+          409,
+        );
+      }
+    }
+    const twin = resolveHeldCommand(run.twin, decision.state);
     return {
       eventType: 'INCIDENT_REPORT_GENERATED',
       payload: {
@@ -463,6 +601,47 @@ export class JudgeOrchestrator {
     };
   }
 
+  private async executeEnforcement(
+    run: RunRecord,
+    action: EnforcementCall['action'],
+    invoke: () => Promise<EnforcementCall>,
+  ) {
+    const key = `${run.correlationId}:${action}`;
+    const existing = this.store
+      .enforcementForRun(run.id)
+      .find((call) => call.idempotencyKey === key);
+    if (existing) return existing;
+    const intent = EnforcementCallSchema.parse({
+      id: randomUUID(),
+      action,
+      status: 'UNAVAILABLE',
+      provenance: 'UNAVAILABLE',
+      redactedResult: {
+        reason: 'Intent recorded; outcome unknown. Reconciliation required before retry.',
+      },
+      latencyMs: 0,
+      timestamp: new Date().toISOString(),
+      correlationId: run.correlationId,
+      idempotencyKey: key,
+    });
+    this.store.saveEnforcement(intent, run.id);
+    try {
+      const result = EnforcementCallSchema.parse(
+        await withDeadline(invoke(), this.policy.providers.timeoutMs),
+      );
+      if (
+        result.idempotencyKey !== key ||
+        result.correlationId !== run.correlationId ||
+        result.action !== action
+      )
+        return intent;
+      return this.store.completeEnforcement(result, run.id);
+    } catch {
+      // A timed-out side effect may have completed remotely. Retain its intent, never retry blindly.
+      return intent;
+    }
+  }
+
   private async failSafe(run: RunRecord, error: unknown) {
     if (isTerminalState(run.workflowState)) return this.snapshot(run);
     assertTransition(run.workflowState, 'FAILED_SAFE');
@@ -472,7 +651,8 @@ export class JudgeOrchestrator {
       'FAILED_SAFE',
       resolveHeldCommand(run.twin, 'BLOCK'),
     );
-    const event = this.store.appendEvent({
+    updated.playbackStatus = 'FAILED_SAFE';
+    const event = this.store.commitTransition(updated, {
       runId: run.id,
       eventType: 'WORKFLOW_FAILED_SAFE',
       workflowState: 'FAILED_SAFE',
@@ -486,8 +666,6 @@ export class JudgeOrchestrator {
       occurredAt: now,
     });
     updated.presentationCursor = event.sequence;
-    updated.playbackStatus = 'FAILED_SAFE';
-    this.store.updateRun(updated);
     const snapshot = await this.snapshot(updated);
     this.onChange(snapshot);
     return snapshot;
@@ -498,7 +676,12 @@ export class JudgeOrchestrator {
     state: WorkflowState,
     twin: RunRecord['twin'],
   ): RunRecord {
-    return { ...run, workflowState: state, twin, updatedAt: new Date().toISOString() };
+    return {
+      ...run,
+      workflowState: state,
+      twin: { ...twin, scenarioStepStartedAtMs: twin.simulationElapsedMs },
+      updatedAt: new Date().toISOString(),
+    };
   }
 
   private async moveCursor(run: RunRecord, delta: number) {
@@ -506,6 +689,7 @@ export class JudgeOrchestrator {
     const updated = {
       ...run,
       playbackStatus: 'PAUSED' as const,
+      twin: { ...run.twin, simulationPaused: true },
       presentationCursor: Math.max(1, Math.min(eventCount, run.presentationCursor + delta)),
       updatedAt: new Date().toISOString(),
     };
@@ -515,11 +699,21 @@ export class JudgeOrchestrator {
     return snapshot;
   }
 
-  private async updatePlayback(run: RunRecord, status: 'PAUSED' | 'PLAYING', speed?: number) {
+  private async updatePlayback(
+    run: RunRecord,
+    status: 'PAUSED' | 'PLAYING' | undefined,
+    speed?: number,
+  ) {
+    if (speed !== undefined && ![0.5, 1, 2, 4].includes(speed)) {
+      throw new HisnError('COMMAND_INVALID', 'Unsupported simulation playback speed', 400);
+    }
+    const simulationPaused = status === undefined ? run.twin.simulationPaused : status === 'PAUSED';
     const updated = {
       ...run,
-      playbackStatus: isTerminalState(run.workflowState) ? run.playbackStatus : status,
+      playbackStatus:
+        status === undefined || isTerminalState(run.workflowState) ? run.playbackStatus : status,
       speed: speed ?? run.speed,
+      twin: { ...run.twin, simulationPaused },
       updatedAt: new Date().toISOString(),
     };
     this.store.updateRun(updated);
@@ -610,10 +804,13 @@ function safeControlCall(run: RunRecord): EnforcementCall {
   return EnforcementCallSchema.parse({
     id: randomUUID(),
     action: 'ACTIVATE_SAFE_CONTROL',
-    status: 'SUCCEEDED',
+    status: run.twin.backupReady ? 'SUCCEEDED' : 'FAILED',
     provenance: 'SIMULATED',
-    redactedResult: { controller: 'trusted-backup', mode: 'SAFE_CONTROL' },
-    latencyMs: 22,
+    redactedResult: {
+      controller: 'trusted-backup',
+      mode: run.twin.backupReady ? 'SAFE_CONTROL' : 'UNAVAILABLE',
+    },
+    latencyMs: 0,
     timestamp: new Date().toISOString(),
     correlationId: run.correlationId,
     idempotencyKey: `${run.correlationId}:ACTIVATE_SAFE_CONTROL`,

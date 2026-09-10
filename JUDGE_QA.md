@@ -14,11 +14,11 @@ The `AgentReasoner` interprets command consequence, assigns risk, selects allowl
 
 ## Is the LLM actually required?
 
-No. DEMO uses a deterministic reasoner for reliability. A provider-neutral live structured-output adapter is included. It validates output and falls back with `FALLBACK` provenance on timeout or malformed output. This makes the role real but bounded.
+No. The deployed Judge Mode uses a hosted Groq-compatible reasoner and validates its structured plan and recommendation, but a deterministic reasoner takes over on timeout or invalid output. Tool plans differ by command risk, but this is not an open-ended evidence-dependent agent loop. The deterministic safety and authorization engines remain authoritative in both cases.
 
 ## Are Nokia or CAMARA calls live?
 
-Not in the delivered DEMO run. Results say `SIMULATED`. The TypeScript Nokia SDK adapter implements Number Verification, SIM Swap, Device Swap, Location Verification, Device Reachability, Specialized Network device detach, and QoD. Sandbox/live execution requires credentials, consent, registered devices, operator coverage, a slice attachment, and an entitled QoS profile.
+The public DEMO uses Nokia's test network through the TypeScript SDK. SIM Swap, Device Swap, Location Verification, Device Reachability, and QoD calls return `SANDBOX` provenance. Number Verification returns a reason-bearing `SIMULATED` fallback because subscriber OAuth is absent. Specialized Network detachment does the same because no slice attachment is configured. These test-network results do not prove an operator production effect.
 
 ## Why use telecom evidence?
 
@@ -38,11 +38,11 @@ No. A test explicitly supplies an ALLOW recommendation for 88%; the authoritativ
 
 ## Why detach only the gateway?
 
-Containment is proportionate and continuity-aware. The implicated attachment is isolated while the trusted backup path is protected. Removing the entire network would trade cyber risk for an availability incident.
+The design scopes containment to the implicated attachment while it requests continuity for the trusted backup path. In the current public rehearsal, no real slice attachment exists, so detachment is visibly simulated. The Nokia test-network QoD request remains pending, which correctly withholds backup ownership and safe-stops the modeled pump.
 
 ## How do you prove continuity?
 
-The digital twin reports actual pressure against the safe band, backup heartbeat delta, flow, path latency, and unsafe-execution count. These values enter the incident report from persisted state.
+The digital twin reports pressure bounds, simulated observation time and duration, heartbeat delta, maximum observation gap, simulated flow, tank levels, valve position, and unsafe-execution count. Heartbeats advance with the shared simulation clock, not proof steps, and pause with the local process. Backup ownership requires confirmed QoD and safe-control activation; the current pending QoD therefore produces a visible safe stop rather than a false continuity claim. Configured network latency is not a measured network result.
 
 ## Is the audit log immutable?
 

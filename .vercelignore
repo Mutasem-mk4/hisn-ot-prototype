@@ -1,0 +1,4 @@
+tmp/
+artifacts/visual-qa/
+playwright-report/
+test-results/

@@ -46,7 +46,14 @@ export const CommandSchema = z
     requestedSetpointPercent: z.number().min(0).max(100).nullable(),
     reason: z.string().trim().min(3).max(240),
   })
-  .strict();
+  .strict()
+  .refine(
+    (command) =>
+      command.kind === 'SET_PRESSURE'
+        ? command.requestedSetpointPercent !== null
+        : command.requestedSetpointPercent === null,
+    'Setpoint must match command kind',
+  );
 
 export const PrincipalSchema = z
   .object({
@@ -67,6 +74,13 @@ export const EvidenceFixtureSchema = z
 export const TwinStateSchema = z
   .object({
     actualPressurePercent: z.number().min(0).max(100),
+    acceptedPressurePercent: z.number().min(0).max(100).nullable().default(null),
+    observedAt: z.string().datetime().nullable().default(null),
+    observationStartedAt: z.string().datetime().nullable().default(null),
+    minimumObservedPressure: z.number().nullable().default(null),
+    maximumObservedPressure: z.number().nullable().default(null),
+    maximumHeartbeatGapMs: z.number().nonnegative().default(0),
+    backupReady: z.boolean().default(true),
     requestedPressurePercent: z.number().min(0).max(100).nullable(),
     pumpState: z.enum(['STOPPED', 'RUNNING', 'SAFE_CONTROL']),
     valvePositionPercent: z.number().min(0).max(100),
@@ -78,6 +92,13 @@ export const TwinStateSchema = z
     primaryAttachment: z.enum(['OPERATIONAL', 'PROTECTED']),
     backupAttachment: z.enum(['OPERATIONAL', 'PROTECTED']),
     networkLatencyMs: z.number().nonnegative(),
+    simulationElapsedMs: z.number().nonnegative().default(0),
+    simulationPaused: z.boolean().default(true),
+    scenarioStepStartedAtMs: z.number().nonnegative().default(0),
+    pumpSpeedPercent: z.number().min(0).max(100).default(46),
+    inletTankLevelPercent: z.number().min(0).max(100).default(68),
+    outputTankLevelPercent: z.number().min(0).max(100).default(54),
+    telemetryStatus: z.enum(['LIVE', 'STALE', 'UNKNOWN']).default('LIVE'),
     commandHistory: z.array(
       z
         .object({
@@ -97,6 +118,10 @@ export const ScenarioSchema = z
     name: z.string().min(3),
     assetId: z.string().min(3),
     principal: PrincipalSchema,
+    telecomDevice: z
+      .object({ phoneNumber: z.string().regex(/^\+[1-9]\d{4,14}$/) })
+      .strict()
+      .optional(),
     command: CommandSchema,
     initialTwin: TwinStateSchema,
     evidence: z.record(EvidenceToolSchema, EvidenceFixtureSchema),
@@ -254,7 +279,7 @@ export const EnforcementCallSchema = z
   .object({
     id: z.string(),
     action: z.enum(['DETACH_GATEWAY', 'QUALITY_ON_DEMAND', 'ACTIVATE_SAFE_CONTROL']),
-    status: z.enum(['SUCCEEDED', 'FAILED', 'UNAVAILABLE']),
+    status: z.enum(['SUCCEEDED', 'PENDING', 'FAILED', 'UNAVAILABLE']),
     provenance: EvidenceProvenanceSchema,
     redactedResult: z.record(z.string(), z.unknown()),
     latencyMs: z.number().nonnegative(),
@@ -301,8 +326,13 @@ export const IncidentReportSchema = z
 
 export const ControlRequestSchema = z
   .object({
-    action: z.enum(['PLAY', 'PAUSE', 'NEXT', 'PREVIOUS', 'RESET']),
-    speed: z.enum(['0.5', '1', '1.5', '2']).optional(),
+    action: z.enum(['PLAY', 'PAUSE', 'NEXT', 'PREVIOUS', 'RESET', 'SET_SPEED', 'TICK']),
+    speed: z.enum(['0.5', '1', '2', '4']).optional(),
+  })
+  .superRefine((request, context) => {
+    if (request.action === 'SET_SPEED' && request.speed === undefined) {
+      context.addIssue({ code: 'custom', message: 'SET_SPEED requires speed' });
+    }
   })
   .strict();
 

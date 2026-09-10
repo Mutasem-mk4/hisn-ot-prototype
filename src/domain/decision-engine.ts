@@ -8,7 +8,8 @@ import type {
   Principal,
   SafetyEvaluation,
 } from '../shared/contracts.js';
-import { evidenceSummary, failedEvidencePolicies } from './evidence.js';
+import { assessEvidence, evidenceSummary } from './evidence.js';
+import { evaluatePhysicalSafety } from './safety-engine.js';
 
 type DecisionInput = {
   command: Command;
@@ -20,19 +21,32 @@ type DecisionInput = {
 };
 
 export function issueDecision(input: DecisionInput): DecisionRecord {
+  input = { ...input, safety: evaluatePhysicalSafety(input.command, input.policy) };
+  const assessment = assessEvidence(input.evidence, input.policy);
   const missingEvidence = missingRequiredEvidence(input);
   const failedPolicies = [
-    ...failedEvidencePolicies(input.evidence, input.policy),
+    ...(!input.principal.credentialsValid ? ['Principal credentials invalid'] : []),
+    ...(input.command.kind === 'SET_PRESSURE' && input.principal.role === 'VIEWER'
+      ? ['Role is not authorized for control']
+      : []),
+    ...assessment.failures,
+    ...assessment.unknown,
     ...missingEvidence.map((tool) => `${tool} required evidence was not collected`),
   ];
-  const state = policyDecisionState(input, failedPolicies.length, missingEvidence.length > 0);
+  const state = policyDecisionState(
+    input,
+    assessment.compromised.length,
+    missingEvidence.length > 0 ||
+      assessment.unknown.length > 0 ||
+      assessment.failures.length > assessment.compromised.length,
+  );
   return {
     state,
     requestedAction: requestedAction(input.command),
     evidenceSummary: evidenceSummary(input.evidence),
     failedPolicies,
     failedLimits: input.safety.failedLimits,
-    containmentRationale: containmentRationale(state, input.recommendation, failedPolicies.length),
+    containmentRationale: containmentRationale(state, assessment.compromised.length),
     recoveryRequirements: state === 'ALLOW' ? [] : input.policy.containment.recoveryRequirements,
     authoritativeSource: 'DETERMINISTIC_POLICY_ENGINE',
   };
@@ -44,12 +58,13 @@ function policyDecisionState(
   missingRequiredEvidence: boolean,
 ): DecisionState {
   if (!input.principal.credentialsValid) return 'BLOCK';
+  if (input.command.kind === 'SET_PRESSURE' && input.principal.role === 'VIEWER') return 'BLOCK';
+  if (missingRequiredEvidence || hasUnavailableEvidence(input.evidence)) return 'BLOCK';
+  if (input.command.kind === 'READ_STATUS') return anomalyCount > 0 ? 'BLOCK' : 'ALLOW';
   if (!input.safety.permitted && anomalyCount >= input.policy.containment.criticalAnomalyCount) {
     return 'BLOCK_AND_CONTAIN';
   }
   if (!input.safety.permitted) return 'BLOCK';
-  if (missingRequiredEvidence || hasUnavailableEvidence(input.evidence))
-    return input.policy.evidence.criticalMissingEvidenceDecision;
   if (anomalyCount >= input.policy.containment.criticalAnomalyCount) return 'BLOCK_AND_CONTAIN';
   if (anomalyCount === 1) return 'STEP_UP';
   return 'ALLOW';
@@ -72,11 +87,8 @@ function requestedAction(command: Command): string {
     : 'Read current process status';
 }
 
-function containmentRationale(
-  state: DecisionState,
-  recommendation: AgentRecommendation,
-  anomalyCount: number,
-): string {
-  if (state !== 'BLOCK_AND_CONTAIN') return recommendation.containmentRationale;
+function containmentRationale(state: DecisionState, anomalyCount: number): string {
+  if (state !== 'BLOCK_AND_CONTAIN')
+    return 'No containment authorized by deterministic policy; uncertainty alone is not evidence of compromise.';
   return `Targeted containment is proportionate because ${anomalyCount} network-context controls failed while a safety-critical command was held.`;
 }

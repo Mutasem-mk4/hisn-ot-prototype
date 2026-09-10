@@ -1,5 +1,5 @@
 import type { WorkflowArtifacts } from '../../application/ports.js';
-import type { WorkflowState } from '../../shared/contracts.js';
+import type { TwinState, WorkflowState } from '../../shared/contracts.js';
 
 type Layer = {
   key: string;
@@ -11,13 +11,13 @@ type Layer = {
 export function NetworkProofLattice({
   artifacts,
   workflowState,
+  twin,
 }: {
   artifacts: WorkflowArtifacts;
   workflowState: WorkflowState | null;
+  twin: TwinState;
 }) {
-  const contained = ['ENDPOINT_CONTAINED', 'CONTINUITY_PROTECTED', 'INCIDENT_REPORTED'].includes(
-    workflowState ?? '',
-  );
+  const contained = twin.gatewayAttachment === 'DETACHED';
   const layers = latticeLayers(artifacts, workflowState);
   return (
     <section
@@ -84,7 +84,7 @@ export function NetworkProofLattice({
               </text>
               <path className="trusted-route" markerEnd="url(#arrow)" d="M422 165v-112h258" />
               <text x="462" y="37">
-                TRUSTED BACKUP PRIORITIZED
+                {twin.backupReady ? 'BACKUP CONTROL ACTIVE' : 'BACKUP UNAVAILABLE'}
               </text>
             </g>
           )}
@@ -104,9 +104,10 @@ export function NetworkProofLattice({
 
 function latticeLayers(artifacts: WorkflowArtifacts, workflowState: WorkflowState | null): Layer[] {
   const evidence = artifacts.evidence ?? [];
-  const number = evidence.find((call) => call.tool === 'NUMBER_VERIFICATION');
-  const location = evidence.find((call) => call.tool === 'LOCATION_VERIFICATION');
-  const network = evidence.find((call) => call.tool === 'DEVICE_REACHABILITY');
+  const usable = evidence.filter((call) => call.requestStatus === 'SUCCEEDED');
+  const number = usable.find((call) => call.tool === 'NUMBER_VERIFICATION');
+  const location = usable.find((call) => call.tool === 'LOCATION_VERIFICATION');
+  const network = usable.find((call) => call.tool === 'DEVICE_REACHABILITY');
   const hasRequest = workflowState !== null;
   return [
     {
@@ -117,7 +118,7 @@ function latticeLayers(artifacts: WorkflowArtifacts, workflowState: WorkflowStat
           ? 'Valid'
           : 'Rejected'
         : hasRequest
-          ? 'Credential valid'
+          ? 'Not yet proven'
           : 'Waiting',
       state: number
         ? number.redactedResult.verified
@@ -169,5 +170,5 @@ function glyph(index: number) {
 }
 
 function latticeDescription(layers: Layer[], contained: boolean) {
-  return `${layers.map((layer) => `${layer.label}: ${layer.detail}`).join('. ')}. ${contained ? 'Compromised route isolated and backup route protected.' : ''}`;
+  return `${layers.map((layer) => `${layer.label}: ${layer.detail}`).join('. ')}. ${contained ? 'Gateway detached; inspect the evidence record for provenance.' : ''}`;
 }

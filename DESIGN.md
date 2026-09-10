@@ -2,7 +2,7 @@
 
 ## Direction
 
-The visual system is the Network Proof Lattice: a spatial gate that assembles Identity, Presence, Connectivity, and Physical Safety evidence around a held command, then resolves into a containment topology. The interface combines an industrial safety instrument with an editorial data story. It is dense, quiet, and decisive.
+The visual system centers on a state-bound desalination facility schematic. A distinct digital lane shows the operator, HISN command gate, evidence services, gateways, and controller ownership; a physical lane shows tanks, pump, treatment, valve, and water flow. The interface combines an industrial safety instrument with an editorial data story. It is dense, quiet, and decisive.
 
 Physical scene: an OT security lead and a judging panel read a 27-inch display in a controlled operations room under low ambient light, where rapid distinction between safe telemetry, uncertain context, and genuine danger matters more than decoration.
 
@@ -29,25 +29,25 @@ Use the local system UI stack for controls and prose. Use a local monospace stac
 
 ## Geometry and depth
 
-The lattice uses code-native SVG: orthogonal routes, clipped corners, fine one-pixel rules, and nested gate geometry. Depth comes from tonal planes and real topology, not blurred glass. Corners stay mostly square with 2 to 8 pixel radii reserved for controls and compact status marks.
+The facility view uses code-native SVG: distinct physical/digital routes, clipped corners, fine one-pixel rules, and nested gate geometry. Depth comes from tonal planes and real topology, not blurred glass. Corners stay mostly square with 2 to 8 pixel radii reserved for controls and compact status marks.
 
 ## Layout
 
-Judge Mode uses a three-part instrument at wide sizes: process reality, Network Proof Lattice, and decision record. At narrower widths the process instrument follows the lattice. On mobile, the lattice becomes a text-first proof sequence and contract tables remain available through horizontal scrolling. The lattice also uses a container query so it adapts when its own content column narrows.
+Judge Mode uses a wide facility instrument with a component inspector, followed by compact process and evidence summaries. Below 1050 pixels, time, setpoint, and presentation controls stack. On mobile, the SVG remains available in a component-owned horizontal viewport while the inspector and supporting instruments stack below it.
 
 ## Components
 
 - Wordmark: custom fortress gate symbol paired with HISN-OT lettering.
-- Lattice node: label, evidence state, provenance mark, and concise measurement.
+- Facility asset: selectable SVG equipment with state-derived measurement and recent events.
 - Process rail: requested and actual pressure on separate visual tracks.
 - Event ledger: persisted event index, timestamp, state, and presenter cue.
 - Evidence call: purpose, request state, redacted response, provenance, latency, timestamp, and correlation ID.
 - Decision seal: authoritative state, failed policy references, and recovery conditions.
-- Control deck: Play, Pause, Next, Previous, Reset, Explain, and Speed with 44-pixel minimum targets.
+- Control deck: separate simulation-time and pump-setpoint groups, plus Step, Back, Reset, Explain, and Present with 44-pixel minimum targets.
 
 ## Motion
 
-Only persisted events animate. Route strokes reveal when evidence completes, topology lines reroute when containment begins, and heartbeat marks advance from server measurements. Most transitions last 160 to 240 milliseconds with an exponential ease-out. Reduced-motion mode removes transforms and route drawing while preserving state changes.
+Only state-linked values animate. Pump rotation follows modeled speed, water markers follow modeled flow, evidence routes follow workflow phase, and containment paths follow gateway/controller state. Pause freezes the local clock and corresponding motion. Reduced-motion mode removes motion while preserving every label and state change.
 
 ## Content rules
 

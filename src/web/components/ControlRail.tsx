@@ -1,12 +1,13 @@
 import type { RunSnapshot } from '../../application/ports.js';
 
-type ControlAction = 'PLAY' | 'PAUSE' | 'NEXT' | 'PREVIOUS' | 'RESET';
+type ControlAction = 'PLAY' | 'PAUSE' | 'NEXT' | 'PREVIOUS' | 'RESET' | 'SET_SPEED';
 
 export function ControlRail({
   snapshot,
   busy,
   explained,
   onControl,
+  onCommand,
   onExplain,
   onPresent,
 }: {
@@ -14,64 +15,110 @@ export function ControlRail({
   busy: boolean;
   explained: boolean;
   onControl: (action: ControlAction, speed?: string) => void;
+  onCommand: (scenarioId: string) => void;
   onExplain: () => void;
   onPresent: () => void;
 }) {
-  const playing = snapshot.run.playbackStatus === 'PLAYING';
+  const playing = !snapshot.presentationTwin.simulationPaused;
   const atStart = snapshot.run.presentationCursor <= 1;
   const terminal = ['COMPLETE', 'FAILED_SAFE'].includes(snapshot.run.playbackStatus);
   return (
-    <div className="control-rail" role="group" aria-label="Judge scenario playback controls">
-      <button
-        className="control-primary"
-        onClick={() => onControl(playing ? 'PAUSE' : 'PLAY')}
-        disabled={busy || terminal}
+    <div className="judge-controls" aria-label="Judge demonstration controls">
+      <div
+        className="control-group control-group--time"
+        role="group"
+        aria-labelledby="time-controls-label"
       >
-        <ControlIcon name={playing ? 'pause' : 'play'} />{' '}
-        {playing ? 'Pause' : snapshot.run.workflowState ? 'Resume' : 'Run Judge Scenario'}
-      </button>
-      <button
-        onClick={() => onControl('PREVIOUS')}
-        disabled={busy || atStart}
-        aria-label="Previous event"
-      >
-        <ControlIcon name="back" /> <span>Back</span>
-      </button>
-      <button
-        onClick={() => onControl('NEXT')}
-        disabled={busy || terminal}
-        aria-label="Advance one backend event"
-      >
-        <ControlIcon name="next" /> <span>Step</span>
-      </button>
-      <button onClick={() => onControl('RESET')} disabled={busy} aria-label="Reset scenario">
-        <ControlIcon name="reset" /> <span>Reset</span>
-      </button>
-      <label className="speed-control">
-        <span>Speed</span>
-        <select
-          aria-label="Playback speed"
-          value={String(snapshot.run.speed)}
-          onChange={(event) => onControl(playing ? 'PLAY' : 'PAUSE', event.target.value)}
+        <span className="control-group__label" id="time-controls-label">
+          A · Simulation playback
+        </span>
+        <button
+          className="control-primary"
+          onClick={() => onControl(playing ? 'PAUSE' : 'PLAY')}
+          disabled={busy}
         >
-          <option value="0.5">0.5×</option>
-          <option value="1">1×</option>
-          <option value="1.5">1.5×</option>
-          <option value="2">2×</option>
-        </select>
-      </label>
-      <span className="control-spacer" />
-      <button
-        className={explained ? 'is-active' : ''}
-        onClick={onExplain}
-        aria-pressed={explained}
-        aria-label="Explain current event"
+          <ControlIcon name={playing ? 'pause' : 'play'} />{' '}
+          <span>{playing ? 'Pause simulation' : 'Run simulation'}</span>
+        </button>
+        <label className="speed-control">
+          <span>Clock speed</span>
+          <select
+            aria-label="Simulation playback speed"
+            value={String(snapshot.run.speed)}
+            onChange={(event) => onControl('SET_SPEED', event.target.value)}
+            disabled={busy}
+          >
+            <option value="0.5">0.5×</option>
+            <option value="1">1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+          </select>
+        </label>
+        <button
+          onClick={() => onControl('PREVIOUS')}
+          disabled={busy || atStart}
+          aria-label="Previous event"
+        >
+          <ControlIcon name="back" /> <span>Back</span>
+        </button>
+        <button
+          onClick={() => onControl('NEXT')}
+          disabled={busy || terminal}
+          aria-label="Advance one backend event"
+        >
+          <ControlIcon name="next" /> <span>Step proof</span>
+        </button>
+        <button
+          onClick={() => onControl('RESET')}
+          disabled={busy}
+          aria-label="Reset local simulation"
+        >
+          <ControlIcon name="reset" /> <span>Reset</span>
+        </button>
+      </div>
+      <div
+        className="control-group control-group--process"
+        role="group"
+        aria-labelledby="process-controls-label"
       >
-        <ControlIcon name="explain" /> <span>Explain</span>
-      </button>
-      <button onClick={onPresent} aria-label="Enter presentation mode">
-        <ControlIcon name="present" /> <span>Present</span>
-      </button>
+        <span className="control-group__label" id="process-controls-label">
+          B · Pump operating setpoint
+        </span>
+        <button
+          className="command-safe"
+          onClick={() => onCommand('judge-safe-operating-change')}
+          disabled={busy || snapshot.presentationTwin.gatewayAttachment !== 'OPERATIONAL'}
+        >
+          <span>Submit safe change</span>
+          <b>52%</b>
+        </button>
+        <button
+          className="command-unsafe"
+          onClick={() => onCommand('judge-valid-credentials-compromised-context')}
+          disabled={busy || snapshot.presentationTwin.gatewayAttachment !== 'OPERATIONAL'}
+        >
+          <span>Submit unsafe change</span>
+          <b>88%</b>
+        </button>
+        <small>Both requests traverse the same HISN authorization and safety pipeline.</small>
+      </div>
+      <div
+        className="control-group control-group--view"
+        role="group"
+        aria-label="Presentation controls"
+      >
+        <button
+          className={explained ? 'is-active' : ''}
+          onClick={onExplain}
+          aria-pressed={explained}
+          aria-label="Explain current event"
+        >
+          <ControlIcon name="explain" /> <span>Explain</span>
+        </button>
+        <button onClick={onPresent} aria-label="Enter presentation mode">
+          <ControlIcon name="present" /> <span>Present</span>
+        </button>
+      </div>
     </div>
   );
 }

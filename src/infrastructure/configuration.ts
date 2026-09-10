@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { z } from 'zod';
@@ -28,10 +29,18 @@ const EnvironmentSchema = z
     HISN_LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
+    HISN_SESSION_SECRET: z.string().min(32).optional(),
+    VERCEL: z.literal('1').optional(),
+    HISN_NOKIA_SIMULATOR: z.enum(['true', 'false']).default('false'),
     NOKIA_NAC_BASE_URL: z.string().url().optional(),
     NOKIA_NAC_API_KEY: z.string().min(8).optional(),
+    NOKIA_NAC_RAPIDAPI_HOST: z.string().min(3).default('network-as-code.nokia.rapidapi.com'),
     NOKIA_NAC_ACCESS_TOKEN: z.string().min(8).optional(),
     HISN_OPERATOR_PHONE: z
+      .string()
+      .regex(/^\+[1-9]\d{6,14}$/)
+      .optional(),
+    HISN_BACKUP_PHONE: z
       .string()
       .regex(/^\+[1-9]\d{6,14}$/)
       .optional(),
@@ -51,12 +60,14 @@ const EnvironmentSchema = z
 export type NacCredentials = {
   baseUrl: string;
   apiKey: string;
-  accessToken: string;
+  rapidapiHost: string;
+  accessToken?: string | undefined;
   operatorPhone: string;
-  gatewayNai: string;
-  backupIpv4: string;
+  backupPhone: string;
+  gatewayNai?: string | undefined;
+  backupIpv4?: string | undefined;
   appServerIpv4: string;
-  operationalSliceId: string;
+  operationalSliceId?: string | undefined;
   geofence: { latitude: number; longitude: number; radiusMeters: number };
 };
 
@@ -67,6 +78,9 @@ export type AppConfiguration = {
   port: number;
   databasePath: string;
   logLevel: z.infer<typeof EnvironmentSchema>['HISN_LOG_LEVEL'];
+  sessionSecret: string;
+  secureCookies: boolean;
+  nokiaSimulatorEnabled: boolean;
   policy: Policy;
   scenarios: Scenario[];
   nac: NacCredentials | null;
@@ -86,11 +100,17 @@ export function loadConfiguration(
   );
   const nac = nacCredentials(parsedEnvironment);
   assertLiveConfiguration(parsedEnvironment.HISN_MODE, nac);
+  if (parsedEnvironment.HISN_NOKIA_SIMULATOR === 'true' && nac === null) {
+    throw configurationError('HISN_NOKIA_SIMULATOR requires Nokia simulator configuration');
+  }
   return {
     mode: parsedEnvironment.HISN_MODE,
     port: parsedEnvironment.HISN_PORT,
     databasePath: resolve(workingDirectory, parsedEnvironment.HISN_DATABASE_PATH),
     logLevel: parsedEnvironment.HISN_LOG_LEVEL,
+    sessionSecret: sessionSecret(parsedEnvironment),
+    secureCookies: parsedEnvironment.VERCEL === '1' || parsedEnvironment.HISN_MODE === 'LIVE',
+    nokiaSimulatorEnabled: parsedEnvironment.HISN_NOKIA_SIMULATOR === 'true',
     policy,
     scenarios: scenariosFile.scenarios,
     nac,
@@ -101,13 +121,21 @@ export function loadConfiguration(
 function parseEnvironment(environment: NodeJS.ProcessEnv) {
   const relevantEntries = Object.fromEntries(
     Object.entries(environment).filter(
-      ([key]) => key.startsWith('HISN_') || key.startsWith('NOKIA_'),
+      ([key]) => key.startsWith('HISN_') || key.startsWith('NOKIA_') || key === 'VERCEL',
     ),
   );
   const parsed = EnvironmentSchema.safeParse(relevantEntries);
   if (!parsed.success)
     throw configurationError('Environment validation failed', parsed.error.flatten());
   return parsed.data;
+}
+
+function sessionSecret(environment: z.infer<typeof EnvironmentSchema>): string {
+  if (environment.HISN_SESSION_SECRET) return environment.HISN_SESSION_SECRET;
+  if (environment.VERCEL === '1' || environment.HISN_MODE === 'LIVE') {
+    throw configurationError('HISN_SESSION_SECRET is required for hosted or LIVE operation');
+  }
+  return randomBytes(32).toString('hex');
 }
 
 function readJson<T>(path: string, workingDirectory: string, schema: z.ZodType<T>): T {
@@ -124,8 +152,10 @@ function nacCredentials(environment: z.infer<typeof EnvironmentSchema>): NacCred
   const {
     NOKIA_NAC_BASE_URL: baseUrl,
     NOKIA_NAC_API_KEY: apiKey,
+    NOKIA_NAC_RAPIDAPI_HOST: rapidapiHost,
     NOKIA_NAC_ACCESS_TOKEN: accessToken,
     HISN_OPERATOR_PHONE: operatorPhone,
+    HISN_BACKUP_PHONE: backupPhone,
     HISN_GATEWAY_NAI: gatewayNai,
     HISN_BACKUP_IPV4: backupIpv4,
     HISN_APP_SERVER_IPV4: appServerIpv4,
@@ -134,31 +164,37 @@ function nacCredentials(environment: z.infer<typeof EnvironmentSchema>): NacCred
     HISN_GEOFENCE_LONGITUDE: longitude,
     HISN_GEOFENCE_RADIUS_METERS: radiusMeters,
   } = environment;
-  if (
-    baseUrl === undefined ||
-    apiKey === undefined ||
-    accessToken === undefined ||
-    operatorPhone === undefined ||
-    gatewayNai === undefined ||
-    backupIpv4 === undefined ||
-    appServerIpv4 === undefined ||
-    operationalSliceId === undefined ||
-    latitude === undefined ||
-    longitude === undefined ||
-    radiusMeters === undefined
-  ) {
-    return null;
-  }
-  return {
+  const required = [
     baseUrl,
     apiKey,
-    accessToken,
     operatorPhone,
+    backupPhone,
+    appServerIpv4,
+    latitude,
+    longitude,
+    radiusMeters,
+  ];
+  if (required.every((value) => value === undefined)) return null;
+  if (required.some((value) => value === undefined)) {
+    throw configurationError(
+      'Nokia configuration requires base URL, API key, operator/backup phones, application server IPv4, and geofence values',
+    );
+  }
+  if ((gatewayNai === undefined) !== (operationalSliceId === undefined)) {
+    throw configurationError('Nokia slice ID and gateway NAI must be configured together');
+  }
+  return {
+    baseUrl: baseUrl!,
+    apiKey: apiKey!,
+    rapidapiHost,
+    accessToken,
+    operatorPhone: operatorPhone!,
+    backupPhone: backupPhone!,
     gatewayNai,
     backupIpv4,
-    appServerIpv4,
+    appServerIpv4: appServerIpv4!,
     operationalSliceId,
-    geofence: { latitude, longitude, radiusMeters },
+    geofence: { latitude: latitude!, longitude: longitude!, radiusMeters: radiusMeters! },
   };
 }
 

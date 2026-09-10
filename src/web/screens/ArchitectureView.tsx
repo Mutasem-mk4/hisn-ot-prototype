@@ -63,7 +63,8 @@ export function ArchitectureView({
           <ul>
             {Object.entries(readiness).map(
               ([key, value]) =>
-                key !== 'runtimeMode' && (
+                key !== 'runtimeMode' &&
+                !key.endsWith('Source') && (
                   <li key={key}>
                     <span>{humanize(key)}</span>
                     <StatusMark status={value} />
@@ -82,25 +83,15 @@ export function ArchitectureView({
             </div>
             <div>
               <dt>Current results</dt>
-              <dd>
-                {readiness.runtimeMode === 'DEMO'
-                  ? 'Deterministic simulation fixtures'
-                  : 'Configured provider adapter'}
-              </dd>
+              <dd>{providerLabel(readiness.evidenceSource)}</dd>
             </div>
             <div>
               <dt>Gateway detachment</dt>
-              <dd>
-                {readiness.runtimeMode === 'DEMO'
-                  ? 'Simulated adapter'
-                  : 'Specialized Networks adapter'}
-              </dd>
+              <dd>{providerLabel(readiness.enforcementSource)}</dd>
             </div>
             <div>
               <dt>Backup QoD</dt>
-              <dd>
-                {readiness.runtimeMode === 'DEMO' ? 'Simulated adapter' : 'QoD session adapter'}
-              </dd>
+              <dd>{providerLabel(readiness.enforcementSource)}</dd>
             </div>
           </dl>
           <button onClick={onDegraded}>Run degraded-provider proof</button>
@@ -112,4 +103,15 @@ export function ArchitectureView({
 
 function humanize(value: string) {
   return value.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+}
+
+function providerLabel(source: RunSnapshot['integration']['evidenceSource']) {
+  const labels = {
+    SIMULATED: 'Deterministic simulation',
+    NOKIA_SANDBOX: 'Authenticated Nokia simulator',
+    NOKIA_SANDBOX_WITH_FALLBACK: 'Nokia simulator with labeled fallback',
+    NOKIA_LIVE: 'Nokia operator network',
+    UNAVAILABLE: 'Unavailable',
+  } satisfies Record<RunSnapshot['integration']['evidenceSource'], string>;
+  return labels[source];
 }

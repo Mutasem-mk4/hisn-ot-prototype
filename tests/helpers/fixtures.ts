@@ -38,7 +38,7 @@ export function evidenceCall(
     redactedResult,
     provenance: requestStatus === 'SUCCEEDED' ? 'SIMULATED' : 'UNAVAILABLE',
     latencyMs: 12,
-    timestamp: '2026-09-04T08:00:00.000Z',
+    timestamp: new Date().toISOString(),
     correlationId: 'correlation-test',
   });
 }

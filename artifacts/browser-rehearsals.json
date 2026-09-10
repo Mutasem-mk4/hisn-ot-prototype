@@ -1,0 +1,89 @@
+{
+  "observedAt": "2026-09-07T17:23:26.827Z",
+  "measurements": [
+    {
+      "run": 1,
+      "correlationId": "hisn-7629d079-c821-4721-b112-116c9a81913f",
+      "mode": "DEMO",
+      "speed": 2,
+      "elapsedMs": 44410,
+      "decision": "BLOCK_AND_CONTAIN",
+      "continuity": {
+        "source": "SIMULATED_PROCESS_OBSERVATIONS",
+        "observedAt": "2026-09-07T17:22:01.762Z",
+        "observationDurationMs": 86298,
+        "maximumHeartbeatGapMs": 532,
+        "backupReady": true,
+        "unsafeCommandsExecuted": 0,
+        "pressureStayedInsideSafeBand": true,
+        "backupHeartbeatsObserved": 78,
+        "currentActualPressurePercent": 46,
+        "currentFlowRateM3PerHour": 1239.3531599999972,
+        "configuredNetworkLatencyMs": 31
+      }
+    },
+    {
+      "run": 2,
+      "correlationId": "hisn-9572fd01-4cda-4b1c-a31a-5a2eb9b7e40f",
+      "mode": "DEMO",
+      "speed": 2,
+      "elapsedMs": 44516,
+      "decision": "BLOCK_AND_CONTAIN",
+      "continuity": {
+        "source": "SIMULATED_PROCESS_OBSERVATIONS",
+        "observedAt": "2026-09-07T17:22:47.876Z",
+        "observationDurationMs": 86478,
+        "maximumHeartbeatGapMs": 534,
+        "backupReady": true,
+        "unsafeCommandsExecuted": 0,
+        "pressureStayedInsideSafeBand": true,
+        "backupHeartbeatsObserved": 79,
+        "currentActualPressurePercent": 46,
+        "currentFlowRateM3PerHour": 1239.3531599999972,
+        "configuredNetworkLatencyMs": 31
+      }
+    },
+    {
+      "run": 3,
+      "correlationId": "hisn-9cf33e3b-894b-4767-8f67-8c04a91b7a8c",
+      "mode": "DEMO",
+      "speed": 2,
+      "elapsedMs": 44444,
+      "decision": "BLOCK_AND_CONTAIN",
+      "continuity": {
+        "source": "SIMULATED_PROCESS_OBSERVATIONS",
+        "observedAt": "2026-09-07T17:23:32.504Z",
+        "observationDurationMs": 86222,
+        "maximumHeartbeatGapMs": 536,
+        "backupReady": true,
+        "unsafeCommandsExecuted": 0,
+        "pressureStayedInsideSafeBand": true,
+        "backupHeartbeatsObserved": 78,
+        "currentActualPressurePercent": 46,
+        "currentFlowRateM3PerHour": 1239.3531599999972,
+        "configuredNetworkLatencyMs": 31
+      }
+    },
+    {
+      "run": 4,
+      "correlationId": "hisn-78a56024-cdbf-4e9a-a738-7486cf278248",
+      "mode": "DEMO",
+      "speed": 2,
+      "elapsedMs": 35224,
+      "decision": "BLOCK",
+      "continuity": {
+        "source": "SIMULATED_PROCESS_OBSERVATIONS",
+        "observedAt": "2026-09-07T17:23:56.173Z",
+        "observationDurationMs": 64798,
+        "maximumHeartbeatGapMs": 532,
+        "backupReady": true,
+        "unsafeCommandsExecuted": 0,
+        "pressureStayedInsideSafeBand": true,
+        "backupHeartbeatsObserved": 64,
+        "currentActualPressurePercent": 46,
+        "currentFlowRateM3PerHour": 1239.35315999978,
+        "configuredNetworkLatencyMs": 31
+      }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { IncidentReport, RunSnapshot } from '../application/ports.js';
+import type { TwinState } from '../shared/contracts.js';
 import {
   AgentPlanSchema,
   AgentRecommendationSchema,
@@ -64,6 +65,20 @@ const RunSnapshotSchema: z.ZodType<RunSnapshot> = z
         scenario: z.enum(['READY', 'NOT_READY']),
         evidenceProvider: z.enum(['AVAILABLE', 'DEGRADED', 'UNAVAILABLE']),
         enforcementProvider: z.enum(['AVAILABLE', 'DEGRADED', 'UNAVAILABLE']),
+        evidenceSource: z.enum([
+          'SIMULATED',
+          'NOKIA_SANDBOX',
+          'NOKIA_SANDBOX_WITH_FALLBACK',
+          'NOKIA_LIVE',
+          'UNAVAILABLE',
+        ]),
+        enforcementSource: z.enum([
+          'SIMULATED',
+          'NOKIA_SANDBOX',
+          'NOKIA_SANDBOX_WITH_FALLBACK',
+          'NOKIA_LIVE',
+          'UNAVAILABLE',
+        ]),
         agentReasoner: z.enum(['DETERMINISTIC', 'LIVE_LLM']),
       })
       .strict(),
@@ -84,6 +99,13 @@ const RunSnapshotSchema: z.ZodType<RunSnapshot> = z
   .strict();
 
 const ErrorResponseSchema = z.object({ error: z.object({ message: z.string() }) }).strict();
+const RehearsalResultSchema = z
+  .object({
+    frames: z.array(RunSnapshotSchema).min(2),
+    incident: IncidentReportSchema.nullable(),
+  })
+  .strict();
+export type RehearsalResult = z.infer<typeof RehearsalResultSchema>;
 
 let session: Session | null = null;
 
@@ -104,8 +126,31 @@ export function createJudgeRun(scenarioId: string): Promise<RunSnapshot> {
   );
 }
 
+export function submitJudgeCommand(scenarioId: string): Promise<RunSnapshot> {
+  return mutate(
+    '/api/v1/judge-run/command',
+    { scenarioId, idempotencyKey: crypto.randomUUID() },
+    RunSnapshotSchema,
+  );
+}
+
+export function rehearseJudgeRun(
+  scenarioId: string,
+  continuingTwin?: TwinState,
+): Promise<RehearsalResult> {
+  return mutate(
+    '/api/v1/judge-run/rehearsal',
+    {
+      scenarioId,
+      idempotencyKey: crypto.randomUUID(),
+      ...(continuingTwin ? { continuingTwin } : {}),
+    },
+    RehearsalResultSchema,
+  );
+}
+
 export function controlJudgeRun(
-  action: 'PLAY' | 'PAUSE' | 'NEXT' | 'PREVIOUS' | 'RESET',
+  action: 'PLAY' | 'PAUSE' | 'NEXT' | 'PREVIOUS' | 'RESET' | 'SET_SPEED' | 'TICK',
   speed?: string,
 ): Promise<RunSnapshot> {
   return mutate(
@@ -128,6 +173,10 @@ export function subscribeToRun(
   onInvalidPayload: (message: string) => void,
 ): () => void {
   const source = new EventSource('/api/v1/events');
+  source.onerror = () =>
+    onInvalidPayload(
+      'Connection interrupted. Displayed telemetry may be stale; reconnecting to authoritative state.',
+    );
   source.addEventListener('snapshot', (event) => {
     try {
       const parsed = RunSnapshotSchema.parse(JSON.parse((event as MessageEvent<string>).data));

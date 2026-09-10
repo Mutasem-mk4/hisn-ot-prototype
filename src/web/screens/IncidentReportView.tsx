@@ -68,7 +68,7 @@ export function IncidentReportView({
         <section>
           <span className="eyebrow">Executive finding</span>
           <h3>
-            Identity valid. Context compromised. Command blocked. Operations continued safely.
+            {decision.state}: {decision.requestedAction}.
           </h3>
           <p>{decision.containmentRationale}</p>
         </section>

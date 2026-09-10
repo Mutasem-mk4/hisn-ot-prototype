@@ -1,6 +1,10 @@
 import type { AgentReasoner, EnforcementProvider, EvidenceProvider } from '../application/ports.js';
-import { DeterministicAgentReasoner, FallbackAgentReasoner } from './agent-reasoners.js';
+import { DeterministicAgentReasoner, HostedAgentReasoner } from './agent-reasoners.js';
 import type { AppConfiguration } from './configuration.js';
+import {
+  NokiaSimulatorEnforcementProvider,
+  NokiaSimulatorEvidenceProvider,
+} from './hybrid-providers.js';
 import { NokiaEnforcementProvider, NokiaEvidenceProvider } from './nokia-providers.js';
 import { SimulatedEnforcementProvider, SimulatedEvidenceProvider } from './simulated-providers.js';
 import {
@@ -16,13 +20,35 @@ export type ProviderSet = {
 
 export function createProviders(configuration: AppConfiguration): ProviderSet {
   const reasoner = configuration.llm
-    ? new FallbackAgentReasoner(
+    ? new HostedAgentReasoner(
         configuration.llm,
         configuration.policy.providers.timeoutMs,
         configuration.policy.agent.maximumRetries,
       )
     : new DeterministicAgentReasoner();
   if (configuration.mode === 'DEMO') {
+    if (configuration.nokiaSimulatorEnabled && configuration.nac) {
+      return {
+        evidence: new NokiaSimulatorEvidenceProvider(
+          new NokiaEvidenceProvider(
+            'SANDBOX',
+            configuration.nac,
+            configuration.policy.providers.timeoutMs,
+            configuration.policy.providers.maximumAttempts,
+          ),
+          new SimulatedEvidenceProvider(),
+        ),
+        enforcement: new NokiaSimulatorEnforcementProvider(
+          new NokiaEnforcementProvider(
+            'SANDBOX',
+            configuration.nac,
+            configuration.policy.providers.timeoutMs,
+          ),
+          new SimulatedEnforcementProvider(),
+        ),
+        reasoner,
+      };
+    }
     return {
       evidence: new SimulatedEvidenceProvider(),
       enforcement: new SimulatedEnforcementProvider(),
@@ -47,7 +73,6 @@ export function createProviders(configuration: AppConfiguration): ProviderSet {
       configuration.mode,
       configuration.nac,
       configuration.policy.providers.timeoutMs,
-      configuration.policy.providers.maximumAttempts,
     ),
     reasoner,
   };

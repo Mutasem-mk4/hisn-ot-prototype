@@ -1,15 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { IncidentReport, RunSnapshot } from '../application/ports.js';
 import { Brand } from './components/Brand.js';
 import { StatusMark } from './components/StatusMark.js';
-import {
-  controlJudgeRun,
-  createJudgeRun,
-  getIncident,
-  getJudgeRun,
-  initializeSession,
-  subscribeToRun,
-} from './api.js';
+import { getIncident, getJudgeRun, initializeSession, rehearseJudgeRun } from './api.js';
 import { ArchitectureView } from './screens/ArchitectureView.js';
 import { EvidenceTrace } from './screens/EvidenceTrace.js';
 import { IncidentReportView } from './screens/IncidentReportView.js';
@@ -17,34 +10,46 @@ import { JudgeMode } from './screens/JudgeMode.js';
 import { LiveOperations } from './screens/LiveOperations.js';
 
 type Screen = 'judge' | 'operations' | 'evidence' | 'incident' | 'architecture';
-type ControlAction = 'PLAY' | 'PAUSE' | 'NEXT' | 'PREVIOUS' | 'RESET';
+type ControlAction = 'PLAY' | 'PAUSE' | 'NEXT' | 'PREVIOUS' | 'RESET' | 'SET_SPEED';
 
 export function App() {
   const [screen, setScreen] = useState<Screen>(() => screenFromHash());
   const [snapshot, setSnapshot] = useState<RunSnapshot | null>(null);
   const [report, setReport] = useState<IncidentReport | null>(null);
   const [busy, setBusy] = useState(false);
+  const controlPending = useRef(false);
+  const rehearsalFrames = useRef<RunSnapshot[]>([]);
+  const rehearsalIndex = useRef(0);
+  const playbackGeneration = useRef(0);
   const [explained, setExplained] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let unsubscribe: () => void = () => undefined;
+    let cancelled = false;
     void initializeSession()
       .then(getJudgeRun)
       .then((initial) => {
+        if (cancelled) return;
         setSnapshot(initial);
-        unsubscribe = subscribeToRun(setSnapshot, setError);
       })
       .catch((reason: Error) => setError(reason.message));
-    return () => unsubscribe();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     if (!snapshot?.incidentAvailable) return;
+    if (report?.correlationId === snapshot.run.correlationId) return;
     void getIncident(snapshot.run.id)
       .then(setReport)
       .catch((reason: Error) => setError(reason.message));
-  }, [snapshot?.incidentAvailable, snapshot?.run.id]);
+  }, [
+    report?.correlationId,
+    snapshot?.incidentAvailable,
+    snapshot?.run.correlationId,
+    snapshot?.run.id,
+  ]);
 
   useEffect(() => {
     const onHash = () => setScreen(screenFromHash());
@@ -52,26 +57,112 @@ export function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  const onControl = useCallback(async (action: ControlAction, speed?: string) => {
-    setBusy(true);
-    setError(null);
-    try {
-      const next = await controlJudgeRun(action, speed);
-      setSnapshot(next);
-      if (action === 'RESET') setReport(null);
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Control request failed');
-    } finally {
-      setBusy(false);
-    }
-  }, []);
+  const showFrame = useCallback(
+    (frames: RunSnapshot[], index: number, playing: boolean, speed: number) => {
+      rehearsalIndex.current = index;
+      setSnapshot(playbackFrame(frames[index]!, playing && index < frames.length - 1, speed));
+    },
+    [],
+  );
+
+  const playFrames = useCallback(
+    (frames: RunSnapshot[], startIndex: number, speed: number) => {
+      const generation = ++playbackGeneration.current;
+      showFrame(frames, startIndex, true, speed);
+      const advance = (index: number, firstFrame: boolean) => {
+        window.setTimeout(
+          () => {
+            if (playbackGeneration.current !== generation) return;
+            const nextIndex = index + 1;
+            showFrame(frames, nextIndex, nextIndex < frames.length - 1, speed);
+            if (nextIndex < frames.length - 1) advance(nextIndex, false);
+          },
+          firstFrame ? 750 : Math.max(250, 750 / speed),
+        );
+      };
+      if (startIndex < frames.length - 1) advance(startIndex, true);
+    },
+    [showFrame],
+  );
+
+  const prepareRehearsal = useCallback(
+    async (scenarioId: string, continuingTwin?: RunSnapshot['run']['twin']) => {
+      setBusy(true);
+      setError(null);
+      try {
+        const result = await rehearseJudgeRun(scenarioId, continuingTwin);
+        rehearsalFrames.current = result.frames;
+        rehearsalIndex.current = 0;
+        setReport(result.incident);
+        showFrame(result.frames, 0, false, result.frames[0]!.run.speed);
+        return result.frames;
+      } catch (reason) {
+        setError(reason instanceof Error ? reason.message : 'Could not prepare the rehearsal');
+        return null;
+      } finally {
+        setBusy(false);
+      }
+    },
+    [showFrame],
+  );
+
+  const onControl = useCallback(
+    async (action: ControlAction, speedValue?: string) => {
+      if (!snapshot || controlPending.current) return;
+      const speed = speedValue ? Number(speedValue) : snapshot.run.speed;
+      const frames = rehearsalFrames.current;
+      if (action === 'SET_SPEED') {
+        if (!snapshot.presentationTwin.simulationPaused && frames.length > 0) {
+          playbackGeneration.current += 1;
+          playFrames(frames, rehearsalIndex.current, speed);
+        } else {
+          setSnapshot(playbackFrame(snapshot, false, speed));
+        }
+        return;
+      }
+      if (action === 'PAUSE') {
+        playbackGeneration.current += 1;
+        setSnapshot(playbackFrame(snapshot, false, speed));
+        return;
+      }
+      if (action === 'RESET' && frames.length > 0) {
+        playbackGeneration.current += 1;
+        setReport(null);
+        showFrame(frames, 0, false, speed);
+        return;
+      }
+      let prepared = frames;
+      if (prepared.length === 0 || prepared[0]?.run.scenarioId !== snapshot.run.scenarioId) {
+        controlPending.current = true;
+        prepared = (await prepareRehearsal(snapshot.run.scenarioId, snapshot.run.twin)) ?? [];
+        controlPending.current = false;
+      }
+      if (prepared.length === 0) return;
+      if (action === 'PLAY') {
+        const start = rehearsalIndex.current >= prepared.length - 1 ? 0 : rehearsalIndex.current;
+        playFrames(prepared, start, speed);
+      } else if (action === 'NEXT') {
+        playbackGeneration.current += 1;
+        showFrame(
+          prepared,
+          Math.min(prepared.length - 1, rehearsalIndex.current + 1),
+          false,
+          speed,
+        );
+      } else if (action === 'PREVIOUS') {
+        playbackGeneration.current += 1;
+        showFrame(prepared, Math.max(0, rehearsalIndex.current - 1), false, speed);
+      }
+    },
+    [playFrames, prepareRehearsal, showFrame, snapshot],
+  );
 
   useEffect(() => {
     const keyboard = (event: KeyboardEvent) => {
       if (!snapshot || isInteractiveTarget(event.target)) return;
       if (event.code === 'Space') {
         event.preventDefault();
-        void onControl(snapshot.run.playbackStatus === 'PLAYING' ? 'PAUSE' : 'PLAY');
+        void onControl(snapshot.presentationTwin.simulationPaused ? 'PLAY' : 'PAUSE');
       }
       if (event.key === 'ArrowRight') void onControl('NEXT');
       if (event.key === 'ArrowLeft') void onControl('PREVIOUS');
@@ -81,15 +172,21 @@ export function App() {
   }, [snapshot, onControl]);
 
   const runDegraded = async () => {
-    setBusy(true);
-    try {
-      setSnapshot(await createJudgeRun('judge-degraded-provider'));
-      setReport(null);
+    const frames = await prepareRehearsal('judge-degraded-provider');
+    if (frames) {
       window.location.hash = 'judge';
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Could not start scenario');
-    } finally {
-      setBusy(false);
+      playFrames(frames, 0, snapshot?.run.speed ?? 1);
+    }
+  };
+
+  const submitCommand = async (scenarioId: string) => {
+    if (!snapshot || controlPending.current) return;
+    controlPending.current = true;
+    const frames = await prepareRehearsal(scenarioId, snapshot.run.twin);
+    controlPending.current = false;
+    if (frames) {
+      window.location.hash = 'judge';
+      playFrames(frames, 0, snapshot.run.speed);
     }
   };
 
@@ -119,7 +216,11 @@ export function App() {
           )}
         </nav>
         <div className="mode-indicator">
-          <StatusMark status={snapshot.run.runtimeMode} />
+          <StatusMark status={snapshot.integration.evidenceSource}>
+            {snapshot.integration.evidenceSource === 'NOKIA_SANDBOX_WITH_FALLBACK'
+              ? 'NOKIA TEST NETWORK'
+              : snapshot.run.runtimeMode}
+          </StatusMark>
           <span>{snapshot.policyVersion}</span>
         </div>
       </header>
@@ -137,6 +238,7 @@ export function App() {
           busy={busy}
           explained={explained}
           onControl={(action, speed) => void onControl(action, speed)}
+          onCommand={(scenarioId) => void submitCommand(scenarioId)}
           onExplain={() => setExplained((value) => !value)}
         />
       )}
@@ -194,4 +296,18 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
     target instanceof HTMLElement &&
     (target.matches('button, a, input, select, textarea') || target.isContentEditable)
   );
+}
+
+function playbackFrame(snapshot: RunSnapshot, playing: boolean, speed: number): RunSnapshot {
+  const terminal = ['COMPLETE', 'FAILED_SAFE'].includes(snapshot.run.playbackStatus);
+  return {
+    ...snapshot,
+    run: {
+      ...snapshot.run,
+      speed,
+      playbackStatus: playing ? 'PLAYING' : terminal ? snapshot.run.playbackStatus : 'PAUSED',
+      twin: { ...snapshot.run.twin, simulationPaused: !playing },
+    },
+    presentationTwin: { ...snapshot.presentationTwin, simulationPaused: !playing },
+  };
 }
