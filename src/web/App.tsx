@@ -209,13 +209,11 @@ export function App() {
       <header className="topbar">
         <Brand />
         <nav aria-label="Primary navigation">
-          {(['judge', 'operations', 'evidence', 'incident', 'architecture'] as Screen[]).map(
-            (item) => (
-              <a key={item} href={`#${item}`} aria-current={screen === item ? 'page' : undefined}>
-                {navLabel(item)}
-              </a>
-            ),
-          )}
+          {(['judge', 'evidence', 'architecture'] as Screen[]).map((item) => (
+            <a key={item} href={`#${item}`} aria-current={screen === item ? 'page' : undefined}>
+              {navLabel(item)}
+            </a>
+          ))}
         </nav>
         <div className="mode-indicator">
           <StatusMark status={snapshot.integration.evidenceSource}>
@@ -285,7 +283,7 @@ function screenFromHash(): Screen {
 
 function navLabel(screen: Screen) {
   return {
-    judge: 'Judge Mode',
+    judge: 'Demo',
     operations: 'Live Operations',
     evidence: 'Evidence Trace',
     incident: 'Incident',

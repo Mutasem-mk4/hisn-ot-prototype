@@ -4,27 +4,29 @@
 
 ### 0:00–0:20 — State the problem
 
-“Credentials can be stolen. HISN-OT asks whether this command has current network proof before it can affect a pump.” Point to the requested, accepted, and observed values.
+“Credentials can be stolen. HISN-OT asks whether this command has current network proof before it can affect a pump.” Point to the valid-credentials attack scenario and the recommended action.
 
-### 0:20–0:40 — Prove adaptive scope
+### 0:20–0:55 — Run the attack demonstration
 
-Run the read-only inspection. Show `LANGGRAPH AGENT`, the one-signal Device Reachability minimum, any additional model-selected check, no setpoint change, and no enforcement.
+Select **Run attack demonstration**. Follow the four-step protection path: the gateway holds the 88% request, the agent selects five telecom checks, deterministic policy issues `BLOCK_AND_CONTAIN`, and the plant keeps its accepted setting.
 
-### 0:40–1:05 — Prove safe control
+### 0:55–1:20 — Prove the physical outcome
 
-Submit 52%. Show the in-band evidence floor: Number Verification, Location Verification, and Device Reachability. Advance to `ALLOW` and show accepted pressure become 52% while the twin responds progressively.
+Use the outcome panel to compare **88% requested** with the unchanged accepted value. Point out the **42–52% observed safe band** and the independent **60% command hard limit**. The final decision is visible without opening the digital twin.
 
-### 1:05–1:35 — Prove attack resistance
+### 1:20–1:45 — Prove the agent and evidence
 
-Submit 88%. Explain that exceeding the observed safe band escalates identity-risk evidence with SIM Swap and Device Swap. Point out the independent 60% maximum. Advance to `BLOCK_AND_CONTAIN` and show that accepted pressure remains 52%.
+Show the three-stage agent summary and recorded network observations. Expand **Show technical trace** only if the judges want the goal, tool request, redacted observation, adaptation, and recommendation record. This is an auditable action and observation trace, not hidden chain-of-thought.
 
-### 1:35–1:55 — Prove the agent
+### 1:45–2:00 — Prove honesty and depth
 
-Open Evidence Trace. Walk through goal, model-requested tool, Nokia observation, adaptation, recommendation, and deterministic authority. State that this is an action/observation trace, not hidden chain-of-thought.
+Point to the provenance strip and explain whether the current run uses Nokia sandbox, local evidence, or an unavailable provider. Open **Evidence Trace** for correlation IDs, latency, timestamps, and the incident link. The detailed digital twin remains available under **Open technical view**.
 
-### 1:55–2:10 — Prove honesty and value
+## Optional comparisons
 
-Open Incident. Show Nokia versus local provenance, containment status, continuity status, and recovery requirements. Close with the regional path across desalination, energy, ports, oil and gas, and factories.
+- **Run safe command** requests 52% and demonstrates `ALLOW` when the required evidence passes.
+- **Run read-only inspection** demonstrates the one-signal Device Reachability minimum with no process-state change.
+- **Demo controls** exposes pause, playback speed, event stepping, reset, presenter cues, and full-screen mode for technical review.
 
 ## Likely judge questions
 

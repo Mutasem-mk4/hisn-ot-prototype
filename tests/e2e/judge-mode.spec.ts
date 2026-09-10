@@ -10,42 +10,50 @@ test.beforeEach(async ({ page, context, baseURL }) => {
     baseURL ?? 'http://127.0.0.1:4321',
     'judge-valid-credentials-compromised-context',
   );
-  await expect(page.getByRole('button', { name: 'Advance one backend event' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: /Run attack demonstration/ })).toBeEnabled();
 });
 
 test('explains the product immediately and exposes the primary action', async ({ page }) => {
   await expect(
-    page.getByRole('heading', { name: /No critical command becomes a physical action/i }),
+    page.getByRole('heading', { name: /Stop dangerous industrial commands/i }),
   ).toBeVisible();
-  await expect(page.getByRole('button', { name: /Run simulation/i })).toBeVisible();
-  await expect(page.getByText('Valid credentials. But should this command execute?')).toBeVisible();
-  const workflow = page.getByRole('region', { name: 'See what the agent does and why' });
+  await expect(page.getByRole('button', { name: /Run attack demonstration/i })).toBeVisible();
+  await expect(
+    page.getByText('Compromised device context requests 88% pump pressure.'),
+  ).toBeVisible();
+  const workflow = page.locator('.agent-workflow');
   await expect(workflow).toBeVisible();
-  await expect(workflow.getByText('Understand command')).toBeVisible();
-  await expect(workflow.getByText('Call CAMARA tools')).toBeVisible();
-  await expect(workflow.getByText('Policy authorizes')).toBeVisible();
+  await expect(workflow.getByText('Understand the command')).toBeVisible();
+  await expect(workflow.getByText('Choose trusted evidence')).toBeVisible();
+  await expect(workflow.getByText('Observe and recommend')).toBeVisible();
   await expect(workflow.getByText('Ready to investigate')).toBeVisible();
   await expect(page.getByRole('button', { name: /Run read-only inspection/i })).toContainText(
     '1 API',
   );
+  const primaryAction = await page
+    .getByRole('button', { name: /Run attack demonstration/i })
+    .boundingBox();
+  expect(primaryAction?.y).toBeLessThan(768);
 });
 
 test('runs the adaptive low-risk path with one inspectable evidence call', async ({ page }) => {
+  await openDemoControls(page);
   await page.getByLabel('Simulation playback speed').selectOption('4');
   await page.getByRole('button', { name: /Run read-only inspection/i }).click();
 
-  await expect(
-    page.getByRole('heading', { name: 'Evidence-bound incident record sealed' }),
-  ).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Read-only inspection authorized.' })).toBeVisible(
+    { timeout: 15_000 },
+  );
   await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
-  const workflow = page.getByRole('region', { name: 'See what the agent does and why' });
-  await expect(workflow.getByText(/recorded steps/)).toBeVisible();
+  const workflow = page.locator('.agent-workflow');
+  await expect(workflow.getByText(/recorded agent steps/)).toBeVisible();
+  await workflow.getByText('Show technical trace').click();
   await expect(workflow.getByText(/^Tool request/).first()).toBeVisible();
   await expect(workflow.getByText(/^Observation/).first()).toBeVisible();
-  await expect(workflow.getByText('Allow · SIMULATED', { exact: true })).toBeVisible();
-  const process = page.getByRole('heading', { name: 'Simulated process' }).locator('..');
-  await expect(process).toContainText('Accepted setpoint46%');
-  await expect(process).toContainText('No command pending');
+  await expect(workflow.getByText('Allow recommended from recorded evidence')).toBeVisible();
+  const outcome = page.locator('.outcome-facts');
+  await expect(outcome).toContainText('Accepted by plant46%');
+  await expect(outcome).toContainText('Physical resultNo change');
 
   await page.getByRole('link', { name: 'Evidence Trace' }).click();
   const table = page.getByRole('table', { name: 'Pre-decision telecom evidence calls' });
@@ -64,6 +72,7 @@ test('runs the adaptive low-risk path with one inspectable evidence call', async
 test('supports keyboard stepping while keeping requested and actual pressure distinct', async ({
   page,
 }) => {
+  await openDemoControls(page);
   const step = page.getByRole('button', { name: 'Advance one backend event' });
   await step.focus();
   await page.keyboard.press('Enter');
@@ -71,10 +80,10 @@ test('supports keyboard stepping while keeping requested and actual pressure dis
   await step.focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Gateway holds physical command' })).toBeVisible();
-  const instrument = page.getByRole('heading', { name: 'Simulated process' }).locator('..');
-  await expect(instrument).toContainText('46.0%');
-  await expect(instrument).toContainText('88%');
-  await expect(instrument).toContainText('BLOCKED');
+  const outcome = page.locator('.outcome-facts');
+  await expect(outcome).toContainText('Accepted by plant46%');
+  await expect(outcome).toContainText('Requested88%');
+  await expect(outcome).toContainText('Physical resultUnchanged');
 });
 
 test('shows an allowed plant response followed by an intercepted unsafe command', async ({
@@ -84,11 +93,13 @@ test('shows an allowed plant response followed by an intercepted unsafe command'
     !['desktop', 'projector'].includes(testInfo.project.name),
     'The full judge interaction is exercised at the presentation viewports.',
   );
-  await page.getByRole('button', { name: /Submit safe change/ }).click();
+  await openDemoControls(page);
+  await page.getByRole('button', { name: /Run safe command/ }).click();
   await page.getByRole('button', { name: 'Pause simulation' }).click();
   await page.getByLabel('Simulation playback speed').selectOption('4');
   await stepProof(page, 9);
   await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
+  await page.getByText('Open technical view').click();
   const process = page.getByRole('heading', { name: 'Simulated process' }).locator('..');
   await expect(process).toContainText('Accepted setpoint52%');
   await expect(process).toContainText('EXECUTED');
@@ -105,7 +116,7 @@ test('shows an allowed plant response followed by an intercepted unsafe command'
   await page.waitForTimeout(400);
   await expect(page.locator('.facility__clock b')).toHaveText(pausedClock);
 
-  await page.getByRole('button', { name: /Submit unsafe change/ }).click();
+  await page.getByRole('button', { name: /Run attack demonstration/ }).click();
   await page.getByRole('button', { name: 'Pause simulation' }).click();
   await stepProof(page, 12);
   await expect(page.getByText('BLOCK AND CONTAIN', { exact: true }).first()).toBeVisible();
@@ -118,9 +129,9 @@ test('shows an allowed plant response followed by an intercepted unsafe command'
   const readOnly = page.getByRole('button', { name: /Run read-only inspection/i });
   await expect(readOnly).toBeEnabled();
   await readOnly.click();
-  await expect(
-    page.getByRole('heading', { name: 'Evidence-bound incident record sealed' }),
-  ).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Read-only inspection authorized.' })).toBeVisible(
+    { timeout: 15_000 },
+  );
   await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
   await expect(process).toContainText('Accepted setpoint46%');
   await expect(process).toContainText('GatewayOPERATIONAL');
@@ -129,13 +140,14 @@ test('shows an allowed plant response followed by an intercepted unsafe command'
 test('completes the backend workflow, exposes trace, and exports the incident', async ({
   page,
 }, testInfo) => {
+  await openDemoControls(page);
   const step = page.getByRole('button', { name: 'Advance one backend event' });
   for (let count = 0; count < 12; count += 1) {
     await step.click();
     if (count < 11) await expect(step).toBeEnabled();
   }
   await expect(
-    page.getByRole('heading', { name: 'Evidence-bound incident record sealed' }),
+    page.getByRole('heading', { name: 'Unsafe command blocked. Plant setting unchanged.' }),
   ).toBeVisible();
   await expect(page.getByText('BLOCK AND CONTAIN', { exact: true }).first()).toBeVisible();
   await page.getByRole('link', { name: 'Evidence Trace' }).click();
@@ -157,14 +169,13 @@ test('has no serious accessibility violations or browser console errors', async 
   });
   await page.reload();
   await expect(page.getByRole('main')).toBeVisible();
-  for (const screen of [
-    'Judge Mode',
-    'Live Operations',
-    'Evidence Trace',
-    'Incident',
-    'Architecture',
-  ]) {
+  for (const screen of ['Demo', 'Evidence Trace', 'Architecture']) {
     await page.getByRole('link', { name: screen, exact: true }).click();
+    await expect(page.getByRole('main')).toBeVisible();
+    await expectNoSeriousViolations(page);
+  }
+  for (const screen of ['operations', 'incident']) {
+    await page.goto(`#${screen}`);
     await expect(page.getByRole('main')).toBeVisible();
     await expectNoSeriousViolations(page);
   }
@@ -185,5 +196,12 @@ async function stepProof(page: Page, steps: number) {
     await expect(step).toBeEnabled();
     await step.click();
     await expect(page.locator('.event-sequence')).toHaveText(String(index + 2).padStart(2, '0'));
+  }
+}
+
+async function openDemoControls(page: Page) {
+  const controls = page.locator('.demo-controls');
+  if (!(await controls.evaluate((element) => (element as HTMLDetailsElement).open))) {
+    await controls.getByText('Demo controls').click();
   }
 }

@@ -1,5 +1,5 @@
 import type { RunSnapshot } from '../../application/ports.js';
-import type { WorkflowState } from '../../shared/contracts.js';
+import type { EvidenceCall, WorkflowState } from '../../shared/contracts.js';
 import { StatusMark } from './StatusMark.js';
 
 type StageState = 'complete' | 'current' | 'failed' | 'pending';
@@ -32,7 +32,6 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
   const trace = snapshot.artifacts.agentTrace ?? [];
   const recommendation = snapshot.artifacts.recommendation;
   const decision = snapshot.artifacts.decision;
-  const missingTrace = trace.length === 0 && decision !== undefined;
   const agentFailed =
     snapshot.run.playbackStatus === 'FAILED_SAFE' &&
     snapshot.currentEvent?.payload.errorCode === 'AGENT_UNAVAILABLE';
@@ -40,79 +39,52 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
     plan?.reasoningProvenance === 'LIVE' || recommendation?.reasoningProvenance === 'LIVE';
   const agentUnavailable =
     snapshot.integration.agentReasoner === 'UNAVAILABLE' || (agentFailed && !hasAgentOutput);
-  const failureCode = textPayload(snapshot.currentEvent?.payload.errorCode, 'FAILED SAFE');
   const failureReason = textPayload(snapshot.currentEvent?.payload.failureReason, 'UNAVAILABLE');
-  const failureDetail = textPayload(
-    snapshot.currentEvent?.payload.detail,
-    'The command remained blocked.',
-  );
   const stages: WorkflowStage[] = [
     {
-      label: 'Understand command',
+      label: 'Understand the command',
       detail: snapshot.artifacts.risk
-        ? `${humanize(snapshot.run.command.kind)} · ${snapshot.artifacts.risk} risk`
-        : 'Read redacted command context',
+        ? `${humanize(snapshot.artifacts.risk)} risk identified`
+        : 'Read the command and its physical consequence',
       completeAt: 'RISK_CLASSIFIED',
     },
     {
-      label: 'Plan evidence',
+      label: 'Choose trusted evidence',
       detail: plan
-        ? `${plan.selectedTools.length} allowlisted ${pluralize('tool', plan.selectedTools.length)}`
-        : 'Choose signals by consequence',
+        ? `${plan.selectedTools.length} telecom ${pluralize('check', plan.selectedTools.length)} selected`
+        : 'Select network checks from the safe allowlist',
       completeAt: 'EVIDENCE_PLANNED',
     },
     {
-      label: 'Call CAMARA tools',
-      detail:
-        evidence.length > 0
-          ? `${evidence.length} trusted ${pluralize('result', evidence.length)} recorded`
-          : plan
-            ? `${plan.selectedTools.length} selected ${pluralize('call', plan.selectedTools.length)} queued`
-            : 'Nokia tools remain idle',
-      completeAt: 'EVIDENCE_COMPLETE',
-    },
-    {
-      label: 'Observe & adapt',
-      detail: trace.some((step) => step.phase === 'ADAPTATION')
-        ? 'Plan changed from observations'
-        : 'Check evidence completeness',
-      completeAt: 'SAFETY_EVALUATED',
-    },
-    {
-      label: 'Recommend action',
+      label: 'Observe and recommend',
       detail: recommendation
-        ? `${humanize(recommendation.recommendedDecision)} · ${recommendation.reasoningProvenance}`
-        : 'Explain evidence-based advice',
-      completeAt: 'DECISION_ISSUED',
-    },
-    {
-      label: 'Policy authorizes',
-      detail: decision
-        ? `${humanize(decision.state)} · deterministic authority`
-        : 'Enforce non-bypassable limits',
+        ? `${humanize(recommendation.recommendedDecision)} recommended from recorded evidence`
+        : 'Review observations and explain the recommendation',
       completeAt: 'DECISION_ISSUED',
     },
   ];
   const stageStates = statesFor(
     stages,
     snapshot.currentEvent?.workflowState ?? null,
-    failedStageIndex(snapshot),
+    agentUnavailable,
   );
 
   return (
     <section className="agent-workflow" aria-labelledby="agent-workflow-heading">
       <header className="agent-workflow__header">
         <div>
-          <span className="eyebrow">Auditable AI workflow</span>
+          <span className="eyebrow">How the AI makes its recommendation</span>
           <h2 id="agent-workflow-heading">
             {agentUnavailable
-              ? 'AI unavailable — command stays held'
-              : 'See what the agent does and why'}
+              ? 'AI unavailable. The command stays held.'
+              : plan
+                ? agentSummary(snapshot)
+                : 'The agent will choose evidence before policy decides.'}
           </h2>
           <p>
             {agentUnavailable
-              ? 'No rule-based AI recommendation is substituted. The deterministic safety boundary prevents actuation.'
-              : 'Inspectable goal, tool choices, observations and adaptation. The final control decision remains with the deterministic safety policy.'}
+              ? 'No rule-based recommendation replaced the failed model call.'
+              : 'The agent chooses and evaluates network evidence. It cannot authorize the pump.'}
           </p>
         </div>
         <StatusMark
@@ -120,7 +92,7 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
         />
       </header>
 
-      <ol className="agent-workflow__stages" aria-label="Agent decision workflow">
+      <ol className="agent-workflow__stages" aria-label="AI decision workflow">
         {stages.map((stage, index) => {
           const state = stageStates[index] ?? 'pending';
           return (
@@ -130,11 +102,7 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
               aria-current={state === 'current' ? 'step' : undefined}
             >
               <span className="agent-workflow__number">
-                {state === 'complete'
-                  ? '✓'
-                  : state === 'failed'
-                    ? '!'
-                    : String(index + 1).padStart(2, '0')}
+                {state === 'complete' ? '✓' : state === 'failed' ? '!' : index + 1}
               </span>
               <div>
                 <b>{stage.label}</b>
@@ -145,30 +113,32 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
         })}
       </ol>
 
-      <div className="agent-journal">
-        <div className="agent-journal__heading">
+      {agentUnavailable ? (
+        <div className="agent-failure">
+          <StatusMark status="UNAVAILABLE" />
           <div>
-            <span className="eyebrow">Action + observation journal</span>
-            <b>
-              {agentFailed
-                ? 'Agent stopped safely'
-                : trace.length > 0
-                  ? `${trace.length} recorded steps`
-                  : missingTrace
-                    ? 'No trace in this saved run'
-                    : 'Ready to investigate'}
-            </b>
+            <b>Provider error: {failureReason}</b>
+            <p>The physical command was held and no substitute AI result was created.</p>
           </div>
-          <a href="#evidence">Inspect complete AI record →</a>
         </div>
-        {agentFailed ? (
-          <div className="agent-journal__missing">
-            <span>{`${failureCode} · ${failureReason}`}</span>
-            <b>No AI plan or recommendation replaced the failed agent call.</b>
-            <p>{failureDetail}</p>
-          </div>
-        ) : trace.length > 0 ? (
-          <ol aria-live="polite">
+      ) : evidence.length > 0 ? (
+        <EvidenceSummary evidence={evidence} />
+      ) : (
+        <div className="agent-ready">
+          <b>Ready to investigate</b>
+          <span>Run a scenario to see the model's selected tools and recorded observations.</span>
+        </div>
+      )}
+
+      <details className="agent-details">
+        <summary>
+          <span>
+            {trace.length > 0 ? `${trace.length} recorded agent steps` : 'Agent execution record'}
+          </span>
+          <b>Show technical trace</b>
+        </summary>
+        {trace.length > 0 ? (
+          <ol className="agent-trace">
             {trace.map((step) => (
               <li key={step.sequence} data-phase={step.phase}>
                 <span>{String(step.sequence).padStart(2, '0')}</span>
@@ -184,72 +154,77 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
               </li>
             ))}
           </ol>
-        ) : missingTrace ? (
-          <div className="agent-journal__missing">
-            <span>Saved result</span>
-            <b>This run has no structured agent trace.</b>
-            <p>Reset and run a scenario again to capture each goal, tool call and observation.</p>
-          </div>
         ) : (
-          <div className="agent-journal__empty">
-            <div>
-              <span>01</span>
-              <p>
-                <b>Frame the goal</b>
-                Interpret the command, role and physical consequence.
-              </p>
-            </div>
-            <div>
-              <span>02</span>
-              <p>
-                <b>Select trusted signals</b>
-                Choose Nokia/CAMARA tools from the server allowlist.
-              </p>
-            </div>
-            <div>
-              <span>03</span>
-              <p>
-                <b>Adapt without authority</b>
-                Recommend from observations; policy alone can authorize control.
-              </p>
-            </div>
-          </div>
+          <p className="agent-details__empty">
+            The trace will record the goal, tool requests, redacted observations and adaptation.
+          </p>
         )}
-      </div>
+        <a href="#evidence">Open the complete evidence record</a>
+      </details>
+
+      {decision && (
+        <div className="policy-boundary">
+          <span>Independent authority</span>
+          <b>{humanize(decision.state)}</b>
+          <p>Deterministic policy makes the final control decision.</p>
+        </div>
+      )}
     </section>
   );
+}
+
+function EvidenceSummary({ evidence }: { evidence: EvidenceCall[] }) {
+  return (
+    <div className="agent-evidence" aria-label="Network evidence selected by the agent">
+      <div>
+        <span className="eyebrow">Recorded network observations</span>
+        <b>
+          {evidence.length} {pluralize('result', evidence.length)}
+        </b>
+      </div>
+      <ul>
+        {evidence.map((call) => (
+          <li key={call.id}>
+            <span>{humanize(call.tool)}</span>
+            <StatusMark status={call.provenance} />
+            <StatusMark status={call.requestStatus} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function agentSummary(snapshot: RunSnapshot) {
+  const plan = snapshot.artifacts.plan;
+  if (!plan) return 'The agent will choose evidence before policy decides.';
+  if (snapshot.run.command.kind === 'READ_STATUS') {
+    return `Low-risk inspection uses ${plan.selectedTools.length} focused network ${pluralize('check', plan.selectedTools.length)}.`;
+  }
+  return `Physical control requires ${plan.selectedTools.length} network ${pluralize('check', plan.selectedTools.length)}.`;
 }
 
 function statesFor(
   stages: WorkflowStage[],
   workflowState: WorkflowState | null,
-  failedStage: number | null,
+  agentUnavailable: boolean,
 ): StageState[] {
-  if (workflowState === 'FAILED_SAFE' && failedStage !== null) {
+  if (agentUnavailable) {
+    const riskComplete = workflowState ? workflowOrder.indexOf(workflowState) >= 2 : false;
     return stages.map((_stage, index) => {
-      if (index < failedStage) return 'complete';
-      if (index === failedStage) return 'failed';
+      if (index === 0 && riskComplete) return 'complete';
+      if (index === (riskComplete ? 1 : 0)) return 'failed';
       return 'pending';
     });
   }
   const currentIndex = workflowState ? workflowOrder.indexOf(workflowState) : -1;
   const completed = stages.map((stage) => currentIndex >= workflowOrder.indexOf(stage.completeAt));
   const firstPending = completed.findIndex((value) => !value);
-
   return completed.map((isComplete, index) => {
     if (isComplete) return 'complete';
     if (index === firstPending) return 'current';
     return 'pending';
   });
-}
-
-function failedStageIndex(snapshot: RunSnapshot): number | null {
-  if (snapshot.run.playbackStatus !== 'FAILED_SAFE') return null;
-  if (!snapshot.artifacts.plan) return 1;
-  if (!snapshot.artifacts.evidence) return 2;
-  if (!snapshot.artifacts.safety) return 3;
-  if (!snapshot.artifacts.recommendation) return 4;
-  return 5;
 }
 
 function humanize(machineLabel: string) {
@@ -263,6 +238,6 @@ function pluralize(noun: string, count: number) {
   return count === 1 ? noun : `${noun}s`;
 }
 
-function textPayload(payload: unknown, fallback: string) {
-  return typeof payload === 'string' ? payload : fallback;
+function textPayload(value: unknown, fallback: string) {
+  return typeof value === 'string' ? value : fallback;
 }

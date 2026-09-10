@@ -25,129 +25,108 @@ export function ControlRail({
   const contained = snapshot.run.twin.gatewayAttachment !== 'OPERATIONAL';
   const lowRiskToolCount = snapshot.lowRiskComparison.selectedTools.length;
   return (
-    <div className="judge-controls" aria-label="Judge demonstration controls">
-      <div
-        className="control-group control-group--time"
-        role="group"
-        aria-labelledby="time-controls-label"
-      >
-        <span className="control-group__label" id="time-controls-label">
-          A · Simulation playback
-        </span>
-        <button
-          className="control-primary"
-          onClick={() => onControl(playing ? 'PAUSE' : 'PLAY')}
-          disabled={busy}
-        >
-          <ControlIcon name={playing ? 'pause' : 'play'} />{' '}
-          <span>{playing ? 'Pause simulation' : 'Run simulation'}</span>
-        </button>
-        <label className="speed-control">
-          <span>Clock speed</span>
-          <select
-            aria-label="Simulation playback speed"
-            value={String(snapshot.run.speed)}
-            onChange={(event) => onControl('SET_SPEED', event.target.value)}
-            disabled={busy}
-          >
-            <option value="0.5">0.5×</option>
-            <option value="1">1×</option>
-            <option value="2">2×</option>
-            <option value="4">4×</option>
-          </select>
-        </label>
-        <button
-          onClick={() => onControl('PREVIOUS')}
-          disabled={busy || atStart}
-          aria-label="Previous event"
-        >
-          <ControlIcon name="back" /> <span>Back</span>
-        </button>
-        <button
-          onClick={() => onControl('NEXT')}
-          disabled={busy || terminal}
-          aria-label="Advance one backend event"
-        >
-          <ControlIcon name="next" /> <span>Step proof</span>
-        </button>
-        <button
-          onClick={() => onControl('RESET')}
-          disabled={busy}
-          aria-label="Reset local simulation"
-        >
-          <ControlIcon name="reset" /> <span>Reset</span>
-        </button>
+    <section className="scenario-launcher" aria-labelledby="scenario-launcher-heading">
+      <div className="scenario-launcher__intro">
+        <span className="eyebrow">Choose a demonstration</span>
+        <h2 id="scenario-launcher-heading">See the safety gate make a real decision</h2>
+        <p>Start with the attack scenario. The accepted pump setting must remain unchanged.</p>
       </div>
-      <div
-        className="control-group control-group--inspection"
-        role="group"
-        aria-labelledby="inspection-controls-label"
-      >
-        <span className="control-group__label" id="inspection-controls-label">
-          B · Adaptive API proof
-        </span>
+
+      <div className="scenario-actions" role="group" aria-label="Demonstration scenarios">
         <button
-          className="command-inspection"
+          className="scenario-action scenario-action--primary"
+          onClick={() => onCommand('judge-valid-credentials-compromised-context')}
+          disabled={busy}
+        >
+          <span>
+            <small>Recommended demo</small>
+            {busy ? 'Preparing verified run…' : 'Run attack demonstration'}
+          </span>
+          <b>88%</b>
+        </button>
+        <button
+          className="scenario-action"
+          onClick={() => onCommand('judge-safe-operating-change')}
+          disabled={busy}
+        >
+          <span>
+            <small>Safe comparison</small>
+            Run safe command
+          </span>
+          <b>52%</b>
+        </button>
+        <button
+          className="scenario-action scenario-action--quiet"
           onClick={() => onCommand('judge-read-only-inspection')}
           disabled={busy}
         >
           <span>
+            <small>Low-risk comparison</small>
             Run read-only inspection
-            <small>Device Reachability</small>
           </span>
           <b>
             {lowRiskToolCount} {lowRiskToolCount === 1 ? 'API' : 'APIs'}
           </b>
         </button>
       </div>
-      <div
-        className="control-group control-group--process"
-        role="group"
-        aria-labelledby="process-controls-label"
-      >
-        <span className="control-group__label" id="process-controls-label">
-          C · Pump operating setpoint
-        </span>
-        <button
-          className="command-safe"
-          onClick={() => onCommand('judge-safe-operating-change')}
-          disabled={busy}
-        >
-          <span>Submit safe change</span>
-          <b>52%</b>
-        </button>
-        <button
-          className="command-unsafe"
-          onClick={() => onCommand('judge-valid-credentials-compromised-context')}
-          disabled={busy}
-        >
-          <span>Submit unsafe change</span>
-          <b>88%</b>
-        </button>
-        <small>
-          {contained
-            ? 'Contained demo: choosing a scenario starts a fresh baseline run.'
-            : 'Both requests traverse the same HISN authorization and safety pipeline.'}
-        </small>
-      </div>
-      <div
-        className="control-group control-group--view"
-        role="group"
-        aria-label="Presentation controls"
-      >
-        <button
-          className={explained ? 'is-active' : ''}
-          onClick={onExplain}
-          aria-pressed={explained}
-          aria-label="Explain current event"
-        >
-          <ControlIcon name="explain" /> <span>Explain</span>
-        </button>
-        <button onClick={onPresent} aria-label="Enter presentation mode">
-          <ControlIcon name="present" /> <span>Present</span>
-        </button>
-      </div>
-    </div>
+
+      <details className="demo-controls">
+        <summary>Demo controls</summary>
+        <div className="demo-controls__body" role="group" aria-label="Simulation playback">
+          <button
+            className="control-primary"
+            onClick={() => onControl(playing ? 'PAUSE' : 'PLAY')}
+            disabled={busy}
+          >
+            <ControlIcon name={playing ? 'pause' : 'play'} />
+            <span>{playing ? 'Pause simulation' : 'Run simulation'}</span>
+          </button>
+          <label className="speed-control">
+            <span>Speed</span>
+            <select
+              aria-label="Simulation playback speed"
+              value={String(snapshot.run.speed)}
+              onChange={(event) => onControl('SET_SPEED', event.target.value)}
+              disabled={busy}
+            >
+              <option value="0.5">0.5×</option>
+              <option value="1">1×</option>
+              <option value="2">2×</option>
+              <option value="4">4×</option>
+            </select>
+          </label>
+          <button onClick={() => onControl('PREVIOUS')} disabled={busy || atStart}>
+            <ControlIcon name="back" /> <span>Previous</span>
+          </button>
+          <button
+            onClick={() => onControl('NEXT')}
+            disabled={busy || terminal}
+            aria-label="Advance one backend event"
+          >
+            <ControlIcon name="next" /> <span>Next step</span>
+          </button>
+          <button
+            onClick={() => onControl('RESET')}
+            disabled={busy}
+            aria-label="Reset local simulation"
+          >
+            <ControlIcon name="reset" /> <span>Reset</span>
+          </button>
+          <button
+            className={explained ? 'is-active' : ''}
+            onClick={onExplain}
+            aria-pressed={explained}
+            aria-label="Explain current event"
+          >
+            <ControlIcon name="explain" /> <span>Presenter cue</span>
+          </button>
+          <button onClick={onPresent} aria-label="Enter presentation mode">
+            <ControlIcon name="present" /> <span>Full screen</span>
+          </button>
+        </div>
+        {contained && <p>Choosing another scenario starts from a fresh facility baseline.</p>}
+      </details>
+    </section>
   );
 }
 

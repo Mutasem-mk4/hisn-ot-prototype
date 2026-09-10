@@ -16,11 +16,11 @@ The industrial plant is a clearly labeled digital twin. Nokia responses show the
 
 ### [Open Judge Mode](https://hisn-ot-prototype.vercel.app/#judge)
 
-1. Run **Read-only inspection**. Its minimum scope is Device Reachability; the agent may add a justified check and never changes process state.
-2. Submit the safe **52%** pressure change. The in-band command requires identity, location, and reachability evidence before it can reach `ALLOW`.
-3. Submit the unsafe **88%** pressure change. The out-of-band context escalates the minimum plan with SIM Swap and Device Swap. The independent **60% hard maximum** prevents execution.
-4. Open **Evidence Trace** to inspect the LangGraph goal, each model-requested tool, Nokia observation, adaptation, recommendation, and authoritative policy result.
-5. Open **Incident** to inspect the evidence-bound report and containment/continuity outcome.
+1. Select **Run attack demonstration**. A valid account requests an unsafe **88%** pressure setting.
+2. Watch the four-step protection path: the gateway holds the command, the agent selects telecom evidence, deterministic policy decides, and only authorized state can reach the plant.
+3. Confirm the outcome panel shows **88% requested**, the previous accepted setting unchanged, and the independent **60% hard maximum**.
+4. Expand **Show technical trace** or open **Evidence Trace** to inspect model-requested tools, observations, provenance, adaptation, recommendation, and the authoritative policy result.
+5. Use **Run safe command** and **Run read-only inspection** as optional comparisons. Open the incident report from the technical view or Evidence Trace after a completed run.
 
 Expected invariant: the blocked request never changes the previously accepted control value.
 
@@ -101,5 +101,7 @@ npm run audit:deps
 - [Safety and security case](docs/safety-and-security.md)
 - [Judge demo and questions](docs/demo-and-judging.md)
 - [Verification evidence](docs/verification.md)
+- [Product definition](PRODUCT.md)
+- [Interface design system](DESIGN.md)
 
 HISN-OT aligns with the MENA Ignite **Industrial & Enterprise AI Automation** theme and uses desalination as its anchor MENA water-security use case. The same network proof-of-authority pattern can extend to energy, ports, oil and gas, factories, airports, and hospitals.

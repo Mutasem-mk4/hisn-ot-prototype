@@ -127,6 +127,7 @@ export function EvidenceTrace({ snapshot }: { snapshot: RunSnapshot }) {
               <li key={signal}>{signal}</li>
             ))}
           </ul>
+          {snapshot.incidentAvailable && <a href="#incident">Open the sealed incident report →</a>}
         </section>
       )}
     </main>
