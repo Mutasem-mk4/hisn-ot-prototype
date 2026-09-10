@@ -605,6 +605,219 @@
     font-size: 0.74rem;
     line-height: 1.5;
   }
+  .agent-workflow {
+    margin-top: 0.75rem;
+    border: 1px solid var(--line);
+    background: var(--ink-1);
+  }
+  .agent-workflow__header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 0.85rem 1rem;
+    background: linear-gradient(100deg, oklch(18% 0.028 208), var(--ink-1) 68%);
+  }
+  .agent-workflow__header h2 {
+    margin: 0.25rem 0 0.2rem;
+    font-size: 1rem;
+  }
+  .agent-workflow__header p {
+    max-width: 780px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.68rem;
+    line-height: 1.45;
+  }
+  .agent-workflow__stages {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 1px;
+    margin: 0;
+    padding: 1px 0;
+    background: var(--line);
+    list-style: none;
+  }
+  .agent-workflow__stages li {
+    position: relative;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 0.5rem;
+    min-height: 74px;
+    padding: 0.75rem 0.65rem;
+    background: var(--ink-2);
+  }
+  .agent-workflow__stages li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    right: -5px;
+    width: 8px;
+    height: 8px;
+    border-top: 1px solid var(--line-bright);
+    border-right: 1px solid var(--line-bright);
+    background: var(--ink-2);
+    transform: translateY(-50%) rotate(45deg);
+  }
+  .agent-workflow__stages li[data-state='current'] {
+    background: linear-gradient(135deg, oklch(21% 0.04 65), var(--ink-2));
+    box-shadow: inset 0 2px 0 var(--sand);
+  }
+  .agent-workflow__stages li[data-state='complete'] {
+    background: linear-gradient(135deg, oklch(20% 0.035 195), var(--ink-2));
+  }
+  .agent-workflow__stages li[data-state='pending'] {
+    background: var(--ink-1);
+  }
+  .agent-workflow__number {
+    display: grid;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+    border: 1px solid var(--line-bright);
+    color: var(--muted);
+    font: 700 0.63rem var(--mono);
+  }
+  .agent-workflow__stages li[data-state='current'] .agent-workflow__number {
+    border-color: var(--sand);
+    color: var(--sand);
+  }
+  .agent-workflow__stages li[data-state='complete'] .agent-workflow__number {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  .agent-workflow__stages b,
+  .agent-workflow__stages small {
+    display: block;
+  }
+  .agent-workflow__stages b {
+    font-size: 0.68rem;
+    line-height: 1.25;
+  }
+  .agent-workflow__stages small {
+    margin-top: 0.28rem;
+    color: var(--muted);
+    font: 0.55rem/1.35 var(--mono);
+  }
+  .agent-journal {
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    min-height: 108px;
+  }
+  .agent-journal__heading {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 0.85rem 1rem;
+    border-right: 1px solid var(--line);
+  }
+  .agent-journal__heading b {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+  }
+  .agent-journal__heading a {
+    color: var(--cyan);
+    font: 0.58rem var(--mono);
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+  .agent-journal__heading a:hover,
+  .agent-journal__heading a:focus-visible {
+    text-decoration: underline;
+  }
+  .agent-journal > ol {
+    max-height: 260px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+  }
+  .agent-journal > ol li {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: 0.7rem;
+    align-items: start;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .agent-journal > ol li:last-child {
+    border-bottom: 0;
+  }
+  .agent-journal > ol li > span,
+  .agent-journal > ol small {
+    color: var(--cyan);
+    font: 0.56rem var(--mono);
+    text-transform: uppercase;
+  }
+  .agent-journal > ol li > span {
+    color: var(--sand);
+    font-size: 0.66rem;
+    font-weight: 700;
+  }
+  .agent-journal > ol b {
+    display: block;
+    margin-top: 0.14rem;
+    font-size: 0.68rem;
+  }
+  .agent-journal > ol p {
+    margin: 0.18rem 0 0;
+    color: var(--muted);
+    font-size: 0.62rem;
+    line-height: 1.4;
+  }
+  .agent-journal__empty {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--line);
+  }
+  .agent-journal__missing {
+    display: grid;
+    align-content: center;
+    padding: 1rem 1.2rem;
+    background: var(--ink-2);
+  }
+  .agent-journal__missing span {
+    color: var(--amber);
+    font: 0.58rem var(--mono);
+    text-transform: uppercase;
+  }
+  .agent-journal__missing b {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+  }
+  .agent-journal__missing p {
+    margin: 0.25rem 0 0;
+    color: var(--muted);
+    font-size: 0.64rem;
+  }
+  .agent-journal__empty > div {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 0.6rem;
+    padding: 0.85rem;
+    background: var(--ink-2);
+  }
+  .agent-journal__empty span {
+    color: var(--sand);
+    font: 700 0.65rem var(--mono);
+  }
+  .agent-journal__empty p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.62rem;
+    line-height: 1.4;
+  }
+  .agent-journal__empty b {
+    display: block;
+    margin-bottom: 0.18rem;
+    color: var(--text);
+    font-size: 0.68rem;
+  }
   .lattice {
     margin-top: 1rem;
     border: 1px solid var(--line);
@@ -1977,6 +2190,12 @@
     .judge-grid {
       grid-template-columns: 1fr;
     }
+    .agent-workflow__stages {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .agent-workflow__stages li:nth-child(3)::after {
+      display: none;
+    }
     .judge-side {
       grid-template-columns: 1fr 1fr;
     }
@@ -2124,6 +2343,31 @@
     }
     .event-banner > .status-mark {
       grid-column: 2;
+    }
+    .agent-workflow__header {
+      display: grid;
+      gap: 0.7rem;
+    }
+    .agent-workflow__stages {
+      grid-template-columns: 1fr 1fr;
+    }
+    .agent-workflow__stages li:nth-child(3)::after {
+      display: block;
+    }
+    .agent-workflow__stages li:nth-child(even)::after {
+      display: none;
+    }
+    .agent-journal {
+      grid-template-columns: 1fr;
+    }
+    .agent-journal__heading {
+      flex-direction: row;
+      align-items: center;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .agent-journal__empty {
+      grid-template-columns: 1fr;
     }
     .event-sequence {
       grid-row: 1 / 3;

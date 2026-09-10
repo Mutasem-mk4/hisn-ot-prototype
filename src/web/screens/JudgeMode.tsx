@@ -1,4 +1,5 @@
 import type { RunSnapshot } from '../../application/ports.js';
+import { AgentWorkflowPanel } from '../components/AgentWorkflowPanel.js';
 import { ControlRail } from '../components/ControlRail.js';
 import { FacilitySchematic } from '../components/FacilitySchematic.js';
 import { ProcessTwin } from '../components/ProcessTwin.js';
@@ -78,6 +79,7 @@ export function JudgeMode({
         </div>
         <StatusMark status={decision?.state ?? snapshot.run.playbackStatus} />
       </div>
+      <AgentWorkflowPanel snapshot={snapshot} />
       <FacilitySchematic snapshot={snapshot} />
       <div className="judge-support">
         <ProcessTwin

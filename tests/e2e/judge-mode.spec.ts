@@ -19,6 +19,12 @@ test('explains the product immediately and exposes the primary action', async ({
   ).toBeVisible();
   await expect(page.getByRole('button', { name: /Run simulation/i })).toBeVisible();
   await expect(page.getByText('Valid credentials. But should this command execute?')).toBeVisible();
+  const workflow = page.getByRole('region', { name: 'See what the agent does and why' });
+  await expect(workflow).toBeVisible();
+  await expect(workflow.getByText('Understand command')).toBeVisible();
+  await expect(workflow.getByText('Call CAMARA tools')).toBeVisible();
+  await expect(workflow.getByText('Policy authorizes')).toBeVisible();
+  await expect(workflow.getByText('Ready to investigate')).toBeVisible();
   await expect(page.getByRole('button', { name: /Run read-only inspection/i })).toContainText(
     '1 API',
   );
@@ -32,6 +38,11 @@ test('runs the adaptive low-risk path with one inspectable evidence call', async
     page.getByRole('heading', { name: 'Evidence-bound incident record sealed' }),
   ).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
+  const workflow = page.getByRole('region', { name: 'See what the agent does and why' });
+  await expect(workflow.getByText(/recorded steps/)).toBeVisible();
+  await expect(workflow.getByText(/^Tool request/).first()).toBeVisible();
+  await expect(workflow.getByText(/^Observation/).first()).toBeVisible();
+  await expect(workflow.getByText('Allow · SIMULATED', { exact: true })).toBeVisible();
   const process = page.getByRole('heading', { name: 'Simulated process' }).locator('..');
   await expect(process).toContainText('Accepted setpoint46%');
   await expect(process).toContainText('No command pending');
