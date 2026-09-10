@@ -300,21 +300,16 @@ function strictPlanJsonSchema(input: AgentPlanRequest | AgentRecommendationReque
   const commandPolicy = input.policy.commands[input.command.kind];
   const requiredEvidence = minimumEvidenceForCommand(input.command, input.policy);
   const reasonProperties = Object.fromEntries(
-    input.policy.agent.allowedTools.map((tool) => [
-      tool,
-      { type: 'string', minLength: 3, maxLength: 180 },
-    ]),
+    requiredEvidence.map((tool) => [tool, { type: 'string' }]),
   );
   return {
     type: 'object',
     properties: {
       risk: { type: 'string', enum: [commandPolicy.risk] },
-      consequence: { type: 'string', minLength: 8, maxLength: 280 },
+      consequence: { type: 'string' },
       selectedTools: {
         type: 'array',
         items: { type: 'string', enum: input.policy.agent.allowedTools },
-        minItems: requiredEvidence.length,
-        maxItems: input.policy.agent.maximumToolCalls,
       },
       selectionReasons: {
         type: 'object',
@@ -340,13 +335,12 @@ function strictRecommendationJsonSchema(request: AgentRecommendationRequest) {
         type: 'string',
         enum: [recommendationState(request, signals.length)],
       },
-      summary: { type: 'string', minLength: 8, maxLength: 500 },
+      summary: { type: 'string' },
       observedSignals: {
         type: 'array',
-        items: { type: 'string', minLength: 3 },
-        maxItems: 12,
+        items: { type: 'string' },
       },
-      containmentRationale: { type: 'string', minLength: 3, maxLength: 320 },
+      containmentRationale: { type: 'string' },
     },
     required: ['recommendedDecision', 'summary', 'observedSignals', 'containmentRationale'],
     additionalProperties: false,
