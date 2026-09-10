@@ -274,7 +274,7 @@ export const AgentInvestigationSchema = z
   .object({
     plan: AgentPlanSchema,
     evidence: z.array(EvidenceCallSchema),
-    trace: z.array(AgentTraceStepSchema).min(1).max(24),
+    trace: z.array(AgentTraceStepSchema).min(1).max(64),
     framework: z.enum(['LANGGRAPH', 'DETERMINISTIC']),
   })
   .strict();

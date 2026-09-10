@@ -208,7 +208,7 @@ export class LangGraphEvidenceAgent {
       return {
         messages: [
           new HumanMessage(
-            `The deterministic authorization floor is incomplete. Select and call one of these missing tools now: ${missing.join(', ')}.`,
+            `The deterministic authorization floor is incomplete. Select and call one of these missing tools now: ${missing.map((evidenceTool) => `${TOOL_NAMES[evidenceTool]} (${evidenceTool})`).join(', ')}.`,
           ),
         ],
       };
@@ -232,7 +232,7 @@ export class LangGraphEvidenceAgent {
             new HumanMessage(JSON.stringify(redactedContext(request))),
           ],
         },
-        { recursionLimit: maximumToolCalls * 2 + 4, signal },
+        { recursionLimit: maximumToolCalls * 4 + 4, signal },
       );
     } catch (error) {
       if (signal.aborted) throw error;
