@@ -122,6 +122,14 @@ async function runScenario(page: Page, buttonName: RegExp, expectedHeadline: Reg
   const body = (await response.json()) as { frames: ProductionFrame[] };
   const finalFrame = body.frames.at(-1);
   expect(finalFrame).toBeTruthy();
+  if (finalFrame?.run.playbackStatus === 'FAILED_SAFE') {
+    const failure = {
+      errorCode: finalFrame.currentEvent?.payload.errorCode,
+      failureReason: finalFrame.currentEvent?.payload.failureReason,
+      failedAfter: finalFrame.currentEvent?.payload.failedAfter,
+    };
+    throw new Error(`Production scenario failed safe: ${JSON.stringify(failure)}`);
+  }
   await expect
     .poll(() => page.locator('#judge-result-heading').innerText(), { timeout: 120_000 })
     .toMatch(expectedHeadline);
