@@ -38,6 +38,16 @@ A release is complete only after checking the canonical public URL:
 
 ## Release evidence
 
+### 2026-09-11 light-interface follow-up
+
+- Copy refinement commit: `9ea7334`. The hero identifies LangGraph and Nokia/CAMARA, and the 60% boundary is explicitly named the command hard limit.
+- Local verification passed: 76 tests across 12 files, formatting, lint, type checks, and production build. Browser verification passed 22 tests with 2 intentional viewport skips.
+- The rebuilt local application returned HTTP 200 from `/readyz`, rendered the updated copy without page errors, and had no horizontal overflow at 1280 pixels.
+- Public rehearsals used the existing light-interface deployment `dpl_DWDNnQSn549qwbWmuFyiKbvxF3vy`. Read-only inspection completed with live planning and recommendation, one successful Nokia Sandbox reachability result, and `ALLOW`; accepted pressure stayed at 46%.
+- The public safe command completed with live planning and recommendation and `ALLOW`; accepted pressure became 52%. Location and reachability came from successful Nokia Sandbox calls. Number Verification remained simulated.
+- The following public attack attempt returned `HTTP_429` from the hosted agent after live planning. It reached `FAILED_SAFE` and retained 46% accepted pressure. A fresh successful attack rehearsal is not claimed here.
+- Vercel rejected deployment of the copy refinement with `api-deployments-free-per-day` and instructed retry after 24 hours. The canonical public alias therefore still serves the previously deployed light redesign; the new wording is available locally and on GitHub.
+
 Record the final test counts, Git commit, CI run, Vercel deployment ID, canonical URL, and public rehearsal result here only after fresh verification. Historical results must not be presented as current verification.
 
 ### 2026-09-10 judge-mode release
