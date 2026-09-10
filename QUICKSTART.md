@@ -35,6 +35,8 @@ Controls are state-safe: Run/Pause simulation, Step proof, Back, Reset, Clock sp
 
 Playback speed (0.5×, 1×, 2×, 4×) changes simulated time, not the pump input. Pause freezes the local process, scenario scheduling, simulation timestamps, and corresponding motion without a resume jump. Real provider durations and timeouts remain wall-clock based. Back shows historical process observations; returning to the latest event shows current observations. Reset creates another DEMO run and preserves prior audit history. STEP_UP never executes without approval, and this prototype intentionally exposes no approval or quarantine-recovery endpoint.
 
+After a contained rehearsal, choosing another scenario starts it from a fresh demo baseline because the contained operator edge cannot carry forward. The UI labels this transition explicitly. It starts a separate demonstration run; it does not represent quarantine recovery or reverse the persisted incident.
+
 ## Reliability checks before judging
 
 ```powershell

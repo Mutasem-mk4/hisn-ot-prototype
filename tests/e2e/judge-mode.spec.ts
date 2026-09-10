@@ -103,6 +103,16 @@ test('shows an allowed plant response followed by an intercepted unsafe command'
   await expect(process).toContainText('BLOCKED');
   await expect(process).toContainText('ControllerBACKUP');
   await expect(process).toContainText('GatewayDETACHED');
+
+  const readOnly = page.getByRole('button', { name: /Run read-only inspection/i });
+  await expect(readOnly).toBeEnabled();
+  await readOnly.click();
+  await expect(
+    page.getByRole('heading', { name: 'Evidence-bound incident record sealed' }),
+  ).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
+  await expect(process).toContainText('Accepted setpoint46%');
+  await expect(process).toContainText('GatewayOPERATIONAL');
 });
 
 test('completes the backend workflow, exposes trace, and exports the incident', async ({

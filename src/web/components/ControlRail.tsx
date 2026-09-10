@@ -22,6 +22,7 @@ export function ControlRail({
   const playing = !snapshot.presentationTwin.simulationPaused;
   const atStart = snapshot.run.presentationCursor <= 1;
   const terminal = ['COMPLETE', 'FAILED_SAFE'].includes(snapshot.run.playbackStatus);
+  const contained = snapshot.run.twin.gatewayAttachment !== 'OPERATIONAL';
   return (
     <div className="judge-controls" aria-label="Judge demonstration controls">
       <div
@@ -87,7 +88,7 @@ export function ControlRail({
         <button
           className="command-inspection"
           onClick={() => onCommand('judge-read-only-inspection')}
-          disabled={busy || snapshot.presentationTwin.gatewayAttachment !== 'OPERATIONAL'}
+          disabled={busy}
         >
           <span>
             Run read-only inspection
@@ -107,7 +108,7 @@ export function ControlRail({
         <button
           className="command-safe"
           onClick={() => onCommand('judge-safe-operating-change')}
-          disabled={busy || snapshot.presentationTwin.gatewayAttachment !== 'OPERATIONAL'}
+          disabled={busy}
         >
           <span>Submit safe change</span>
           <b>52%</b>
@@ -115,12 +116,16 @@ export function ControlRail({
         <button
           className="command-unsafe"
           onClick={() => onCommand('judge-valid-credentials-compromised-context')}
-          disabled={busy || snapshot.presentationTwin.gatewayAttachment !== 'OPERATIONAL'}
+          disabled={busy}
         >
           <span>Submit unsafe change</span>
           <b>88%</b>
         </button>
-        <small>Both requests traverse the same HISN authorization and safety pipeline.</small>
+        <small>
+          {contained
+            ? 'Contained demo: choosing a scenario starts a fresh baseline run.'
+            : 'Both requests traverse the same HISN authorization and safety pipeline.'}
+        </small>
       </div>
       <div
         className="control-group control-group--view"

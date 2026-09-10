@@ -182,7 +182,9 @@ export function App() {
   const submitCommand = async (scenarioId: string) => {
     if (!snapshot || controlPending.current) return;
     controlPending.current = true;
-    const frames = await prepareRehearsal(scenarioId, snapshot.run.twin);
+    const continuingTwin =
+      snapshot.run.twin.gatewayAttachment === 'OPERATIONAL' ? snapshot.run.twin : undefined;
+    const frames = await prepareRehearsal(scenarioId, continuingTwin);
     controlPending.current = false;
     if (frames) {
       window.location.hash = 'judge';
