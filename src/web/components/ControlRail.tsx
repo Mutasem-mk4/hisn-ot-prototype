@@ -27,9 +27,10 @@ export function ControlRail({
   return (
     <section className="scenario-launcher" aria-labelledby="scenario-launcher-heading">
       <div className="scenario-launcher__intro">
-        <span className="eyebrow">Choose a demonstration</span>
-        <h2 id="scenario-launcher-heading">See the safety gate make a real decision</h2>
-        <p>Start with the attack scenario. The accepted pump setting must remain unchanged.</p>
+        <h2 id="scenario-launcher-heading">Try a compromised command</h2>
+        <p>
+          An 88% pressure request exceeds the {snapshot.setPressureMaximumPercent}% safety limit.
+        </p>
       </div>
 
       <div className="scenario-actions" role="group" aria-label="Demonstration scenarios">
@@ -38,21 +39,14 @@ export function ControlRail({
           onClick={() => onCommand('judge-valid-credentials-compromised-context')}
           disabled={busy}
         >
-          <span>
-            <small>Recommended demo</small>
-            {busy ? 'Preparing verified run…' : 'Run attack demonstration'}
-          </span>
-          <b>88%</b>
+          <span>{busy ? 'Preparing verified run…' : 'Run attack demonstration'}</span>
         </button>
         <button
           className="scenario-action"
           onClick={() => onCommand('judge-safe-operating-change')}
           disabled={busy}
         >
-          <span>
-            <small>Safe comparison</small>
-            Run safe command
-          </span>
+          <span>Run safe command</span>
           <b>52%</b>
         </button>
         <button
@@ -60,10 +54,7 @@ export function ControlRail({
           onClick={() => onCommand('judge-read-only-inspection')}
           disabled={busy}
         >
-          <span>
-            <small>Low-risk comparison</small>
-            Run read-only inspection
-          </span>
+          <span>Run read-only inspection</span>
           <b>
             {lowRiskToolCount} {lowRiskToolCount === 1 ? 'API' : 'APIs'}
           </b>

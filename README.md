@@ -17,7 +17,7 @@ The industrial plant is a clearly labeled digital twin. Nokia responses show the
 ### [Open Judge Mode](https://hisn-ot-prototype.vercel.app/#judge)
 
 1. Select **Run attack demonstration**. A valid account requests an unsafe **88%** pressure setting.
-2. Watch the four-step protection path: the gateway holds the command, the agent selects telecom evidence, deterministic policy decides, and only authorized state can reach the plant.
+2. Watch the result and compare requested pressure with accepted plant pressure. Open **How was this decision made?** to inspect the four-step protection path and agent evidence.
 3. Confirm the outcome panel shows **88% requested**, the previous accepted setting unchanged, and the independent **60% hard maximum**.
 4. Expand **Show technical trace** or open **Evidence Trace** to inspect model-requested tools, observations, provenance, adaptation, recommendation, and the authoritative policy result.
 5. Use **Run safe command** and **Run read-only inspection** as optional comparisons. Open the incident report from the technical view or Evidence Trace after a completed run.

@@ -34,17 +34,12 @@ export function JudgeMode({
     <main className="judge-screen" id="main-content">
       <section className="judge-intro">
         <div>
-          <span className="eyebrow">Connected desalination safety · MENA Ignite</span>
+          <span className="eyebrow">HISN-OT / Industrial safety</span>
           <h1>Stop dangerous industrial commands before they reach the plant.</h1>
           <p>
-            HISN-OT holds every control request while an AI agent selects the required telecom
-            evidence. A separate safety policy decides what can execute.
+            Valid credentials can hide a compromised device. HISN-OT checks network context before a
+            command can change the plant.
           </p>
-        </div>
-        <div className="takeaway">
-          <span>Attack scenario</span>
-          <b>Valid credentials</b>
-          <p>Compromised device context requests 88% pump pressure.</p>
         </div>
       </section>
       <section className="external-proof" aria-label="Implementation and provider provenance">
@@ -87,8 +82,14 @@ export function JudgeMode({
         </div>
         <OutcomeFacts snapshot={snapshot} />
       </section>
-      <JudgeProofFlow snapshot={snapshot} />
-      <AgentWorkflowPanel snapshot={snapshot} />
+      <details className="investigation-details">
+        <summary>
+          <span>How was this decision made?</span>
+          <span>Inspect AI reasoning and network evidence</span>
+        </summary>
+        <JudgeProofFlow snapshot={snapshot} />
+        <AgentWorkflowPanel snapshot={snapshot} />
+      </details>
       <details className="technical-expansion">
         <summary>
           <span>
@@ -182,16 +183,6 @@ function OutcomeFacts({ snapshot }: { snapshot: RunSnapshot }) {
       <div>
         <dt>Network evidence</dt>
         <dd>{evidenceCount === 0 ? 'Pending' : `${evidenceCount} recorded`}</dd>
-      </div>
-      <div>
-        <dt>Observed safe band</dt>
-        <dd>
-          {snapshot.safePressureBand.minimumPercent}–{snapshot.safePressureBand.maximumPercent}%
-        </dd>
-      </div>
-      <div>
-        <dt>Command hard limit</dt>
-        <dd>{snapshot.setPressureMaximumPercent}%</dd>
       </div>
     </dl>
   );

@@ -8,15 +8,15 @@
 
 ### 0:20–0:55 — Run the attack demonstration
 
-Select **Run attack demonstration**. Follow the four-step protection path: the gateway holds the 88% request, the agent selects five telecom checks, deterministic policy issues `BLOCK_AND_CONTAIN`, and the plant keeps its accepted setting.
+Select **Run attack demonstration**. Follow the result: the gateway holds the 88% request, the agent selects telecom checks, deterministic policy issues `BLOCK_AND_CONTAIN`, and the plant keeps its accepted setting.
 
 ### 0:55–1:20 — Prove the physical outcome
 
-Use the outcome panel to compare **88% requested** with the unchanged accepted value. Point out the **42–52% observed safe band** and the independent **60% command hard limit**. The final decision is visible without opening the digital twin.
+Use the outcome panel to compare **88% requested** with the unchanged accepted value. The scenario introduction states the independent **60% command hard limit**. The final decision is visible without opening the digital twin.
 
 ### 1:20–1:45 — Prove the agent and evidence
 
-Show the three-stage agent summary and recorded network observations. Expand **Show technical trace** only if the judges want the goal, tool request, redacted observation, adaptation, and recommendation record. This is an auditable action and observation trace, not hidden chain-of-thought.
+Open **How was this decision made?** to show the protection path, agent summary, and recorded network observations. Expand **Show technical trace** if the judges want the goal, tool request, redacted observation, adaptation, and recommendation record. This is an auditable action and observation trace, not hidden chain-of-thought.
 
 ### 1:45–2:00 — Prove honesty and depth
 

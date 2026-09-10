@@ -19,9 +19,13 @@ test('explains the product immediately and exposes the primary action', async ({
   ).toBeVisible();
   await expect(page.getByRole('button', { name: /Run attack demonstration/i })).toBeVisible();
   await expect(
-    page.getByText('Compromised device context requests 88% pump pressure.'),
+    page.getByText('An 88% pressure request exceeds the 60% safety limit.'),
   ).toBeVisible();
   const workflow = page.locator('.agent-workflow');
+  await expect(workflow).toBeHidden();
+  const investigation = page.locator('.investigation-details > summary');
+  await investigation.focus();
+  await page.keyboard.press('Enter');
   await expect(workflow).toBeVisible();
   await expect(workflow.getByText('Understand the command')).toBeVisible();
   await expect(workflow.getByText('Choose trusted evidence')).toBeVisible();
@@ -46,6 +50,7 @@ test('runs the adaptive low-risk path with one inspectable evidence call', async
   );
   await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
   const workflow = page.locator('.agent-workflow');
+  await page.getByText('How was this decision made?', { exact: true }).click();
   await expect(workflow.getByText(/recorded agent steps/)).toBeVisible();
   await workflow.getByText('Show technical trace').click();
   await expect(workflow.getByText(/^Tool request/).first()).toBeVisible();
