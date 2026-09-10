@@ -77,6 +77,7 @@ export type LlmCredentials = { baseUrl: string; apiKey: string; model: string };
 
 export type AppConfiguration = {
   mode: RuntimeMode;
+  hosted: boolean;
   port: number;
   databasePath: string;
   logLevel: z.infer<typeof EnvironmentSchema>['HISN_LOG_LEVEL'];
@@ -102,14 +103,16 @@ export function loadConfiguration(
     workingDirectory,
     ScenarioFileSchema,
   );
+  const hosted = parsedEnvironment.VERCEL === '1';
   const nac = nacCredentials(parsedEnvironment);
-  const llm = llmCredentials(parsedEnvironment);
+  const llm = llmCredentials(parsedEnvironment, hosted);
   assertLiveConfiguration(parsedEnvironment.HISN_MODE, nac);
   if (parsedEnvironment.HISN_NOKIA_SIMULATOR === 'true' && nac === null) {
     throw configurationError('HISN_NOKIA_SIMULATOR requires Nokia simulator configuration');
   }
   return {
     mode: parsedEnvironment.HISN_MODE,
+    hosted,
     port: parsedEnvironment.HISN_PORT,
     databasePath: resolve(workingDirectory, parsedEnvironment.HISN_DATABASE_PATH),
     logLevel: parsedEnvironment.HISN_LOG_LEVEL,
@@ -205,7 +208,10 @@ function nacCredentials(environment: z.infer<typeof EnvironmentSchema>): NacCred
   };
 }
 
-function llmCredentials(environment: z.infer<typeof EnvironmentSchema>): LlmCredentials | null {
+function llmCredentials(
+  environment: z.infer<typeof EnvironmentSchema>,
+  hosted: boolean,
+): LlmCredentials | null {
   if (environment.HISN_AGENT_PROVIDER === 'DETERMINISTIC') return null;
   const entries = [
     environment.HISN_LLM_BASE_URL,
@@ -213,12 +219,14 @@ function llmCredentials(environment: z.infer<typeof EnvironmentSchema>): LlmCred
     environment.HISN_LLM_MODEL,
   ];
   if (entries.every((entry) => entry === undefined)) {
-    if (environment.HISN_AGENT_PROVIDER === 'GROQ')
+    if (environment.HISN_AGENT_PROVIDER === 'GROQ' && !hosted)
       throw configurationError('HISN_AGENT_PROVIDER=GROQ requires all HISN_LLM_* values');
     return null;
   }
-  if (entries.some((entry) => entry === undefined))
+  if (entries.some((entry) => entry === undefined)) {
+    if (hosted) return null;
     throw configurationError('All HISN_LLM_* values must be set together');
+  }
   return { baseUrl: entries[0]!, apiKey: entries[1]!, model: entries[2]! };
 }
 

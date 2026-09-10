@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadConfiguration } from '../../src/infrastructure/configuration.js';
+import { createProviders } from '../../src/infrastructure/provider-factory.js';
 
 describe('runtime-mode configuration', () => {
   it('starts DEMO without external credentials', () => {
@@ -8,6 +9,23 @@ describe('runtime-mode configuration', () => {
     expect(configuration.nac).toBeNull();
     expect(configuration.sessionSecret).toHaveLength(64);
     expect(configuration.secureCookies).toBe(false);
+    expect(configuration.hosted).toBe(false);
+    expect(createProviders(configuration).reasoner.mode).toBe('DETERMINISTIC');
+  });
+
+  it('does not substitute a deterministic agent when hosted AI is unconfigured', () => {
+    const configuration = loadConfiguration(
+      {
+        HISN_MODE: 'DEMO',
+        VERCEL: '1',
+        HISN_AGENT_PROVIDER: 'GROQ',
+        HISN_SESSION_SECRET: 'test-session-signing-key-at-least-32-characters',
+      },
+      process.cwd(),
+    );
+
+    expect(configuration.hosted).toBe(true);
+    expect(createProviders(configuration).reasoner.mode).toBe('UNAVAILABLE');
   });
 
   it('refuses LIVE startup when Nokia configuration is incomplete', () => {

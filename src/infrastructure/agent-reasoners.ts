@@ -17,6 +17,7 @@ import {
   type EvidenceCall,
   type EvidenceTool,
 } from '../shared/contracts.js';
+import { HisnError } from '../shared/errors.js';
 import type { LlmCredentials } from './configuration.js';
 import { assertPlanAssurance, minimumEvidenceForCommand } from '../domain/agent-plan.js';
 import { LangGraphEvidenceAgent } from './langgraph-evidence-agent.js';
@@ -81,9 +82,9 @@ export class DeterministicAgentReasoner implements AgentReasoner {
       {
         sequence: 1,
         phase: 'GOAL',
-        headline: 'Deterministic evidence fallback active',
+        headline: 'Local deterministic DEMO reasoner active',
         detail:
-          'The safe fallback applies the configured minimum-evidence plan without model inference.',
+          'Explicit DEMO mode applies the configured minimum-evidence plan without a hosted-model claim.',
       },
     ];
     for (const [index, evidenceTool] of initialPlan.selectedTools.entries()) {
@@ -91,8 +92,8 @@ export class DeterministicAgentReasoner implements AgentReasoner {
       trace.push({
         sequence: trace.length + 1,
         phase: 'TOOL_REQUEST',
-        headline: `Fallback requested ${evidenceTool.replaceAll('_', ' ').toLowerCase()}`,
-        detail: `Deterministic fallback reason: ${initialPlan.selectionReasons[evidenceTool] ?? 'Required by policy.'}`,
+        headline: `DEMO reasoner requested ${evidenceTool.replaceAll('_', ' ').toLowerCase()}`,
+        detail: `Configured DEMO reason: ${initialPlan.selectionReasons[evidenceTool] ?? 'Required by policy.'}`,
         tool: evidenceTool,
       });
       trace.push({
@@ -136,7 +137,6 @@ export class DeterministicAgentReasoner implements AgentReasoner {
 
 export class LangGraphAgentReasoner implements AgentReasoner {
   readonly mode = 'LANGGRAPH' as const;
-  private readonly fallback = new DeterministicAgentReasoner();
   private readonly graphAgent: LangGraphEvidenceAgent;
 
   constructor(
@@ -144,7 +144,7 @@ export class LangGraphAgentReasoner implements AgentReasoner {
     private readonly timeoutMs: number,
     private readonly maximumRetries = 0,
   ) {
-    this.graphAgent = new LangGraphEvidenceAgent(credentials, timeoutMs);
+    this.graphAgent = new LangGraphEvidenceAgent(credentials, timeoutMs, maximumRetries);
   }
 
   async plan(request: AgentPlanRequest, signal: AbortSignal): Promise<AgentPlan> {
@@ -153,8 +153,7 @@ export class LangGraphAgentReasoner implements AgentReasoner {
       return AgentPlanSchema.parse({ ...output, reasoningProvenance: 'LIVE' });
     } catch (error) {
       if (!isRecoverableReasonerFailure(error)) throw error;
-      const result = await this.fallback.plan(request, new AbortController().signal);
-      return { ...result, reasoningProvenance: 'FALLBACK' };
+      throw agentUnavailable('PLAN', error);
     }
   }
 
@@ -173,8 +172,7 @@ export class LangGraphAgentReasoner implements AgentReasoner {
       return AgentRecommendationSchema.parse({ ...output, reasoningProvenance: 'LIVE' });
     } catch (error) {
       if (!isRecoverableReasonerFailure(error)) throw error;
-      const result = await this.fallback.recommend(request, new AbortController().signal);
-      return { ...result, reasoningProvenance: 'FALLBACK' };
+      throw agentUnavailable('RECOMMEND', error);
     }
   }
 
@@ -187,21 +185,8 @@ export class LangGraphAgentReasoner implements AgentReasoner {
     try {
       return await this.graphAgent.investigate(request, initialPlan, executeTool, signal);
     } catch (error) {
-      if (signal.aborted) throw error;
-      const result = await this.fallback.investigate(request, initialPlan, executeTool, signal);
-      return AgentInvestigationSchema.parse({
-        ...result,
-        plan: { ...result.plan, reasoningProvenance: 'FALLBACK' },
-        trace: [
-          {
-            sequence: 1,
-            phase: 'FALLBACK',
-            headline: 'LangGraph provider unavailable',
-            detail: 'The investigation continued with the bounded deterministic evidence plan.',
-          },
-          ...result.trace.map((step, index) => ({ ...step, sequence: index + 2 })),
-        ],
-      });
+      if (!isRecoverableReasonerFailure(error)) throw error;
+      throw agentUnavailable('INVESTIGATE', error);
     }
   }
 
@@ -251,6 +236,30 @@ export class LangGraphAgentReasoner implements AgentReasoner {
       throw new TypeError(`Structured reasoning endpoint returned ${response.status}`);
     const completion = ChatCompletionSchema.parse(await response.json());
     return schema.parse(JSON.parse(completion.choices[0]!.message.content));
+  }
+}
+
+export class UnavailableAgentReasoner implements AgentReasoner {
+  readonly mode = 'UNAVAILABLE' as const;
+
+  plan(_request: AgentPlanRequest, signal: AbortSignal): Promise<never> {
+    signal.throwIfAborted();
+    return Promise.reject(agentUnavailable('PLAN'));
+  }
+
+  investigate(
+    _request: AgentPlanRequest,
+    _initialPlan: AgentPlan,
+    _executeTool: (tool: EvidenceTool, signal: AbortSignal) => Promise<EvidenceCall>,
+    signal: AbortSignal,
+  ): Promise<never> {
+    signal.throwIfAborted();
+    return Promise.reject(agentUnavailable('INVESTIGATE'));
+  }
+
+  recommend(_request: AgentRecommendationRequest, signal: AbortSignal): Promise<never> {
+    signal.throwIfAborted();
+    return Promise.reject(agentUnavailable('RECOMMEND'));
   }
 }
 
@@ -407,6 +416,18 @@ function isRecoverableReasonerFailure(error: unknown): boolean {
     error instanceof TypeError ||
     error instanceof SyntaxError ||
     (error instanceof DOMException && ['AbortError', 'TimeoutError'].includes(error.name))
+  );
+}
+
+function agentUnavailable(
+  stage: 'PLAN' | 'INVESTIGATE' | 'RECOMMEND',
+  failure?: unknown,
+): HisnError {
+  return new HisnError(
+    'AGENT_UNAVAILABLE',
+    `Hosted AI ${stage.toLowerCase()} unavailable; the command remains held`,
+    503,
+    { stage, failureType: failure instanceof Error ? failure.name : 'NOT_CONFIGURED' },
   );
 }
 

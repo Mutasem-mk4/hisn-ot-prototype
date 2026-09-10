@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { LangGraphAgentReasoner } from '../../src/infrastructure/agent-reasoners.js';
 import { completeRun, createHarness } from '../helpers/harness.js';
 
 describe('complete judge workflow', () => {
@@ -135,6 +136,33 @@ describe('complete judge workflow', () => {
       expect(harness.store.enforcementForRun(snapshot.run.id)).toEqual([]);
       expect(snapshot.run.twin.commandHistory[0]?.outcome).toBe('BLOCKED');
     } finally {
+      harness.close();
+    }
+  });
+
+  it('holds the command when hosted AI is unavailable without substituting a recommendation', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Hosted endpoint unavailable')));
+    const reasoner = new LangGraphAgentReasoner(
+      { baseUrl: 'https://reasoner.invalid', apiKey: 'redacted-key', model: 'hosted-model' },
+      50,
+    );
+    const harness = createHarness('judge-safe-operating-change', { reasoner });
+    try {
+      let snapshot = await harness.orchestrator.createRun(harness.scenarioId);
+      for (let step = 0; step < 4 && snapshot.run.playbackStatus !== 'FAILED_SAFE'; step += 1) {
+        snapshot = await harness.orchestrator.control('NEXT');
+      }
+
+      expect(snapshot.run.playbackStatus).toBe('FAILED_SAFE');
+      expect(snapshot.currentEvent?.payload.errorCode).toBe('AGENT_UNAVAILABLE');
+      expect(snapshot.currentEvent?.payload.headline).toBe('AI agent unavailable — command held');
+      expect(snapshot.artifacts.recommendation).toBeUndefined();
+      expect(snapshot.artifacts.decision).toBeUndefined();
+      expect(snapshot.run.twin.acceptedPressurePercent).toBe(46);
+      expect(snapshot.run.twin.commandHistory.at(-1)?.outcome).toBe('BLOCKED');
+      expect(harness.store.enforcementForRun(snapshot.run.id)).toEqual([]);
+    } finally {
+      vi.unstubAllGlobals();
       harness.close();
     }
   });

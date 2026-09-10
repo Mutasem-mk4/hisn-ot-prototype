@@ -30,7 +30,7 @@ Open Incident. Show Nokia versus local provenance, containment status, continuit
 
 ### Is the agent real?
 
-Yes. The hosted path uses LangGraph and Groq. The model issues typed tool calls, the trusted executor invokes Nokia adapters, observations return to the graph, and the model may choose another tool. A deterministic fallback is visibly labeled.
+Yes. The hosted path uses LangGraph and Groq. The model issues typed tool calls, the trusted executor invokes Nokia adapters, observations return to the graph, and the model may choose another tool. If the hosted agent fails, HISN-OT records `AGENT_UNAVAILABLE` and keeps the command held; it does not substitute a rule-based AI recommendation.
 
 ### Does the AI decide whether the pump runs?
 
@@ -58,7 +58,7 @@ The product creates one evidence trail connecting operator context, mobile-netwo
 
 ## Presentation recovery
 
-- If Groq is unavailable, show `FALLBACK` and explain graceful degradation.
+- If Groq is unavailable, show `AGENT_UNAVAILABLE` and explain that the held command fails closed without a substitute recommendation.
 - If Nokia is unavailable, show the `BLOCK` result and fail-closed behavior.
 - If QoD stays pending, explain that HISN-OT correctly withholds backup ownership.
 - If a prior run ended in containment, choose any scenario to start a fresh labeled demo baseline.

@@ -34,8 +34,8 @@ The evidence agent uses LangGraph `StateGraph`, `MessagesAnnotation`, and `ToolN
 4. Return a typed, redacted observation to the model.
 5. Reassess after every observation.
 6. Stop when sufficient or when the five-call budget is exhausted.
-7. Apply any missing deterministic minimum-evidence floor transparently.
-8. Produce a recommendation.
+7. Fail closed if the hosted model stops before the server evidence floor is complete.
+8. Produce a recommendation only after a successful investigation.
 9. Run deterministic authorization.
 
 Read-only status requires Device Reachability. An in-band pressure command requires Number Verification, Location Verification, and Device Reachability. A command above the observed 52% safe band also requires SIM Swap and Device Swap. The 60% hard maximum is independent from this evidence policy.
@@ -67,7 +67,7 @@ The command is held before reasoning or network calls. Every transition is persi
 | Module                                           | Responsibility                                                       |
 | ------------------------------------------------ | -------------------------------------------------------------------- |
 | `src/infrastructure/langgraph-evidence-agent.ts` | Model/tool/observation loop and structured trace                     |
-| `src/infrastructure/agent-reasoners.ts`          | Live planning/recommendation and deterministic fallback              |
+| `src/infrastructure/agent-reasoners.ts`          | Hosted planning/recommendation with explicit fail-closed errors      |
 | `src/infrastructure/nokia-providers.ts`          | Nokia SDK evidence and programmable-connectivity adapters            |
 | `src/application/judge-orchestrator.ts`          | Workflow transitions, cancellation, execution order, incidents       |
 | `src/domain/decision-engine.ts`                  | Authoritative policy decision                                        |

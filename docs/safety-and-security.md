@@ -28,7 +28,7 @@ The claim applies to the software prototype and digital twin. It is not a certif
 | Model hallucinated tool            | Only bound LangGraph tools can execute                                |
 | Excessive or duplicate tool calls  | Five-call budget and duplicate rejection                              |
 | Model recommends unsafe approval   | Independent deterministic policy recomputes the decision              |
-| Provider outage                    | Explicit unavailable evidence and deterministic fallback              |
+| Hosted AI outage                   | Explicit `AGENT_UNAVAILABLE`; held command fails closed               |
 | Replay or double submission        | Idempotency keys and stored run state                                 |
 | Partial containment failure        | Persisted intent, visible uncertainty, local safe stop                |
 | Secret disclosure                  | Server-only environment configuration and redacted traces             |
@@ -36,7 +36,7 @@ The claim applies to the software prototype and digital twin. It is not a certif
 
 ## Failure behavior
 
-The system prefers a safe, explainable failure over an optimistic result. If Groq fails, the deterministic evidence plan runs and is labeled `FALLBACK`. If Nokia evidence fails, the result is `UNAVAILABLE` and cannot authorize the command. If QoD remains pending, backup ownership is withheld and the modeled pump safe-stops.
+The system prefers a safe, explainable failure over an optimistic result. If Groq fails, the workflow records `AGENT_UNAVAILABLE`, issues no substitute recommendation, and keeps the command blocked. If Nokia evidence fails, the result is `UNAVAILABLE` and cannot authorize the command. If QoD remains pending, backup ownership is withheld and the modeled pump safe-stops.
 
 ## Production work
 

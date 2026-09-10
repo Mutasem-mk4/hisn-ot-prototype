@@ -1,5 +1,9 @@
 import type { AgentReasoner, EnforcementProvider, EvidenceProvider } from '../application/ports.js';
-import { DeterministicAgentReasoner, LangGraphAgentReasoner } from './agent-reasoners.js';
+import {
+  DeterministicAgentReasoner,
+  LangGraphAgentReasoner,
+  UnavailableAgentReasoner,
+} from './agent-reasoners.js';
 import type { AppConfiguration } from './configuration.js';
 import {
   NokiaSimulatorEnforcementProvider,
@@ -26,7 +30,9 @@ export function createProviders(configuration: AppConfiguration): ProviderSet {
         modelTimeoutMs,
         configuration.policy.agent.maximumRetries,
       )
-    : new DeterministicAgentReasoner();
+    : configuration.mode === 'DEMO' && !configuration.hosted
+      ? new DeterministicAgentReasoner()
+      : new UnavailableAgentReasoner();
   if (configuration.mode === 'DEMO') {
     if (configuration.nokiaSimulatorEnabled && configuration.nac) {
       return {

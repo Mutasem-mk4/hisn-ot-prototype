@@ -15,7 +15,7 @@ The automated suite covers:
 - Missing, stale, malformed, duplicate, and unavailable evidence
 - Model recommendations that conflict with policy
 - Model-requested LangGraph tools and observation-driven adaptation
-- Provider timeouts and deterministic fallback
+- Provider timeouts and explicit hosted-agent fail closure
 - Idempotent enforcement and uncertain side effects
 - Accepted-state isolation for blocked commands
 - Digital-twin integration-step and playback behavior

@@ -2,7 +2,7 @@ import type { RunSnapshot } from '../../application/ports.js';
 import type { WorkflowState } from '../../shared/contracts.js';
 import { StatusMark } from './StatusMark.js';
 
-type StageState = 'complete' | 'current' | 'pending';
+type StageState = 'complete' | 'current' | 'failed' | 'pending';
 
 type WorkflowStage = {
   label: string;
@@ -33,6 +33,20 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
   const recommendation = snapshot.artifacts.recommendation;
   const decision = snapshot.artifacts.decision;
   const missingTrace = trace.length === 0 && decision !== undefined;
+  const agentFailed =
+    snapshot.run.playbackStatus === 'FAILED_SAFE' &&
+    snapshot.currentEvent?.payload.errorCode === 'AGENT_UNAVAILABLE';
+  const hasAgentOutput =
+    plan?.reasoningProvenance === 'LIVE' || recommendation?.reasoningProvenance === 'LIVE';
+  const agentUnavailable =
+    snapshot.integration.agentReasoner === 'UNAVAILABLE' ||
+    (snapshot.lowRiskComparison === null && !hasAgentOutput) ||
+    agentFailed;
+  const failureCode = textPayload(snapshot.currentEvent?.payload.errorCode, 'FAILED SAFE');
+  const failureDetail = textPayload(
+    snapshot.currentEvent?.payload.detail,
+    'The command remained blocked.',
+  );
   const stages: WorkflowStage[] = [
     {
       label: 'Understand command',
@@ -80,20 +94,31 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
       completeAt: 'DECISION_ISSUED',
     },
   ];
-  const stageStates = statesFor(stages, snapshot.currentEvent?.workflowState ?? null);
+  const stageStates = statesFor(
+    stages,
+    snapshot.currentEvent?.workflowState ?? null,
+    failedStageIndex(snapshot),
+  );
 
   return (
     <section className="agent-workflow" aria-labelledby="agent-workflow-heading">
       <header className="agent-workflow__header">
         <div>
           <span className="eyebrow">Auditable AI workflow</span>
-          <h2 id="agent-workflow-heading">See what the agent does and why</h2>
+          <h2 id="agent-workflow-heading">
+            {agentUnavailable
+              ? 'AI unavailable — command stays held'
+              : 'See what the agent does and why'}
+          </h2>
           <p>
-            Inspectable goal, tool choices, observations and adaptation. The final control decision
-            remains with the deterministic safety policy.
+            {agentUnavailable
+              ? 'No rule-based AI recommendation is substituted. The deterministic safety boundary prevents actuation.'
+              : 'Inspectable goal, tool choices, observations and adaptation. The final control decision remains with the deterministic safety policy.'}
           </p>
         </div>
-        <StatusMark status={snapshot.integration.agentReasoner} />
+        <StatusMark
+          status={agentUnavailable ? 'UNAVAILABLE' : snapshot.integration.agentReasoner}
+        />
       </header>
 
       <ol className="agent-workflow__stages" aria-label="Agent decision workflow">
@@ -106,7 +131,11 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
               aria-current={state === 'current' ? 'step' : undefined}
             >
               <span className="agent-workflow__number">
-                {state === 'complete' ? '✓' : String(index + 1).padStart(2, '0')}
+                {state === 'complete'
+                  ? '✓'
+                  : state === 'failed'
+                    ? '!'
+                    : String(index + 1).padStart(2, '0')}
               </span>
               <div>
                 <b>{stage.label}</b>
@@ -122,16 +151,24 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
           <div>
             <span className="eyebrow">Action + observation journal</span>
             <b>
-              {trace.length > 0
-                ? `${trace.length} recorded steps`
-                : missingTrace
-                  ? 'No trace in this saved run'
-                  : 'Ready to investigate'}
+              {agentFailed
+                ? 'Agent stopped safely'
+                : trace.length > 0
+                  ? `${trace.length} recorded steps`
+                  : missingTrace
+                    ? 'No trace in this saved run'
+                    : 'Ready to investigate'}
             </b>
           </div>
           <a href="#evidence">Inspect complete AI record →</a>
         </div>
-        {trace.length > 0 ? (
+        {agentFailed ? (
+          <div className="agent-journal__missing">
+            <span>{failureCode}</span>
+            <b>No AI plan or recommendation replaced the failed agent call.</b>
+            <p>{failureDetail}</p>
+          </div>
+        ) : trace.length > 0 ? (
           <ol aria-live="polite">
             {trace.map((step) => (
               <li key={step.sequence} data-phase={step.phase}>
@@ -184,7 +221,18 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
   );
 }
 
-function statesFor(stages: WorkflowStage[], workflowState: WorkflowState | null): StageState[] {
+function statesFor(
+  stages: WorkflowStage[],
+  workflowState: WorkflowState | null,
+  failedStage: number | null,
+): StageState[] {
+  if (workflowState === 'FAILED_SAFE' && failedStage !== null) {
+    return stages.map((_stage, index) => {
+      if (index < failedStage) return 'complete';
+      if (index === failedStage) return 'failed';
+      return 'pending';
+    });
+  }
   const currentIndex = workflowState ? workflowOrder.indexOf(workflowState) : -1;
   const completed = stages.map((stage) => currentIndex >= workflowOrder.indexOf(stage.completeAt));
   const firstPending = completed.findIndex((value) => !value);
@@ -196,6 +244,15 @@ function statesFor(stages: WorkflowStage[], workflowState: WorkflowState | null)
   });
 }
 
+function failedStageIndex(snapshot: RunSnapshot): number | null {
+  if (snapshot.run.playbackStatus !== 'FAILED_SAFE') return null;
+  if (!snapshot.artifacts.plan) return 1;
+  if (!snapshot.artifacts.evidence) return 2;
+  if (!snapshot.artifacts.safety) return 3;
+  if (!snapshot.artifacts.recommendation) return 4;
+  return 5;
+}
+
 function humanize(machineLabel: string) {
   return machineLabel
     .toLowerCase()
@@ -205,4 +262,8 @@ function humanize(machineLabel: string) {
 
 function pluralize(noun: string, count: number) {
   return count === 1 ? noun : `${noun}s`;
+}
+
+function textPayload(payload: unknown, fallback: string) {
+  return typeof payload === 'string' ? payload : fallback;
 }

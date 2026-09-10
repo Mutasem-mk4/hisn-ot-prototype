@@ -24,6 +24,7 @@ export function JudgeMode({
 }) {
   const event = snapshot.currentEvent;
   const decision = snapshot.artifacts.decision;
+  const displayedAgentStatus = agentStatus(snapshot);
   const networkProof = networkProofCopy(snapshot.integration.evidenceSource);
   const progress = ['COMPLETE', 'FAILED_SAFE'].includes(snapshot.run.playbackStatus)
     ? 100
@@ -50,8 +51,8 @@ export function JudgeMode({
         </div>
         <div>
           <span>Agent reasoning</span>
-          <StatusMark status={snapshot.integration.agentReasoner} />
-          <small>LangGraph tool loop, deterministic authority</small>
+          <StatusMark status={displayedAgentStatus} />
+          <small>{agentProofCopy(displayedAgentStatus)}</small>
         </div>
         <div>
           <span>Industrial process</span>
@@ -92,10 +93,11 @@ export function JudgeMode({
           <div className="plan-compare">
             <div>
               <span>Read-only inspection</span>
-              <b>{snapshot.lowRiskComparison.selectedTools.length}</b>
+              <b>{snapshot.lowRiskComparison?.selectedTools.length ?? '—'}</b>
               <small>
-                {snapshot.lowRiskComparison.selectedTools.length === 1 ? 'tool' : 'tools'} · LOW ·{' '}
-                {snapshot.lowRiskComparison.reasoningProvenance}
+                {snapshot.lowRiskComparison
+                  ? `${snapshot.lowRiskComparison.selectedTools.length === 1 ? 'tool' : 'tools'} · LOW · ${snapshot.lowRiskComparison.reasoningProvenance}`
+                  : 'AI unavailable · no plan issued'}
               </small>
             </div>
             <i aria-hidden="true" />
@@ -132,6 +134,23 @@ export function JudgeMode({
       </div>
     </main>
   );
+}
+
+function agentStatus(snapshot: RunSnapshot): RunSnapshot['integration']['agentReasoner'] {
+  const agentFailed =
+    snapshot.run.playbackStatus === 'FAILED_SAFE' &&
+    snapshot.currentEvent?.payload.errorCode === 'AGENT_UNAVAILABLE';
+  const hasAgentOutput =
+    snapshot.artifacts.plan?.reasoningProvenance === 'LIVE' ||
+    snapshot.artifacts.recommendation?.reasoningProvenance === 'LIVE';
+  if (agentFailed || (snapshot.lowRiskComparison === null && !hasAgentOutput)) return 'UNAVAILABLE';
+  return snapshot.integration.agentReasoner;
+}
+
+function agentProofCopy(reasoner: RunSnapshot['integration']['agentReasoner']) {
+  if (reasoner === 'LANGGRAPH') return 'Hosted model tool loop, deterministic authority';
+  if (reasoner === 'DETERMINISTIC') return 'Explicit local DEMO reasoner, no hosted-model claim';
+  return 'No AI recommendation; every command fails closed';
 }
 
 function networkProofCopy(source: RunSnapshot['integration']['evidenceSource']) {

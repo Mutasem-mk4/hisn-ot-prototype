@@ -46,7 +46,7 @@ const PRESENTATION_STEP_MS = 7_000;
 
 export class JudgeOrchestrator {
   private busy = false;
-  private lowRiskComparison: AgentPlan | null = null;
+  private lowRiskComparison: AgentPlan | null | undefined;
 
   constructor(
     private readonly store: AuditStore,
@@ -82,6 +82,7 @@ export class JudgeOrchestrator {
       return this.snapshot(existing);
     }
     const scenario = this.scenario(scenarioId);
+    this.lowRiskComparison = undefined;
     const now = new Date().toISOString();
     const run: RunRecord = {
       id: randomUUID(),
@@ -204,22 +205,32 @@ export class JudgeOrchestrator {
     };
   }
 
-  private async compareLowRisk(scenario: Scenario): Promise<AgentPlan> {
-    if (this.lowRiskComparison) return this.lowRiskComparison;
-    this.lowRiskComparison = await this.reasoner.plan(
-      {
-        command: {
-          kind: 'READ_STATUS',
-          requestedSetpointPercent: null,
-          reason: 'Judge comparison',
+  private async compareLowRisk(scenario: Scenario): Promise<AgentPlan | null> {
+    if (this.lowRiskComparison !== undefined) return this.lowRiskComparison;
+    if (this.reasoner.mode === 'UNAVAILABLE') {
+      this.lowRiskComparison = null;
+      return null;
+    }
+    try {
+      this.lowRiskComparison = await this.reasoner.plan(
+        {
+          command: {
+            kind: 'READ_STATUS',
+            requestedSetpointPercent: null,
+            reason: 'Judge comparison',
+          },
+          principal: scenario.principal,
+          policy: this.policy,
+          twin: scenario.initialTwin,
         },
-        principal: scenario.principal,
-        policy: this.policy,
-        twin: scenario.initialTwin,
-      },
-      AbortSignal.timeout(this.policy.providers.timeoutMs),
-    );
-    return this.lowRiskComparison;
+        AbortSignal.timeout(this.policy.providers.timeoutMs),
+      );
+      return this.lowRiskComparison;
+    } catch (error) {
+      if (!(error instanceof HisnError) || error.code !== 'AGENT_UNAVAILABLE') throw error;
+      this.lowRiskComparison = null;
+      return null;
+    }
   }
 
   incident(runId: string) {
@@ -671,15 +682,18 @@ export class JudgeOrchestrator {
       resolveHeldCommand(run.twin, 'BLOCK'),
     );
     updated.playbackStatus = 'FAILED_SAFE';
+    const agentUnavailable = error instanceof HisnError && error.code === 'AGENT_UNAVAILABLE';
     const event = this.store.commitTransition(updated, {
       runId: run.id,
       eventType: 'WORKFLOW_FAILED_SAFE',
       workflowState: 'FAILED_SAFE',
       payload: {
-        headline: 'Workflow failed safe',
-        detail:
-          'An integration or orchestration error occurred; the physical command remained blocked.',
+        headline: agentUnavailable ? 'AI agent unavailable — command held' : 'Workflow failed safe',
+        detail: agentUnavailable
+          ? 'No rule-based recommendation was substituted. The physical command remained blocked.'
+          : 'An integration or orchestration error occurred; the physical command remained blocked.',
         errorCode: error instanceof HisnError ? error.code : 'UNEXPECTED_FAILURE',
+        failedAfter: run.workflowState,
         twin: updated.twin,
       },
       occurredAt: now,

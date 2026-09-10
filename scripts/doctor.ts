@@ -9,7 +9,14 @@ try {
   const configuration = loadConfiguration(process.env, process.cwd());
   const checks = [
     ['Runtime', configuration.mode],
-    ['Agent framework', configuration.llm ? 'LANGGRAPH' : 'DETERMINISTIC FALLBACK'],
+    [
+      'Agent framework',
+      configuration.llm
+        ? 'LANGGRAPH'
+        : configuration.hosted
+          ? 'UNAVAILABLE (COMMANDS HELD)'
+          : 'LOCAL DETERMINISTIC DEMO',
+    ],
     ['Groq model', configuration.llm ? 'CONFIGURED' : 'NOT CONFIGURED'],
     [
       'Nokia evidence',

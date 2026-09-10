@@ -23,6 +23,7 @@ export function ControlRail({
   const atStart = snapshot.run.presentationCursor <= 1;
   const terminal = ['COMPLETE', 'FAILED_SAFE'].includes(snapshot.run.playbackStatus);
   const contained = snapshot.run.twin.gatewayAttachment !== 'OPERATIONAL';
+  const lowRiskToolCount = snapshot.lowRiskComparison?.selectedTools.length;
   return (
     <div className="judge-controls" aria-label="Judge demonstration controls">
       <div
@@ -92,9 +93,13 @@ export function ControlRail({
         >
           <span>
             Run read-only inspection
-            <small>Device Reachability</small>
+            <small>
+              {lowRiskToolCount === undefined ? 'Agent unavailable' : 'Device Reachability'}
+            </small>
           </span>
-          <b>{snapshot.lowRiskComparison.selectedTools.length} API</b>
+          <b>
+            {lowRiskToolCount ?? '—'} {lowRiskToolCount === 1 ? 'API' : 'APIs'}
+          </b>
         </button>
       </div>
       <div

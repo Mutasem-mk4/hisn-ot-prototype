@@ -80,10 +80,10 @@ const RunSnapshotSchema: z.ZodType<RunSnapshot> = z
           'NOKIA_LIVE',
           'UNAVAILABLE',
         ]),
-        agentReasoner: z.enum(['DETERMINISTIC', 'LANGGRAPH']),
+        agentReasoner: z.enum(['DETERMINISTIC', 'LANGGRAPH', 'UNAVAILABLE']),
       })
       .strict(),
-    lowRiskComparison: AgentPlanSchema,
+    lowRiskComparison: AgentPlanSchema.nullable(),
     presentationTwin: TwinStateSchema,
     artifacts: z
       .object({

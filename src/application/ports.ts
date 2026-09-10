@@ -34,7 +34,7 @@ export type AgentRecommendationRequest = AgentPlanRequest & {
 };
 
 export interface AgentReasoner {
-  readonly mode: 'DETERMINISTIC' | 'LANGGRAPH';
+  readonly mode: 'DETERMINISTIC' | 'LANGGRAPH' | 'UNAVAILABLE';
   plan(request: AgentPlanRequest, signal: AbortSignal): Promise<AgentPlan>;
   investigate(
     request: AgentPlanRequest,
@@ -97,7 +97,7 @@ export type RunSnapshot = {
   safePressureBand: Policy['safePressureBand'];
   setPressureMaximumPercent: number;
   integration: IntegrationReadiness;
-  lowRiskComparison: AgentPlan;
+  lowRiskComparison: AgentPlan | null;
   presentationTwin: TwinState;
   artifacts: WorkflowArtifacts;
   incidentAvailable: boolean;
@@ -113,7 +113,7 @@ export type IntegrationReadiness = {
   enforcementProvider: 'AVAILABLE' | 'DEGRADED' | 'UNAVAILABLE';
   evidenceSource: ProviderSource;
   enforcementSource: ProviderSource;
-  agentReasoner: 'DETERMINISTIC' | 'LANGGRAPH';
+  agentReasoner: AgentReasoner['mode'];
 };
 
 export type EventAppend = {

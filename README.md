@@ -47,23 +47,23 @@ The model chooses from five allowlisted, typed tools:
 - Location Verification
 - Device Reachability
 
-LangGraph executes the model/tool/observation loop. The application injects trusted run context, invokes the existing Nokia adapters, validates every result with Zod, enforces a five-call budget, rejects duplicate calls, and records an inspectable action trace. Missing minimum evidence is collected by a visibly labeled safety floor; unavailable evidence fails closed.
+LangGraph executes the model/tool/observation loop. The application injects trusted run context, invokes the existing Nokia adapters, validates every result with Zod, enforces a five-call budget, rejects duplicate calls, and records an inspectable action trace. The graph reminds the model when required evidence is missing; if the model still stops early or becomes unavailable, the workflow fails closed without substituting a rule-based recommendation.
 
 The final decision remains deterministic. Model output cannot change the 60% command maximum, authorize missing evidence, detach a gateway, or activate backup control by itself.
 
 ## Honest integration status
 
-| Capability            | Deployed path                                                    | Boundary                                                     |
-| --------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------ |
-| Agent orchestration   | LangGraph.js with a hosted Groq model and deterministic fallback | Advisory evidence selection and recommendation only          |
-| SIM Swap              | Authenticated Nokia sandbox API                                  | Simulator identity                                           |
-| Device Swap           | Authenticated Nokia sandbox API                                  | Simulator identity                                           |
-| Location Verification | Authenticated Nokia sandbox API                                  | Simulator identity                                           |
-| Device Reachability   | Authenticated Nokia sandbox API                                  | Simulator identity                                           |
-| Number Verification   | Local CAMARA-shaped fallback                                     | Subscriber OAuth is not configured                           |
-| Quality on Demand     | Authenticated Nokia sandbox request                              | Observed sessions may remain pending; no handover is claimed |
-| Slice detachment      | Guarded local implementation                                     | No operational slice attachment is configured                |
-| Plant and PLC         | Stateful digital twin                                            | No physical PLC or calibrated plant claim                    |
+| Capability            | Deployed path                         | Boundary                                                     |
+| --------------------- | ------------------------------------- | ------------------------------------------------------------ |
+| Agent orchestration   | LangGraph.js with a hosted Groq model | Advisory evidence selection and recommendation; fails closed |
+| SIM Swap              | Authenticated Nokia sandbox API       | Simulator identity                                           |
+| Device Swap           | Authenticated Nokia sandbox API       | Simulator identity                                           |
+| Location Verification | Authenticated Nokia sandbox API       | Simulator identity                                           |
+| Device Reachability   | Authenticated Nokia sandbox API       | Simulator identity                                           |
+| Number Verification   | Local CAMARA-shaped fallback          | Subscriber OAuth is not configured                           |
+| Quality on Demand     | Authenticated Nokia sandbox request   | Observed sessions may remain pending; no handover is claimed |
+| Slice detachment      | Guarded local implementation          | No operational slice attachment is configured                |
+| Plant and PLC         | Stateful digital twin                 | No physical PLC or calibrated plant claim                    |
 
 The UI uses the same provenance vocabulary throughout: `LANGGRAPH AGENT`, `NOKIA SANDBOX`, `LIVE`, `FALLBACK`, `UNAVAILABLE`, and `IMPLEMENTED LOCALLY`.
 

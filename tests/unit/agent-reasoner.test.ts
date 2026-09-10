@@ -205,6 +205,43 @@ describe('bounded evidence planning', () => {
     expect(executor).toHaveBeenCalledTimes(1);
   });
 
+  it('does not substitute tool calls when the hosted agent leaves the evidence floor incomplete', async () => {
+    const lowRequest = {
+      command: {
+        kind: 'READ_STATUS' as const,
+        requestedSetpointPercent: null,
+        reason: 'Read status only',
+      },
+      principal: scenario.principal,
+      policy,
+      twin: scenario.initialTwin,
+    };
+    const initialPlan = await new DeterministicAgentReasoner().plan(
+      lowRequest,
+      new AbortController().signal,
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(groqResponse({ content: 'No tool is needed.' })),
+    );
+    const reasoner = new LangGraphAgentReasoner(
+      {
+        baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
+        apiKey: 'redacted-key',
+        model: 'openai/gpt-oss-20b',
+      },
+      500,
+    );
+    const executor = vi.fn((tool) =>
+      Promise.resolve(evidenceCall(tool, { reachable: true, connectivity: ['DATA'] })),
+    );
+
+    await expect(
+      reasoner.investigate(lowRequest, initialPlan, executor, new AbortController().signal),
+    ).rejects.toMatchObject({ code: 'AGENT_UNAVAILABLE' });
+    expect(executor).not.toHaveBeenCalled();
+  });
+
   it('serializes parallel model suggestions into observation-driven calls', async () => {
     const lowRequest = {
       command: {
@@ -327,7 +364,7 @@ describe('bounded evidence planning', () => {
     expect(plan.selectedTools).toEqual(minimumEvidenceForCommand(scenario.command, policy));
   });
 
-  it('uses a validated deterministic fallback for malformed model output', async () => {
+  it('fails closed when hosted planning returns malformed output', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: () =>
@@ -341,21 +378,21 @@ describe('bounded evidence planning', () => {
       200,
       1,
     );
-    const plan = await reasoner.plan(
-      {
-        command: scenario.command,
-        principal: scenario.principal,
-        policy,
-        twin: scenario.initialTwin,
-      },
-      new AbortController().signal,
-    );
-    expect(plan.reasoningProvenance).toBe('FALLBACK');
-    expect(plan.selectedTools).toEqual(minimumEvidenceForCommand(scenario.command, policy));
+    await expect(
+      reasoner.plan(
+        {
+          command: scenario.command,
+          principal: scenario.principal,
+          policy,
+          twin: scenario.initialTwin,
+        },
+        new AbortController().signal,
+      ),
+    ).rejects.toMatchObject({ code: 'AGENT_UNAVAILABLE' });
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('uses the deterministic fallback after the hosted deadline expires', async () => {
+  it('fails closed after the hosted planning deadline expires', async () => {
     const timeout = new DOMException('Hosted reasoning deadline expired', 'TimeoutError');
     const fetchMock = vi.fn().mockRejectedValue(timeout);
     vi.stubGlobal('fetch', fetchMock);
@@ -365,22 +402,21 @@ describe('bounded evidence planning', () => {
     );
     const expiredSignal = AbortSignal.abort(timeout);
 
-    const plan = await reasoner.plan(
-      {
-        command: scenario.command,
-        principal: scenario.principal,
-        policy,
-        twin: scenario.initialTwin,
-      },
-      expiredSignal,
-    );
-
-    expect(plan.reasoningProvenance).toBe('FALLBACK');
-    expect(plan.selectedTools).toEqual(minimumEvidenceForCommand(scenario.command, policy));
+    await expect(
+      reasoner.plan(
+        {
+          command: scenario.command,
+          principal: scenario.principal,
+          policy,
+          twin: scenario.initialTwin,
+        },
+        expiredSignal,
+      ),
+    ).rejects.toMatchObject({ code: 'AGENT_UNAVAILABLE' });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('falls back when a valid-shaped live plan omits required critical evidence', async () => {
+  it('fails closed when a valid-shaped plan omits required critical evidence', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -408,17 +444,17 @@ describe('bounded evidence planning', () => {
       { baseUrl: 'https://reasoner.invalid', apiKey: 'redacted-key', model: 'structured-model' },
       200,
     );
-    const plan = await reasoner.plan(
-      {
-        command: scenario.command,
-        principal: scenario.principal,
-        policy,
-        twin: scenario.initialTwin,
-      },
-      new AbortController().signal,
-    );
-    expect(plan.reasoningProvenance).toBe('FALLBACK');
-    expect(plan.selectedTools).toEqual(minimumEvidenceForCommand(scenario.command, policy));
+    await expect(
+      reasoner.plan(
+        {
+          command: scenario.command,
+          principal: scenario.principal,
+          policy,
+          twin: scenario.initialTwin,
+        },
+        new AbortController().signal,
+      ),
+    ).rejects.toMatchObject({ code: 'AGENT_UNAVAILABLE' });
   });
 
   it('accepts an allowlisted live plan that adds proportionate evidence', async () => {
@@ -469,7 +505,7 @@ describe('bounded evidence planning', () => {
     expect(plan.selectedTools).toEqual(['DEVICE_REACHABILITY', 'NUMBER_VERIFICATION']);
   });
 
-  it('rejects a hosted recommendation that weakens required containment', async () => {
+  it('fails closed when a hosted recommendation weakens required containment', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -500,20 +536,19 @@ describe('bounded evidence planning', () => {
       200,
     );
 
-    const recommendation = await reasoner.recommend(
-      {
-        command: scenario.command,
-        principal: scenario.principal,
-        policy,
-        twin: scenario.initialTwin,
-        evidence,
-        safety: evaluatePhysicalSafety(scenario.command, policy),
-      },
-      new AbortController().signal,
-    );
-
-    expect(recommendation.reasoningProvenance).toBe('FALLBACK');
-    expect(recommendation.recommendedDecision).toBe('BLOCK_AND_CONTAIN');
+    await expect(
+      reasoner.recommend(
+        {
+          command: scenario.command,
+          principal: scenario.principal,
+          policy,
+          twin: scenario.initialTwin,
+          evidence,
+          safety: evaluatePhysicalSafety(scenario.command, policy),
+        },
+        new AbortController().signal,
+      ),
+    ).rejects.toMatchObject({ code: 'AGENT_UNAVAILABLE' });
   });
 });
 
