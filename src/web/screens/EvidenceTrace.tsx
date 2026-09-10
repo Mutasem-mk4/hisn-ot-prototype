@@ -25,6 +25,22 @@ export function EvidenceTrace({ snapshot }: { snapshot: RunSnapshot }) {
         </div>
         <StatusMark status={plan?.reasoningProvenance ?? 'PENDING'} />
       </section>
+      {plan && (
+        <section className="selection-rationale" aria-labelledby="selection-rationale-heading">
+          <div>
+            <span className="eyebrow">Agent tool selection</span>
+            <h2 id="selection-rationale-heading">Why these network signals?</h2>
+          </div>
+          <ol>
+            {plan.selectedTools.map((tool) => (
+              <li key={tool}>
+                <b>{humanize(tool)}</b>
+                <span>{plan.selectionReasons[tool]}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
       {evidence.length === 0 ? (
         <section className="empty-state">
           <span>00</span>
@@ -77,7 +93,7 @@ export function EvidenceTrace({ snapshot }: { snapshot: RunSnapshot }) {
         </div>
       )}
       {recommendation && (
-        <section className="decision-explanation">
+        <section className="decision-explanation" data-state={recommendation.recommendedDecision}>
           <span className="eyebrow">Evidence-based agent recommendation</span>
           <h2>{recommendation.recommendedDecision}</h2>
           <p>{recommendation.summary}</p>

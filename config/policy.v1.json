@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "policyVersion": "desalination-safety-2026.2",
+  "policyVersion": "desalination-safety-2026.3",
   "assetId": "asset-desalination-line-a",
   "safePressureBand": { "minimumPercent": 42, "maximumPercent": 52 },
   "commands": {
     "READ_STATUS": {
       "risk": "LOW",
       "maximumSetpointPercent": null,
-      "requiredEvidence": ["NUMBER_VERIFICATION"]
+      "requiredEvidence": ["DEVICE_REACHABILITY"]
     },
     "SET_PRESSURE": {
       "risk": "CRITICAL",

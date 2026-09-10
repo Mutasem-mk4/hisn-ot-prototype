@@ -22,12 +22,14 @@ The Vite development UI is `http://127.0.0.1:4173`; it proxies `/api` to port 43
 ## Judge Mode in 90–150 seconds
 
 1. Use a 1440×900 browser when possible. Open Judge Mode and click **Present** for full screen.
-2. Under **B · Pump operating setpoint**, click **Submit safe change · 52%**. The command packet stops at the HISN gate while evidence is gathered. Use **Step proof** for narration or let the simulation advance automatically.
-3. At `ALLOW`, the packet is released to the primary controller. Let the simulation run briefly: pump speed becomes 52%, flow increases, pressure approaches the accepted value progressively, and tank/valve telemetry follows the same process model.
-4. Pause the simulation to inspect a tank, pump, treatment stage, valve, gate, or controller. The simulation clock and state-bound motion freeze together.
-5. Click **Submit unsafe change · 88%**. The previously accepted 52% input remains in force while the new packet is held and then blocked at the gate.
-6. Continue through `BLOCK_AND_CONTAIN`. The implicated operator-facing primary edge becomes isolated; the PLC is not described as quarantined. The separately enrolled backup path is marked as owner only after QoD and the simulated safe-control activation both succeed; a pending or failed handover safe-stops the modeled pump.
-7. Open **Incident**, then use **Export JSON** or **Print report**.
+2. Under **B · Adaptive API proof**, click **Run read-only inspection · 1 API**. The agent classifies the request as low risk, calls Nokia Device Reachability, and reaches `ALLOW` without changing the accepted control state.
+3. Open **Evidence Trace**. Confirm that one of five allowlisted tools was selected, read the selection reason, and inspect the returned provenance. Return to Judge Mode.
+4. Under **C · Pump operating setpoint**, click **Submit safe change · 52%**. The command packet stops at the HISN gate while evidence is gathered. Use **Step proof** for narration or let the simulation advance automatically.
+5. At `ALLOW`, the packet is released to the primary controller. Let the simulation run briefly: pump speed becomes 52%, flow increases, pressure approaches the accepted value progressively, and tank/valve telemetry follows the same process model.
+6. Pause the simulation to inspect a tank, pump, treatment stage, valve, gate, or controller. The simulation clock and state-bound motion freeze together.
+7. Click **Submit unsafe change · 88%**. The previously accepted 52% input remains in force while the new packet is held and then blocked at the gate.
+8. Continue through `BLOCK_AND_CONTAIN`. The implicated operator-facing primary edge becomes isolated; the PLC is not described as quarantined. The separately enrolled backup path is marked as owner only after QoD and the simulated safe-control activation both succeed; a pending or failed handover safe-stops the modeled pump.
+9. Open **Incident**, then use **Export JSON** or **Print report**.
 
 Controls are state-safe: Run/Pause simulation, Step proof, Back, Reset, Clock speed, Explain, and Present. `Space` toggles Run/Pause. Arrow Right steps; Arrow Left replays the previous persisted event. Back does not reverse a real enforcement action.
 

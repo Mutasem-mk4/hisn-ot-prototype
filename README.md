@@ -16,13 +16,13 @@ A privileged command may carry valid credentials while coming from a recently sw
 
 ### [Launch Judge Mode →](https://hisn-ot-prototype.vercel.app/#judge)
 
-The clearest demonstration takes under two minutes:
+The clearest demonstration takes about two minutes:
 
-1. Click **Submit safe change · 52%** and run the proof. The request reaches `ALLOW`; the accepted setpoint becomes 52%, and the modeled facility responds.
-2. Click **Submit unsafe change · 88%**. The gate holds the new request while the previously accepted control state remains unchanged.
-3. Follow the agent through risk classification, allowlisted tool selection, Nokia evidence collection, and the independent 60% command limit.
-4. Open [Evidence Trace](https://hisn-ot-prototype.vercel.app/#evidence) to inspect each tool's purpose, redacted result, provenance, latency, timestamp, and correlation ID.
-5. Open [Incident](https://hisn-ot-prototype.vercel.app/#incident) to see the evidence-bound decision, containment result, continuity state, recovery requirements, and exportable report.
+1. Click **Run read-only inspection · 1 API**. The agent classifies the consequence as `LOW`, selects only Device Reachability, and authorizes the read without changing control state.
+2. Open [Evidence Trace](https://hisn-ot-prototype.vercel.app/#evidence) to see the tool-selection reason and the Nokia result's provenance, latency, timestamp, and correlation ID.
+3. Return to Judge Mode, click **Submit safe change · 52%**, and run the proof. The critical request selects five tools, reaches `ALLOW`, changes the accepted setpoint to 52%, and drives the modeled facility response.
+4. Click **Submit unsafe change · 88%**. The same gate holds the new request while the previously accepted control state remains unchanged.
+5. Follow the agent through Nokia evidence collection and the independent 60% command limit, then open [Incident](https://hisn-ot-prototype.vercel.app/#incident) for the evidence-bound decision, containment result, continuity state, recovery requirements, and exportable report.
 
 The result is concise: **identity valid, context compromised, command blocked, zero unsafe executions.**
 
@@ -66,18 +66,19 @@ flowchart LR
 
 The AI performs two bounded jobs:
 
-1. **Plan:** classify consequence and select the required tools from the server allowlist. A read-only request needs one identity check; pressure control requires five evidence tools.
+1. **Plan:** classify consequence and select the required tools from the server allowlist. A read-only inspection needs one Device Reachability check; pressure control requires five evidence tools.
 2. **Recommend:** interpret the returned telecom signals and produce a strict structured recommendation.
 
 The model cannot authorize a physical setpoint. Server-side schemas constrain its output, malformed or unavailable model responses fall back deterministically, and the policy engine independently re-evaluates authorization, evidence completeness, contextual anomalies, and the configured engineering maximum.
 
-## Three behaviors judges can verify
+## Four behaviors judges can verify
 
-| Scenario                     | Network and process context                                                         | Authoritative result | Observable safety property                                                                                              |
-| ---------------------------- | ----------------------------------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Safe operating change        | Trusted hybrid evidence with Nokia simulator calls; requested 52%; hard maximum 60% | `ALLOW`              | Accepted input becomes 52% and the digital twin responds progressively.                                                 |
-| Compromised critical command | Recent SIM/device changes, location mismatch, reachable device; requested 88%       | `BLOCK_AND_CONTAIN`  | The accepted input does not change; the operator edge is isolated locally; unconfirmed continuity safe-stops the model. |
-| Provider degradation         | Required evidence is unavailable                                                    | `BLOCK`              | Uncertainty prevents authorization but is not misreported as confirmed compromise, so containment does not execute.     |
+| Scenario                     | Network and process context                                                   | Authoritative result | Observable safety property                                                                                              |
+| ---------------------------- | ----------------------------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Read-only inspection         | Low consequence; one Nokia Device Reachability call                           | `ALLOW`              | The inspection completes without changing requested, accepted, or actual pressure and starts no enforcement.            |
+| Safe operating change        | Critical consequence; five evidence tools; requested 52%; hard maximum 60%    | `ALLOW`              | Accepted input becomes 52% and the digital twin responds progressively.                                                 |
+| Compromised critical command | Recent SIM/device changes, location mismatch, reachable device; requested 88% | `BLOCK_AND_CONTAIN`  | The accepted input does not change; the operator edge is isolated locally; unconfirmed continuity safe-stops the model. |
+| Provider degradation         | Required evidence is unavailable                                              | `BLOCK`              | Uncertainty prevents authorization but is not misreported as confirmed compromise, so containment does not execute.     |
 
 This distinction matters: missing evidence fails closed, while containment requires affirmative compromise evidence and a stored `BLOCK_AND_CONTAIN` decision.
 
@@ -116,8 +117,8 @@ A practical commercialization path is a per-site or per-critical-asset safety la
 
 The September 10 verification baseline includes:
 
-- `npm run verify`: formatting, ESLint, server/web type checks, **67 Vitest tests**, and production build passed.
-- `npm run test:e2e`: **18 passed**, with two intentional small-screen skips for the full safe-then-unsafe presentation sequence.
+- `npm run verify`: formatting, ESLint, server/web type checks, **68 Vitest tests**, and production build passed.
+- `npm run test:e2e`: **22 passed**, with two intentional small-screen skips for the full safe-then-unsafe presentation sequence.
 - Accessibility and browser-console checks passed on desktop, projector, tablet, and mobile profiles.
 - `npm run audit:deps`: **0 vulnerabilities** reported by npm.
 - Public `/`, `/healthz`, and `/readyz` returned HTTP 200.

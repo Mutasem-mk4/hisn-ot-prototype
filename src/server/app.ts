@@ -142,7 +142,11 @@ export async function registerApplication(
   );
   server.post(
     '/api/v1/judge-run/rehearsal',
-    { config: { rateLimit: { max: 12, timeWindow: '1 minute' } } },
+    {
+      config: {
+        rateLimit: { max: configuration.rehearsalRateLimitMax, timeWindow: '1 minute' },
+      },
+    },
     async (request) => {
       sessions.verifyMutation(request);
       const body = RehearsalRequestSchema.parse(request.body);

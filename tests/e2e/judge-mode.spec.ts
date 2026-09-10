@@ -19,6 +19,35 @@ test('explains the product immediately and exposes the primary action', async ({
   ).toBeVisible();
   await expect(page.getByRole('button', { name: /Run simulation/i })).toBeVisible();
   await expect(page.getByText('Valid credentials. But should this command execute?')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Run read-only inspection/i })).toContainText(
+    '1 API',
+  );
+});
+
+test('runs the adaptive low-risk path with one inspectable evidence call', async ({ page }) => {
+  await page.getByLabel('Simulation playback speed').selectOption('4');
+  await page.getByRole('button', { name: /Run read-only inspection/i }).click();
+
+  await expect(
+    page.getByRole('heading', { name: 'Evidence-bound incident record sealed' }),
+  ).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
+  const process = page.getByRole('heading', { name: 'Simulated process' }).locator('..');
+  await expect(process).toContainText('Accepted setpoint46%');
+  await expect(process).toContainText('No command pending');
+
+  await page.getByRole('link', { name: 'Evidence Trace' }).click();
+  const table = page.getByRole('table', { name: 'Pre-decision telecom evidence calls' });
+  await expect(table).toBeVisible();
+  await expect(table.locator('tbody tr')).toHaveCount(1);
+  await expect(table).toContainText('Device reachability');
+  const toolCount = page.locator('.tool-count');
+  await expect(toolCount.locator('b')).toHaveText('1');
+  await expect(toolCount.locator('span')).toHaveText('of 5 allowed tools selected');
+  await expect(page.getByText('Why these network signals?')).toBeVisible();
+  await expect(
+    page.getByText('Confirm attachment to the expected mobile data network.'),
+  ).toBeVisible();
 });
 
 test('supports keyboard stepping while keeping requested and actual pressure distinct', async ({

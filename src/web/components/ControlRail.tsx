@@ -77,12 +77,32 @@ export function ControlRail({
         </button>
       </div>
       <div
+        className="control-group control-group--inspection"
+        role="group"
+        aria-labelledby="inspection-controls-label"
+      >
+        <span className="control-group__label" id="inspection-controls-label">
+          B · Adaptive API proof
+        </span>
+        <button
+          className="command-inspection"
+          onClick={() => onCommand('judge-read-only-inspection')}
+          disabled={busy || snapshot.presentationTwin.gatewayAttachment !== 'OPERATIONAL'}
+        >
+          <span>
+            Run read-only inspection
+            <small>Device Reachability</small>
+          </span>
+          <b>{snapshot.lowRiskComparison.selectedTools.length} API</b>
+        </button>
+      </div>
+      <div
         className="control-group control-group--process"
         role="group"
         aria-labelledby="process-controls-label"
       >
         <span className="control-group__label" id="process-controls-label">
-          B · Pump operating setpoint
+          C · Pump operating setpoint
         </span>
         <button
           className="command-safe"

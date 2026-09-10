@@ -37,7 +37,7 @@ describe('bounded evidence planning', () => {
       },
       signal,
     );
-    expect(low.selectedTools).toEqual(['NUMBER_VERIFICATION']);
+    expect(low.selectedTools).toEqual(['DEVICE_REACHABILITY']);
     expect(critical.selectedTools).toHaveLength(5);
     expect(critical.selectedTools.length).toBeGreaterThan(low.selectedTools.length);
   });

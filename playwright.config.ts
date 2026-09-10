@@ -10,7 +10,12 @@ export default defineConfig({
   webServer: {
     command: 'npm run start',
     url: 'http://127.0.0.1:4321/readyz',
-    env: { HISN_PORT: '4321', HISN_DATABASE_PATH: './var/e2e-audit.db', HISN_MODE: 'DEMO' },
+    env: {
+      HISN_PORT: '4321',
+      HISN_DATABASE_PATH: './var/e2e-audit.db',
+      HISN_MODE: 'DEMO',
+      HISN_REHEARSAL_RATE_LIMIT_MAX: '120',
+    },
     reuseExistingServer: false,
     timeout: 90_000,
   },

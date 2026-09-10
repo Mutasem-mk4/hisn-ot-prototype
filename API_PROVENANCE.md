@@ -1,6 +1,6 @@
 # API Provenance
 
-Checked against official sources and the deployed Judge Mode on 2026-09-09. `DEMO` is the delivered default. No result is labeled `SANDBOX` or `LIVE` unless the corresponding external adapter actually produced it.
+Checked against official sources and the deployed Judge Mode on 2026-09-10. `DEMO` is the delivered default. No result is labeled `SANDBOX` or `LIVE` unless the corresponding external adapter actually produced it.
 
 ## Capability ledger
 
@@ -19,6 +19,8 @@ Checked against official sources and the deployed Judge Mode on 2026-09-09. `DEM
 ## Evidence and enforcement separation
 
 Pre-decision tools are Number Verification, SIM Swap, Device Swap, Location Verification, and Device Reachability. Their purpose is to inform policy. Post-decision actions are gateway detachment, backup QoD, and simulated backup safe-control. `JudgeOrchestrator` cannot enter `ENFORCEMENT_STARTED` until `DECISION_ISSUED`; detachment additionally checks for `BLOCK_AND_CONTAIN`.
+
+Policy version `desalination-safety-2026.3` makes the adaptive plan executable in Judge Mode. A `READ_STATUS` inspection selects one real Nokia sandbox capability, Device Reachability. A `SET_PRESSURE` command is safety-critical and selects all five pre-decision tools. Evidence Trace exposes the selection reason and actual per-call provenance; the read-only path cannot change the accepted setpoint or start enforcement.
 
 ## Runtime behavior
 

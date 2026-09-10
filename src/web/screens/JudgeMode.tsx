@@ -89,15 +89,21 @@ export function JudgeMode({
           <h2 id="adaptive-heading">Evidence scales with consequence</h2>
           <div className="plan-compare">
             <div>
-              <span>Read only</span>
+              <span>Read-only inspection</span>
               <b>{snapshot.lowRiskComparison.selectedTools.length}</b>
-              <small>tool · LOW</small>
+              <small>
+                {snapshot.lowRiskComparison.selectedTools.length === 1 ? 'tool' : 'tools'} · LOW ·{' '}
+                {snapshot.lowRiskComparison.reasoningProvenance}
+              </small>
             </div>
             <i aria-hidden="true" />
             <div>
               <span>Pressure control</span>
               <b>{snapshot.artifacts.plan?.selectedTools.length ?? '—'}</b>
-              <small>tools · {snapshot.artifacts.plan?.risk ?? 'pending'}</small>
+              <small>
+                tools · {snapshot.artifacts.plan?.risk ?? 'pending'} ·{' '}
+                {snapshot.artifacts.plan?.reasoningProvenance ?? 'pending'}
+              </small>
             </div>
           </div>
         </section>

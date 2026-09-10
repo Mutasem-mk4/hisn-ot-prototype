@@ -26,6 +26,7 @@ const EnvironmentSchema = z
     HISN_DATABASE_PATH: z.string().default('./var/hisn-ot.db'),
     HISN_POLICY_PATH: z.string().default(DEFAULT_POLICY_PATH),
     HISN_SCENARIO_PATH: z.string().default(DEFAULT_SCENARIO_PATH),
+    HISN_REHEARSAL_RATE_LIMIT_MAX: z.coerce.number().int().min(1).max(120).default(12),
     HISN_LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
@@ -80,6 +81,7 @@ export type AppConfiguration = {
   logLevel: z.infer<typeof EnvironmentSchema>['HISN_LOG_LEVEL'];
   sessionSecret: string;
   secureCookies: boolean;
+  rehearsalRateLimitMax: number;
   nokiaSimulatorEnabled: boolean;
   policy: Policy;
   scenarios: Scenario[];
@@ -110,6 +112,7 @@ export function loadConfiguration(
     logLevel: parsedEnvironment.HISN_LOG_LEVEL,
     sessionSecret: sessionSecret(parsedEnvironment),
     secureCookies: parsedEnvironment.VERCEL === '1' || parsedEnvironment.HISN_MODE === 'LIVE',
+    rehearsalRateLimitMax: parsedEnvironment.HISN_REHEARSAL_RATE_LIMIT_MAX,
     nokiaSimulatorEnabled: parsedEnvironment.HISN_NOKIA_SIMULATOR === 'true',
     policy,
     scenarios: scenariosFile.scenarios,

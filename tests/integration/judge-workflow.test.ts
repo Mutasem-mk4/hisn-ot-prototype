@@ -2,6 +2,33 @@ import { describe, expect, it, vi } from 'vitest';
 import { completeRun, createHarness } from '../helpers/harness.js';
 
 describe('complete judge workflow', () => {
+  it('authorizes a read-only inspection with one evidence call and no control-state change', async () => {
+    const harness = createHarness('judge-read-only-inspection');
+    try {
+      const snapshot = await completeRun(harness.orchestrator, harness.scenarioId);
+
+      expect(snapshot.artifacts.plan?.risk).toBe('LOW');
+      expect(snapshot.artifacts.plan?.selectedTools).toEqual(['DEVICE_REACHABILITY']);
+      expect(snapshot.artifacts.evidence?.map((call) => call.tool)).toEqual([
+        'DEVICE_REACHABILITY',
+      ]);
+      expect(snapshot.artifacts.decision?.state).toBe('ALLOW');
+      expect(snapshot.run.twin.acceptedPressurePercent).toBe(46);
+      expect(snapshot.run.twin.actualPressurePercent).toBe(46);
+      expect(snapshot.run.twin.requestedPressurePercent).toBeNull();
+      expect(snapshot.run.twin.commandHistory).toEqual([
+        expect.objectContaining({
+          kind: 'READ_STATUS',
+          requestedSetpointPercent: null,
+          outcome: 'EXECUTED',
+        }),
+      ]);
+      expect(harness.store.enforcementForRun(snapshot.run.id)).toEqual([]);
+    } finally {
+      harness.close();
+    }
+  });
+
   it('blocks and contains the dangerous request while continuity remains measurable', async () => {
     vi.useFakeTimers();
     const harness = createHarness();

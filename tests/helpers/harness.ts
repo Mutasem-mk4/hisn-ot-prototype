@@ -35,6 +35,7 @@ export function createHarness(
       ? [overrides.scenario]
       : [
           testScenario(),
+          testScenario('judge-read-only-inspection'),
           testScenario('judge-safe-operating-change'),
           testScenario('judge-degraded-provider'),
         ],
