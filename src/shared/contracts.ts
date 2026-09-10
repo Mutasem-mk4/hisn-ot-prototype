@@ -136,7 +136,7 @@ export const CommandPolicySchema = z
   .object({
     risk: RiskLevelSchema,
     maximumSetpointPercent: z.number().min(0).max(100).nullable(),
-    requiredEvidence: z.array(EvidenceToolSchema),
+    requiredEvidence: z.array(EvidenceToolSchema).min(1),
   })
   .strict();
 
@@ -200,6 +200,12 @@ export const PolicySchema = z
       });
     }
     for (const [command, commandPolicy] of Object.entries(policy.commands)) {
+      if (new Set(commandPolicy.requiredEvidence).size !== commandPolicy.requiredEvidence.length) {
+        context.addIssue({
+          code: 'custom',
+          message: `${command} required evidence must not contain duplicates`,
+        });
+      }
       if (commandPolicy.requiredEvidence.length > policy.agent.maximumToolCalls) {
         context.addIssue({
           code: 'custom',

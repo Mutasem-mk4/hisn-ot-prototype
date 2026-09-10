@@ -212,7 +212,7 @@ function hostedResponseFormat(input: AgentPlanRequest | AgentRecommendationReque
 function strictPlanJsonSchema(input: AgentPlanRequest | AgentRecommendationRequest) {
   const commandPolicy = input.policy.commands[input.command.kind];
   const reasonProperties = Object.fromEntries(
-    input.policy.agent.allowedTools.map((tool) => [
+    commandPolicy.requiredEvidence.map((tool) => [
       tool,
       { type: 'string', minLength: 3, maxLength: 180 },
     ]),
@@ -224,14 +224,14 @@ function strictPlanJsonSchema(input: AgentPlanRequest | AgentRecommendationReque
       consequence: { type: 'string', minLength: 8, maxLength: 280 },
       selectedTools: {
         type: 'array',
-        items: { type: 'string', enum: input.policy.agent.allowedTools },
+        items: { type: 'string', enum: commandPolicy.requiredEvidence },
         minItems: commandPolicy.requiredEvidence.length,
-        maxItems: input.policy.agent.maximumToolCalls,
+        maxItems: commandPolicy.requiredEvidence.length,
       },
       selectionReasons: {
         type: 'object',
         properties: reasonProperties,
-        required: input.policy.agent.allowedTools,
+        required: commandPolicy.requiredEvidence,
         additionalProperties: false,
       },
     },

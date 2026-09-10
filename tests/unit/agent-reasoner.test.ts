@@ -159,6 +159,54 @@ describe('bounded evidence planning', () => {
     expect(plan.selectedTools).toEqual(policy.commands.SET_PRESSURE.requiredEvidence);
   });
 
+  it('rejects unnecessary live tools for a low-risk request', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    risk: 'LOW',
+                    consequence: 'Read the current process state without changing control state.',
+                    selectedTools: ['DEVICE_REACHABILITY', 'NUMBER_VERIFICATION'],
+                    selectionReasons: {
+                      DEVICE_REACHABILITY: 'Confirm mobile data reachability.',
+                      NUMBER_VERIFICATION: 'Add an unnecessary identity check.',
+                    },
+                  }),
+                },
+              },
+            ],
+          }),
+      }),
+    );
+    const reasoner = new HostedAgentReasoner(
+      { baseUrl: 'https://reasoner.invalid', apiKey: 'redacted-key', model: 'hosted-model' },
+      200,
+    );
+
+    const plan = await reasoner.plan(
+      {
+        command: {
+          kind: 'READ_STATUS',
+          requestedSetpointPercent: null,
+          reason: 'Read status only',
+        },
+        principal: scenario.principal,
+        policy,
+        twin: scenario.initialTwin,
+      },
+      new AbortController().signal,
+    );
+
+    expect(plan.reasoningProvenance).toBe('FALLBACK');
+    expect(plan.selectedTools).toEqual(['DEVICE_REACHABILITY']);
+  });
+
   it('rejects a hosted recommendation that weakens required containment', async () => {
     vi.stubGlobal(
       'fetch',

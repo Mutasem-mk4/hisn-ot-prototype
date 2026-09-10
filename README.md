@@ -117,7 +117,7 @@ A practical commercialization path is a per-site or per-critical-asset safety la
 
 The September 10 verification baseline includes:
 
-- `npm run verify`: formatting, ESLint, server/web type checks, **68 Vitest tests**, and production build passed.
+- `npm run verify`: formatting, ESLint, server/web type checks, **69 Vitest tests**, and production build passed.
 - `npm run test:e2e`: **22 passed**, with two intentional small-screen skips for the full safe-then-unsafe presentation sequence.
 - Accessibility and browser-console checks passed on desktop, projector, tablet, and mobile profiles.
 - `npm run audit:deps`: **0 vulnerabilities** reported by npm.

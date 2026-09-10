@@ -22,7 +22,7 @@ Passing baseline tests did not establish the properties below. The implementatio
 
 ## Final local verification
 
-- `npm run verify`: passed on September 10. Prettier, ESLint, server/web type checks, 68 Vitest tests, and the production build passed.
+- `npm run verify`: passed on September 10. Prettier, ESLint, server/web type checks, 69 Vitest tests, and the production build passed.
 - `npm run test:e2e`: passed on September 10 with 22 passed and 2 intentionally skipped. The adaptive read-only path, baseline, keyboard, incident, serious/critical accessibility, and browser-console checks pass across desktop, projector, tablet, and mobile; the complete safe-then-unsafe interaction passes on desktop and projector. The E2E server uses an explicit 120-rehearsal test budget while the application default remains 12 per minute.
 - `npm run audit:deps`: passed with 0 vulnerabilities reported by npm.
 - Fresh browser rehearsal on September 7 at 2×: three consecutive standard runs completed in 44.410–44.516 seconds and produced `BLOCK_AND_CONTAIN`; the degraded-provider run completed in 35.224 seconds and produced `BLOCK` with zero network-enforcement records. Every run recorded zero unsafe executions, safe-band pressure, nonzero observation duration, and backup heartbeats. Exact measurements and correlation IDs are in `artifacts/browser-rehearsals.json`.

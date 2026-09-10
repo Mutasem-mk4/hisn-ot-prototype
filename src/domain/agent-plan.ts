@@ -8,10 +8,14 @@ export function assertPlanAssurance(
   const required = policy.commands[command.kind];
   if (
     plan.risk !== required.risk ||
+    plan.selectedTools.length !== required.requiredEvidence.length ||
     plan.selectedTools.length > policy.agent.maximumToolCalls ||
     new Set(plan.selectedTools).size !== plan.selectedTools.length ||
     plan.selectedTools.some(
-      (tool) => !policy.agent.allowedTools.includes(tool) || !plan.selectionReasons[tool],
+      (tool) =>
+        !policy.agent.allowedTools.includes(tool) ||
+        !required.requiredEvidence.includes(tool) ||
+        !plan.selectionReasons[tool],
     ) ||
     required.requiredEvidence.some((tool) => !plan.selectedTools.includes(tool))
   ) {
