@@ -223,7 +223,7 @@ export class JudgeOrchestrator {
           policy: this.policy,
           twin: scenario.initialTwin,
         },
-        AbortSignal.timeout(this.policy.providers.timeoutMs),
+        AbortSignal.timeout(this.policy.agent.maximumRuntimeMs),
       );
       return this.lowRiskComparison;
     } catch (error) {
@@ -390,7 +390,7 @@ export class JudgeOrchestrator {
           policy: this.policy,
           twin: run.twin,
         },
-        AbortSignal.timeout(this.policy.providers.timeoutMs),
+        AbortSignal.timeout(this.policy.agent.maximumRuntimeMs),
       ),
     );
     assertPlanAssurance(plan, run.command, this.policy);
@@ -486,7 +486,7 @@ export class JudgeOrchestrator {
           evidence,
           safety,
         },
-        AbortSignal.timeout(this.policy.providers.timeoutMs),
+        AbortSignal.timeout(this.policy.agent.maximumRuntimeMs),
       ),
     );
     const decision = issueDecision({
