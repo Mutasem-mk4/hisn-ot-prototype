@@ -427,8 +427,25 @@ function agentUnavailable(
     'AGENT_UNAVAILABLE',
     `Hosted AI ${stage.toLowerCase()} unavailable; the command remains held`,
     503,
-    { stage, failureType: failure instanceof Error ? failure.name : 'NOT_CONFIGURED' },
+    {
+      stage,
+      failureType: failure instanceof Error ? failure.name : 'NOT_CONFIGURED',
+      failureReason: safeFailureReason(failure),
+    },
   );
+}
+
+function safeFailureReason(failure: unknown): string {
+  if (failure instanceof z.ZodError) return 'INVALID_STRUCTURED_OUTPUT';
+  if (failure instanceof SyntaxError) return 'INVALID_JSON';
+  if (failure instanceof DOMException) return failure.name.toUpperCase();
+  if (!(failure instanceof TypeError)) return 'NOT_CONFIGURED';
+  const httpStatus = /^Structured reasoning endpoint returned (\d{3})$/.exec(failure.message)?.[1];
+  if (httpStatus) return `HTTP_${httpStatus}`;
+  if (failure.message.startsWith('Hosted agent stopped before collecting required evidence')) {
+    return 'INCOMPLETE_EVIDENCE';
+  }
+  return 'NETWORK_OR_PROTOCOL_ERROR';
 }
 
 function recommendationState(

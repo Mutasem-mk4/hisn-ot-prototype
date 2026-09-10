@@ -693,6 +693,7 @@ export class JudgeOrchestrator {
           ? 'No rule-based recommendation was substituted. The physical command remained blocked.'
           : 'An integration or orchestration error occurred; the physical command remained blocked.',
         errorCode: error instanceof HisnError ? error.code : 'UNEXPECTED_FAILURE',
+        ...(agentUnavailable ? { failureReason: error.context.failureReason } : {}),
         failedAfter: run.workflowState,
         twin: updated.twin,
       },

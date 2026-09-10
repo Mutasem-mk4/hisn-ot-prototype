@@ -155,6 +155,7 @@ describe('complete judge workflow', () => {
 
       expect(snapshot.run.playbackStatus).toBe('FAILED_SAFE');
       expect(snapshot.currentEvent?.payload.errorCode).toBe('AGENT_UNAVAILABLE');
+      expect(snapshot.currentEvent?.payload.failureReason).toBe('NETWORK_OR_PROTOCOL_ERROR');
       expect(snapshot.currentEvent?.payload.headline).toBe('AI agent unavailable — command held');
       expect(snapshot.artifacts.recommendation).toBeUndefined();
       expect(snapshot.artifacts.decision).toBeUndefined();

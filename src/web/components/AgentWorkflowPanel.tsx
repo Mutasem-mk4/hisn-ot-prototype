@@ -43,6 +43,7 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
     (snapshot.lowRiskComparison === null && !hasAgentOutput) ||
     agentFailed;
   const failureCode = textPayload(snapshot.currentEvent?.payload.errorCode, 'FAILED SAFE');
+  const failureReason = textPayload(snapshot.currentEvent?.payload.failureReason, 'UNAVAILABLE');
   const failureDetail = textPayload(
     snapshot.currentEvent?.payload.detail,
     'The command remained blocked.',
@@ -164,7 +165,7 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
         </div>
         {agentFailed ? (
           <div className="agent-journal__missing">
-            <span>{failureCode}</span>
+            <span>{`${failureCode} · ${failureReason}`}</span>
             <b>No AI plan or recommendation replaced the failed agent call.</b>
             <p>{failureDetail}</p>
           </div>
