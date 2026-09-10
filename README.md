@@ -1,60 +1,145 @@
 # HISN-OT
 
-**Agentic Network-Enforced Safety Gate for Critical Infrastructure**
+**Agentic network-enforced safety for critical infrastructure**
 
 > No critical command becomes a physical action without network proof.
 
-HISN-OT is a defensive prototype for the MENA Ignite Hackathon's Industrial & Enterprise AI Automation theme. Its interactive desalination line first lets a judge submit a safe 52% pump setpoint and watch the modeled plant respond. The same gate then intercepts an 88% request under compromised network context before it can replace the accepted input. Process motion, telemetry, command location, evidence, containment, and controller ownership all render from the backend simulation state.
+[![Live demo](https://img.shields.io/badge/LIVE_DEMO-JUDGE_MODE-28d7c5?style=for-the-badge)](https://hisn-ot-prototype.vercel.app/#judge)
+[![Verify](https://img.shields.io/github/actions/workflow/status/Mutasem-mk4/hisn-ot-prototype/ci.yml?branch=main&style=for-the-badge&label=VERIFY)](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/workflows/ci.yml)
+[![Theme](https://img.shields.io/badge/MENA_IGNITE-INDUSTRIAL_AI-e7b36f?style=for-the-badge)](https://www.hackerearth.com/community/challenges/hackathon/mena-ignite-hackathon/)
 
-The memorable result is: **Identity valid. Context compromised. Command blocked. Operations continued safely.**
+HISN-OT is a working safety-gate prototype for the **MENA Ignite Hackathon — Industrial & Enterprise AI Automation** theme. It combines an AI agent, Nokia Network as Code/CAMARA signals, deterministic engineering policy, and a stateful desalination digital twin.
 
-This is a safety architecture prototype, not a certified industrial safety system. A default local DEMO uses accurately labeled deterministic fixtures. The deployed Judge Mode opts into Nokia's test network for supported evidence and QoD calls; it still does not control a telecom network or PLC.
+A privileged command may carry valid credentials while coming from a recently swapped SIM, an unexpected device, or outside the approved facility. HISN-OT holds that command before control, gathers the network evidence required for its risk, and releases it only when telecom context and deterministic process limits agree.
+
+## Try the proof
+
+### [Launch Judge Mode →](https://hisn-ot-prototype.vercel.app/#judge)
+
+The clearest demonstration takes under two minutes:
+
+1. Click **Submit safe change · 52%** and run the proof. The request reaches `ALLOW`; the accepted setpoint becomes 52%, and the modeled facility responds.
+2. Click **Submit unsafe change · 88%**. The gate holds the new request while the previously accepted control state remains unchanged.
+3. Follow the agent through risk classification, allowlisted tool selection, Nokia evidence collection, and the independent 60% command limit.
+4. Open [Evidence Trace](https://hisn-ot-prototype.vercel.app/#evidence) to inspect each tool's purpose, redacted result, provenance, latency, timestamp, and correlation ID.
+5. Open [Incident](https://hisn-ot-prototype.vercel.app/#incident) to see the evidence-bound decision, containment result, continuity state, recovery requirements, and exportable report.
+
+The result is concise: **identity valid, context compromised, command blocked, zero unsafe executions.**
+
+## Why the Nokia APIs matter
+
+The APIs are decision inputs, not isolated demo buttons. A successful HTTP request can still return evidence of compromise—for example, `swapped: true` or a failed location match. The agent explains why each signal is required, and the deterministic policy converts the normalized evidence into control authority.
+
+| Capability                         | What HISN-OT asks                                                        | Why it changes the decision                                                             | Public demo provenance                                                                               |
+| ---------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Number Verification**            | Is the session bound to the enrolled operator number?                    | Prevents credentials alone from proving possession of the expected subscriber identity. | **Implemented locally** because subscriber OAuth is not configured. The fallback reason is recorded. |
+| **SIM Swap**                       | Was the subscription reassociated within the configured window?          | Detects a common account-takeover signal before privileged control.                     | **Nokia sandbox API**                                                                                |
+| **Device Swap**                    | Did the subscriber identity move to an unexpected device?                | Detects endpoint replacement that credentials cannot reveal.                            | **Nokia sandbox API**                                                                                |
+| **Location Verification**          | Is the device inside the approved facility boundary?                     | Adds network-verified presence to a high-impact remote command.                         | **Nokia sandbox API**                                                                                |
+| **Device Reachability**            | Is the device reachable on the expected mobile service?                  | Distinguishes an attached endpoint from a simple offline condition.                     | **Nokia sandbox API**                                                                                |
+| **Quality on Demand**              | Can the separately enrolled backup flow receive its requested treatment? | Backup ownership is withheld unless continuity is confirmed.                            | **Nokia sandbox API**, currently `PENDING`; the session is released after the rehearsal.             |
+| **Specialized Network attachment** | Can the implicated operator-facing edge be detached?                     | Contains the suspicious command path after an authorized containment decision.          | **Implemented locally** because no operational slice attachment is configured.                       |
+
+The UI always separates external transport from the modeled subject:
+
+- `NOKIA SANDBOX` means an authenticated Nokia test-network response using simulator identities.
+- `LIVE LLM` means the hosted reasoning provider returned schema-valid output.
+- `IMPLEMENTED LOCALLY` means the result came from the digital twin or a clearly explained deterministic fallback.
+
+No simulated action is presented as operator-network enforcement or physical PLC actuation. The complete capability ledger is in [API_PROVENANCE.md](API_PROVENANCE.md).
+
+## The agentic decision loop
+
+```mermaid
+flowchart LR
+  A[Privileged command] --> B[HISN command gate]
+  B --> C[AI consequence and risk plan]
+  C --> D[Allowlisted CAMARA evidence tools]
+  D --> E[Nokia Network as Code]
+  E --> F[Redacted, typed evidence]
+  F --> G[Hosted AI recommendation]
+  G --> H[Deterministic policy authority]
+  H -->|ALLOW| I[Accepted control state]
+  H -->|BLOCK| J[Command remains held]
+  H -->|BLOCK_AND_CONTAIN| K[Scoped isolation and continuity workflow]
+```
+
+The AI performs two bounded jobs:
+
+1. **Plan:** classify consequence and select the required tools from the server allowlist. A read-only request needs one identity check; pressure control requires five evidence tools.
+2. **Recommend:** interpret the returned telecom signals and produce a strict structured recommendation.
+
+The model cannot authorize a physical setpoint. Server-side schemas constrain its output, malformed or unavailable model responses fall back deterministically, and the policy engine independently re-evaluates authorization, evidence completeness, contextual anomalies, and the configured engineering maximum.
+
+## Three behaviors judges can verify
+
+| Scenario                     | Network and process context                                                         | Authoritative result | Observable safety property                                                                                              |
+| ---------------------------- | ----------------------------------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Safe operating change        | Trusted hybrid evidence with Nokia simulator calls; requested 52%; hard maximum 60% | `ALLOW`              | Accepted input becomes 52% and the digital twin responds progressively.                                                 |
+| Compromised critical command | Recent SIM/device changes, location mismatch, reachable device; requested 88%       | `BLOCK_AND_CONTAIN`  | The accepted input does not change; the operator edge is isolated locally; unconfirmed continuity safe-stops the model. |
+| Provider degradation         | Required evidence is unavailable                                                    | `BLOCK`              | Uncertainty prevents authorization but is not misreported as confirmed compromise, so containment does not execute.     |
+
+This distinction matters: missing evidence fails closed, while containment requires affirmative compromise evidence and a stored `BLOCK_AND_CONTAIN` decision.
+
+## Integration truth
+
+| Layer                           | Deployed implementation                                                                                    | Boundary                                                                                                |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Nokia evidence                  | Authenticated test-network calls for SIM Swap, Device Swap, Location Verification, and Device Reachability | Simulator identities; Number Verification still needs subscriber OAuth.                                 |
+| Nokia programmable connectivity | QoD session creation, polling, and release                                                                 | The observed session remained `REQUESTED`, so HISN-OT records `PENDING` and grants no backup ownership. |
+| AI agent                        | Hosted Groq-compatible structured reasoning with deterministic fallback                                    | Advisory only; deterministic policy is authoritative.                                                   |
+| Safety workflow                 | Backend state machine, evidence plan, decision, containment ordering, incident generation                  | Implemented and tested in this repository.                                                              |
+| Industrial process              | Stateful first-order desalination digital twin with integration steps of at most 100 ms                    | Illustrative model; no physical PLC, Modbus, or calibrated plant claim.                                 |
+| Persistence                     | SQLite migrations and hash-linked event history                                                            | Suitable for this single-process prototype; not durable multi-user Vercel storage.                      |
+
+The current limitation is deliberate and visible: when Nokia QoD remains pending, HISN-OT does not claim a successful network handover. It withholds backup ownership and safe-stops the modeled pump.
+
+## Architecture and safety controls
+
+HISN-OT is a TypeScript modular monolith with explicit ports around every external dependency:
+
+- **React** renders only backend snapshots, including the facility schematic, evidence paths, telemetry, and playback state.
+- **Fastify** exposes versioned APIs, signed DEMO sessions, CSRF validation, rate limits, health/readiness checks, and server-sent updates.
+- **Application orchestration** owns the command lifecycle, cancellation, evidence/enforcement ordering, and incident construction.
+- **Domain modules** own the state machine, evidence semantics, decision policy, hard safety limit, and digital twin.
+- **Infrastructure adapters** isolate Nokia Network as Code, hosted reasoning, deterministic fallbacks, and SQLite persistence.
+
+Additional controls include Zod validation at configuration and trust boundaries, bounded provider timeouts, retries only where safe, persisted enforcement intent, idempotency keys, redacted results, correlation IDs, and SHA-256 event-chain integrity. See [ARCHITECTURE.md](ARCHITECTURE.md), [SAFETY_CASE.md](SAFETY_CASE.md), and [THREAT_MODEL.md](THREAT_MODEL.md).
+
+## Regional and commercial path
+
+The anchor use case is a connected desalination facility: a high-value MENA asset where remote automation, operator mobility, and cyber-physical consequences meet. The same command-gate pattern can be configured for oil and gas, energy, ports, factories, airports, hospitals, and smart-city infrastructure.
+
+A practical commercialization path is a per-site or per-critical-asset safety layer integrated with the operator's identity provider, telecom application credentials, network slice attachments, and certified OT gateway. Customers gain one evidence trail connecting the operator, network context, engineering policy, command outcome, and recovery workflow. The remaining work for operational use is documented in [LIVE_INTEGRATION.md](LIVE_INTEGRATION.md).
+
+## Verification evidence
+
+The September 10 verification baseline includes:
+
+- `npm run verify`: formatting, ESLint, server/web type checks, **67 Vitest tests**, and production build passed.
+- `npm run test:e2e`: **18 passed**, with two intentional small-screen skips for the full safe-then-unsafe presentation sequence.
+- Accessibility and browser-console checks passed on desktop, projector, tablet, and mobile profiles.
+- `npm run audit:deps`: **0 vulnerabilities** reported by npm.
+- Public `/`, `/healthz`, and `/readyz` returned HTTP 200.
+- Authenticated public rehearsals returned `ALLOW` for 52% and `BLOCK_AND_CONTAIN` for 88%, with zero unsafe executions.
+
+The CI workflow runs formatting, linting, type checking, tests, and the production build on every push. Detailed findings and reproducible boundaries are recorded in [AUDIT_LEDGER.md](AUDIT_LEDGER.md).
 
 ## Run locally
 
-Requirements: Node.js 22.18 or later and npm 10 or later.
+Requirement: Node.js 22.18 or later.
 
 ```powershell
+git clone https://github.com/Mutasem-mk4/hisn-ot-prototype.git
 cd hisn-ot-prototype
 npm ci
 npm run build
 npm start
 ```
 
-Open `http://127.0.0.1:4310`. DEMO is the default and needs no secrets. See [QUICKSTART.md](QUICKSTART.md) for presenter instructions and development commands.
+Open [http://127.0.0.1:4310/#judge](http://127.0.0.1:4310/#judge). Local `DEMO` mode needs no secrets and uses deterministic CAMARA-shaped fixtures. External credentials belong in environment variables described by [.env.example](.env.example); they must never enter source control or browser code.
 
-## What is real in DEMO mode
-
-- The backend owns the workflow, explicit state machine, authorization checks, evidence planning, policy decision, and playback cadence.
-- Every transition is stored in SQLite with a correlation ID and SHA-256 hash link to the prior event.
-- The digital twin is stateful. Requested pressure and actual pressure are separate fields; the held 88% command never becomes actual pressure.
-- One pausable simulation clock drives the process model, simulation timestamps, controller heartbeats, scenario cadence, and state-bound motion at 0.5×, 1×, 2×, or 4×. Provider durations and external timeouts remain wall-clock based.
-- The SVG facility view distinguishes physical water paths from digital command/evidence paths. Pump, flow, tank, valve, telemetry, isolation, and backup ownership reflect the validated twin snapshot rather than an independent frontend animation.
-- The operator-facing primary edge and separately enrolled backup edge are shown as distinct control paths. Containment isolates the implicated primary edge; it does not claim that a PLC was quarantined. The backup never receives the operator command and becomes owner only after confirmed handover.
-- Back replays persisted events; it does not invent a parallel frontend story. Refresh recovers the current run.
-- The incident report is generated from persisted events and enforcement records, then saved and exportable as JSON.
-- Every provider result carries explicit provenance. The deployed configuration labels successful Nokia test-network results `SANDBOX` and labels each deterministic fallback `SIMULATED` with a reason.
-
-## Architecture at a glance
-
-The prototype is a TypeScript modular monolith with clean boundaries:
-
-- React presentation consumes versioned Fastify APIs and server-sent snapshots.
-- Application orchestration executes the command lifecycle and builds incident reports.
-- Domain modules hold the state machine, deterministic safety engine, decision policy, evidence semantics, and digital twin.
-- Infrastructure adapters provide SQLite, deterministic simulations, a bounded structured reasoner, and Nokia Network as Code calls.
-
-This shape keeps physical authority outside the model. External operation still requires the identity, reconciliation, operator, and industrial-control work listed in [LIVE_INTEGRATION.md](LIVE_INTEGRATION.md). See [ARCHITECTURE.md](ARCHITECTURE.md) for the implemented boundaries.
-
-## Runtime modes
-
-| Mode      | Behavior                                                                                                                                                                                       |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DEMO`    | Seeded and reproducible by default. With `HISN_NOKIA_SIMULATOR=true` and complete test configuration, calls Nokia's test network first and visibly falls back per capability when unavailable. |
-| `SANDBOX` | Uses configured Nokia adapters without fixture fallback. Interactive APIs remain disabled until enterprise authentication and command-to-gateway binding are implemented.                      |
-| `LIVE`    | Requires Nokia configuration; interactive APIs and automatic advancement remain disabled. It is not an operational live-control mode.                                                          |
-
-## Verification
+### Useful commands
 
 ```powershell
 npm run verify
@@ -64,26 +149,30 @@ npm run audit:deps
 npm run sample:report
 ```
 
-`npm run sample:report` regenerates [the redacted DEMO incident](artifacts/sample-incident-report.json) through the production orchestration path. `npm run visual:qa` requires a running production server and captures desktop, projector, tablet, and mobile evidence under `artifacts/visual-qa/`.
+`npm run sample:report` regenerates the [redacted incident example](artifacts/sample-incident-report.json) through the production orchestration path. `npm run visual:qa` requires a running production server and captures desktop, projector, tablet, and mobile views.
 
-Docker files are supplied for reproducible packaging. Docker was not installed in the implementation environment, so container health was not claimed as executed.
+## Runtime modes
 
-## Audit scope and remaining boundaries
+| Mode      | Behavior                                                                                                                                                          |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEMO`    | Reproducible fixtures by default. With Nokia simulator configuration enabled, calls the Nokia test network first and visibly falls back per capability.           |
+| `SANDBOX` | Uses configured Nokia adapters without fixture fallback. Interactive APIs remain disabled until enterprise identity and durable command-to-gateway binding exist. |
+| `LIVE`    | Requires complete Nokia configuration. Interactive APIs and automatic advancement remain disabled; this is not an operational live-control mode.                  |
 
-See [AUDIT_LEDGER.md](AUDIT_LEDGER.md) for fixes and reproducible evidence. The anonymous DEMO session is not production authentication. STEP_UP remains held; there is no approval or recovery endpoint. The public Judge Mode uses the Groq-compatible hosted reasoner with strict validated output and deterministic fallback. Nokia test-network calls do not establish production operator enforcement. The twin is an in-process first-order simulation, not OpenPLC, Modbus, or a physical controller. This gate cannot prevent a compromised PLC from independently driving unsafe outputs.
+## Documentation map
 
-## Repository guide
+- [Quickstart and presenter controls](QUICKSTART.md)
+- [105-second demo script](DEMO_SCRIPT.md)
+- [Architecture](ARCHITECTURE.md)
+- [API provenance](API_PROVENANCE.md)
+- [Judging matrix](JUDGING_MATRIX.md)
+- [Judge Q&A](JUDGE_QA.md)
+- [Safety case](SAFETY_CASE.md)
+- [Threat model](THREAT_MODEL.md)
+- [Live integration requirements](LIVE_INTEGRATION.md)
+- [Repair and verification ledger](AUDIT_LEDGER.md)
+- [Evidence ledger](EVIDENCE_LEDGER.md)
 
-- `config/` — versioned, startup-validated policy and scenario data
-- `migrations/` — SQLite schema
-- `src/domain/` — deterministic rules and digital twin
-- `src/application/` — workflow and ports
-- `src/infrastructure/` — provider adapters, configuration, persistence
-- `src/server/` — API, session/CSRF boundary, SSE
-- `src/web/` — interactive facility schematic and operational evidence views
-- `tests/` — unit, integration, end-to-end, and rehearsal suites
-- `artifacts/` — redacted sample report and inspected visual captures
+---
 
-## Documentation
-
-[Quickstart](QUICKSTART.md) · [Architecture](ARCHITECTURE.md) · [Safety case](SAFETY_CASE.md) · [Threat model](THREAT_MODEL.md) · [API provenance](API_PROVENANCE.md) · [Live integration](LIVE_INTEGRATION.md) · [Demo script](DEMO_SCRIPT.md) · [Judge Q&A](JUDGE_QA.md) · [Judging matrix](JUDGING_MATRIX.md) · [Design system](DESIGN_SYSTEM.md) · [Evidence ledger](EVIDENCE_LEDGER.md)
+**HISN-OT asks the question credentials cannot answer: _should this command execute here, now, on this device, under this network context?_**
