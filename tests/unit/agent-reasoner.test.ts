@@ -135,6 +135,7 @@ describe('bounded evidence planning', () => {
     expect(investigation.trace.map((step) => step.phase)).toContain('OBSERVATION');
     expect(investigation.trace.map((step) => step.phase)).toContain('ADAPTATION');
     expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('https://api.groq.com/openai/v1/chat/completions');
   });
 
   it('accepts a policy-complete hosted plan from a chat completion', async () => {

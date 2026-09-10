@@ -280,7 +280,10 @@ function observationSummary(call: EvidenceCall): string {
 }
 
 function normalizeGroqBaseUrl(url: string): string {
-  return url.replace(/\/chat\/completions\/?$/, '');
+  return url
+    .replace(/\/+$/, '')
+    .replace(/\/openai\/v1\/chat\/completions$/, '')
+    .replace(/\/openai\/v1$/, '');
 }
 
 function humanize(value: string): string {
