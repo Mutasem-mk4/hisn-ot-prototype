@@ -355,6 +355,31 @@ describe('bounded evidence planning', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it('uses the deterministic fallback after the hosted deadline expires', async () => {
+    const timeout = new DOMException('Hosted reasoning deadline expired', 'TimeoutError');
+    const fetchMock = vi.fn().mockRejectedValue(timeout);
+    vi.stubGlobal('fetch', fetchMock);
+    const reasoner = new LangGraphAgentReasoner(
+      { baseUrl: 'https://reasoner.invalid', apiKey: 'redacted-key', model: 'hosted-model' },
+      10,
+    );
+    const expiredSignal = AbortSignal.abort(timeout);
+
+    const plan = await reasoner.plan(
+      {
+        command: scenario.command,
+        principal: scenario.principal,
+        policy,
+        twin: scenario.initialTwin,
+      },
+      expiredSignal,
+    );
+
+    expect(plan.reasoningProvenance).toBe('FALLBACK');
+    expect(plan.selectedTools).toEqual(minimumEvidenceForCommand(scenario.command, policy));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('falls back when a valid-shaped live plan omits required critical evidence', async () => {
     vi.stubGlobal(
       'fetch',

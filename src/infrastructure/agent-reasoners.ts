@@ -152,8 +152,8 @@ export class LangGraphAgentReasoner implements AgentReasoner {
       const output = await this.request('PLAN', request, constrainedPlanSchema(request), signal);
       return AgentPlanSchema.parse({ ...output, reasoningProvenance: 'LIVE' });
     } catch (error) {
-      if (signal.aborted || !isRecoverableReasonerFailure(error)) throw error;
-      const result = await this.fallback.plan(request, signal);
+      if (!isRecoverableReasonerFailure(error)) throw error;
+      const result = await this.fallback.plan(request, new AbortController().signal);
       return { ...result, reasoningProvenance: 'FALLBACK' };
     }
   }
@@ -172,8 +172,8 @@ export class LangGraphAgentReasoner implements AgentReasoner {
       assertRecommendationAssurance(output, request);
       return AgentRecommendationSchema.parse({ ...output, reasoningProvenance: 'LIVE' });
     } catch (error) {
-      if (signal.aborted || !isRecoverableReasonerFailure(error)) throw error;
-      const result = await this.fallback.recommend(request, signal);
+      if (!isRecoverableReasonerFailure(error)) throw error;
+      const result = await this.fallback.recommend(request, new AbortController().signal);
       return { ...result, reasoningProvenance: 'FALLBACK' };
     }
   }
