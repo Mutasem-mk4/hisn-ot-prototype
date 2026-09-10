@@ -4,6 +4,7 @@ import type { TwinState } from '../shared/contracts.js';
 import {
   AgentPlanSchema,
   AgentRecommendationSchema,
+  AgentTraceStepSchema,
   CommandSchema,
   DecisionRecordSchema,
   DomainEventSchema,
@@ -79,7 +80,7 @@ const RunSnapshotSchema: z.ZodType<RunSnapshot> = z
           'NOKIA_LIVE',
           'UNAVAILABLE',
         ]),
-        agentReasoner: z.enum(['DETERMINISTIC', 'LIVE_LLM']),
+        agentReasoner: z.enum(['DETERMINISTIC', 'LANGGRAPH']),
       })
       .strict(),
     lowRiskComparison: AgentPlanSchema,
@@ -89,6 +90,7 @@ const RunSnapshotSchema: z.ZodType<RunSnapshot> = z
         risk: AgentPlanSchema.shape.risk.optional(),
         plan: AgentPlanSchema.optional(),
         evidence: z.array(EvidenceCallSchema).optional(),
+        agentTrace: z.array(AgentTraceStepSchema).optional(),
         safety: SafetyEvaluationSchema.optional(),
         recommendation: AgentRecommendationSchema.optional(),
         decision: DecisionRecordSchema.optional(),

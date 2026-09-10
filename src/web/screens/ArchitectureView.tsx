@@ -27,7 +27,7 @@ export function ArchitectureView({
         <div className="arch-layer arch-application">
           <span>02</span>
           <b>Application</b>
-          <small>Incident orchestrator · state machine</small>
+          <small>Judge orchestrator · LangGraph agent</small>
         </div>
         <div className="arch-gate">Typed ports</div>
         <div className="arch-layer arch-domain">
@@ -37,8 +37,8 @@ export function ArchitectureView({
         </div>
         <div className="arch-split">
           <div>
-            <b>CAMARA evidence ports</b>
-            <small>Pre-decision only</small>
+            <b>LangGraph CAMARA tools</b>
+            <small>Model → tool → observation loop</small>
           </div>
           <div>
             <b>Nokia enforcement ports</b>
@@ -48,7 +48,7 @@ export function ArchitectureView({
         <div className="arch-layer arch-infrastructure">
           <span>04</span>
           <b>Infrastructure</b>
-          <small>SQLite audit · Nokia SDK · simulations</small>
+          <small>Groq · Nokia SDK · SQLite · simulations</small>
         </div>
       </section>
       <div className="integration-layout">

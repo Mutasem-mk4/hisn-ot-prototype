@@ -23,13 +23,18 @@
     "test:rehearsal": "vitest run tests/rehearsal",
     "visual:qa": "node scripts/capture-visuals.mjs",
     "sample:report": "tsx scripts/generate-sample-report.ts",
+    "doctor": "tsx scripts/doctor.ts",
     "audit:deps": "npm audit --audit-level=high --registry=https://registry.npmjs.org",
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "@fastify/rate-limit": "11.2.0",
     "@fastify/static": "10.1.3",
+    "@langchain/core": "^1.2.10",
+    "@langchain/groq": "^1.3.1",
+    "@langchain/langgraph": "^1.4.14",
     "better-sqlite3": "13.0.3",
+    "dotenv": "^17.4.2",
     "fastify": "5.12.3",
     "network-as-code": "10.0.0",
     "react": "19.2.8",

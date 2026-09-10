@@ -6,6 +6,7 @@ export function EvidenceTrace({ snapshot }: { snapshot: RunSnapshot }) {
   const evidence = snapshot.artifacts.evidence ?? [];
   const plan = snapshot.artifacts.plan;
   const recommendation = snapshot.artifacts.recommendation;
+  const agentTrace = snapshot.artifacts.agentTrace ?? [];
   return (
     <main className="content-screen" id="main-content">
       <ScreenIntro
@@ -36,6 +37,30 @@ export function EvidenceTrace({ snapshot }: { snapshot: RunSnapshot }) {
               <li key={tool}>
                 <b>{humanize(tool)}</b>
                 <span>{plan.selectionReasons[tool]}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+      {agentTrace.length > 0 && (
+        <section className="agent-run" aria-labelledby="agent-run-heading">
+          <div className="agent-run__heading">
+            <div>
+              <span className="eyebrow">LangGraph execution</span>
+              <h2 id="agent-run-heading">Goal → tool → observation → adaptation</h2>
+            </div>
+            <StatusMark status={snapshot.integration.agentReasoner} />
+          </div>
+          <ol>
+            {agentTrace.map((step) => (
+              <li key={step.sequence} data-phase={step.phase}>
+                <span>{String(step.sequence).padStart(2, '0')}</span>
+                <div>
+                  <small>{step.phase.replaceAll('_', ' ')}</small>
+                  <b>{step.headline}</b>
+                  <p>{step.detail}</p>
+                </div>
+                {step.status && <StatusMark status={step.status} />}
               </li>
             ))}
           </ol>

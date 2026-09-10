@@ -73,6 +73,21 @@ export function IncidentReportView({
           </h3>
           <p>{decision.containmentRationale}</p>
         </section>
+        <section>
+          <h3>Agent action trace</h3>
+          <ol className="agent-report-trace">
+            {report.agentTrace.map((step) => (
+              <li key={step.sequence}>
+                <span>{String(step.sequence).padStart(2, '0')}</span>
+                <div>
+                  <small>{humanize(step.phase)}</small>
+                  <b>{step.headline}</b>
+                  <p>{step.detail}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
         <div className="report-columns">
           <section>
             <h3>Network proof</h3>

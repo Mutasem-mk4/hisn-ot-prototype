@@ -25,6 +25,7 @@ export function buildIncidentReport(
     identityAndNetworkEvidence: evidence,
     evidenceProvenance: evidence.map(({ tool, provenance }) => ({ tool, provenance })),
     safetyPolicyEvaluation: artifacts.safety,
+    agentTrace: artifacts.agentTrace ?? [],
     agentRecommendation: artifacts.recommendation,
     authoritativeDecision: artifacts.decision,
     networkEnforcement: store.enforcementForRun(run.id),

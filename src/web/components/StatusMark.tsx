@@ -17,7 +17,7 @@ function tone(status: string) {
       'SUCCEEDED',
       'ALLOW',
       'LIVE',
-      'LIVE_LLM',
+      'LANGGRAPH',
       'NOKIA_SANDBOX',
       'NOKIA_SANDBOX_WITH_FALLBACK',
       'NOKIA_LIVE',

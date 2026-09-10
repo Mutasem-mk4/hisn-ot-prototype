@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   DeterministicAgentReasoner,
-  HostedAgentReasoner,
+  LangGraphAgentReasoner,
 } from '../../src/infrastructure/agent-reasoners.js';
 import { evaluatePhysicalSafety } from '../../src/domain/safety-engine.js';
+import { minimumEvidenceForCommand } from '../../src/domain/agent-plan.js';
 import { evidenceCall, testPolicy, testScenario } from '../helpers/fixtures.js';
 
 const scenario = testScenario();
@@ -42,6 +43,100 @@ describe('bounded evidence planning', () => {
     expect(critical.selectedTools.length).toBeGreaterThan(low.selectedTools.length);
   });
 
+  it('adapts its LangGraph tool plan after observing earlier evidence', async () => {
+    const lowRequest = {
+      command: {
+        kind: 'READ_STATUS' as const,
+        requestedSetpointPercent: null,
+        reason: 'Read status only',
+      },
+      principal: scenario.principal,
+      policy,
+      twin: scenario.initialTwin,
+    };
+    const initialPlan = await new DeterministicAgentReasoner().plan(
+      lowRequest,
+      new AbortController().signal,
+    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        groqResponse({
+          content: null,
+          tool_calls: [
+            {
+              id: 'call-reachability',
+              type: 'function',
+              function: {
+                name: 'get_device_reachability',
+                arguments: JSON.stringify({
+                  reason: 'Confirm the operator device is currently attached for this inspection.',
+                }),
+              },
+            },
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(
+        groqResponse({
+          content: null,
+          tool_calls: [
+            {
+              id: 'call-number',
+              type: 'function',
+              function: {
+                name: 'verify_operator_number',
+                arguments: JSON.stringify({
+                  reason: 'Bind the reachable session to the enrolled operator before concluding.',
+                }),
+              },
+            },
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(
+        groqResponse({ content: 'Reachability and number binding complete the investigation.' }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const reasoner = new LangGraphAgentReasoner(
+      {
+        baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
+        apiKey: 'redacted-key',
+        model: 'openai/gpt-oss-20b',
+      },
+      500,
+    );
+    const executor = vi.fn((tool) =>
+      Promise.resolve(
+        evidenceCall(
+          tool,
+          tool === 'NUMBER_VERIFICATION'
+            ? { verified: true, subject: 'redacted' }
+            : { reachable: true, connectivity: ['DATA'] },
+        ),
+      ),
+    );
+
+    const investigation = await reasoner.investigate(
+      lowRequest,
+      initialPlan,
+      executor,
+      new AbortController().signal,
+    );
+
+    expect(investigation.framework).toBe('LANGGRAPH');
+    expect(investigation.plan.reasoningProvenance).toBe('LIVE');
+    expect(investigation.plan.selectedTools).toEqual([
+      'DEVICE_REACHABILITY',
+      'NUMBER_VERIFICATION',
+    ]);
+    expect(executor).toHaveBeenCalledTimes(2);
+    expect(investigation.trace.map((step) => step.phase)).toContain('TOOL_REQUEST');
+    expect(investigation.trace.map((step) => step.phase)).toContain('OBSERVATION');
+    expect(investigation.trace.map((step) => step.phase)).toContain('ADAPTATION');
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
   it('accepts a policy-complete hosted plan from a chat completion', async () => {
     const deterministicPlan = await new DeterministicAgentReasoner().plan(
       {
@@ -71,7 +166,7 @@ describe('bounded evidence planning', () => {
           }),
       }),
     );
-    const reasoner = new HostedAgentReasoner(
+    const reasoner = new LangGraphAgentReasoner(
       { baseUrl: 'https://reasoner.invalid', apiKey: 'redacted-key', model: 'hosted-model' },
       200,
     );
@@ -87,7 +182,7 @@ describe('bounded evidence planning', () => {
     );
 
     expect(plan.reasoningProvenance).toBe('LIVE');
-    expect(plan.selectedTools).toEqual(policy.commands.SET_PRESSURE.requiredEvidence);
+    expect(plan.selectedTools).toEqual(minimumEvidenceForCommand(scenario.command, policy));
   });
 
   it('uses a validated deterministic fallback for malformed model output', async () => {
@@ -99,7 +194,7 @@ describe('bounded evidence planning', () => {
         }),
     });
     vi.stubGlobal('fetch', fetchMock);
-    const reasoner = new HostedAgentReasoner(
+    const reasoner = new LangGraphAgentReasoner(
       { baseUrl: 'https://reasoner.invalid', apiKey: 'redacted-key', model: 'structured-model' },
       200,
       1,
@@ -114,7 +209,7 @@ describe('bounded evidence planning', () => {
       new AbortController().signal,
     );
     expect(plan.reasoningProvenance).toBe('FALLBACK');
-    expect(plan.selectedTools).toEqual(policy.commands.SET_PRESSURE.requiredEvidence);
+    expect(plan.selectedTools).toEqual(minimumEvidenceForCommand(scenario.command, policy));
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -142,7 +237,7 @@ describe('bounded evidence planning', () => {
           }),
       }),
     );
-    const reasoner = new HostedAgentReasoner(
+    const reasoner = new LangGraphAgentReasoner(
       { baseUrl: 'https://reasoner.invalid', apiKey: 'redacted-key', model: 'structured-model' },
       200,
     );
@@ -156,10 +251,10 @@ describe('bounded evidence planning', () => {
       new AbortController().signal,
     );
     expect(plan.reasoningProvenance).toBe('FALLBACK');
-    expect(plan.selectedTools).toEqual(policy.commands.SET_PRESSURE.requiredEvidence);
+    expect(plan.selectedTools).toEqual(minimumEvidenceForCommand(scenario.command, policy));
   });
 
-  it('rejects unnecessary live tools for a low-risk request', async () => {
+  it('accepts an allowlisted live plan that adds proportionate evidence', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -184,7 +279,7 @@ describe('bounded evidence planning', () => {
           }),
       }),
     );
-    const reasoner = new HostedAgentReasoner(
+    const reasoner = new LangGraphAgentReasoner(
       { baseUrl: 'https://reasoner.invalid', apiKey: 'redacted-key', model: 'hosted-model' },
       200,
     );
@@ -203,8 +298,8 @@ describe('bounded evidence planning', () => {
       new AbortController().signal,
     );
 
-    expect(plan.reasoningProvenance).toBe('FALLBACK');
-    expect(plan.selectedTools).toEqual(['DEVICE_REACHABILITY']);
+    expect(plan.reasoningProvenance).toBe('LIVE');
+    expect(plan.selectedTools).toEqual(['DEVICE_REACHABILITY', 'NUMBER_VERIFICATION']);
   });
 
   it('rejects a hosted recommendation that weakens required containment', async () => {
@@ -229,11 +324,11 @@ describe('bounded evidence planning', () => {
           }),
       }),
     );
-    const evidence = policy.commands.SET_PRESSURE.requiredEvidence.map((tool) => {
+    const evidence = minimumEvidenceForCommand(scenario.command, policy).map((tool) => {
       const fixture = scenario.evidence[tool];
       return evidenceCall(tool, fixture.redacted, fixture.status);
     });
-    const reasoner = new HostedAgentReasoner(
+    const reasoner = new LangGraphAgentReasoner(
       { baseUrl: 'https://reasoner.invalid', apiKey: 'redacted-key', model: 'hosted-model' },
       200,
     );
@@ -254,3 +349,17 @@ describe('bounded evidence planning', () => {
     expect(recommendation.recommendedDecision).toBe('BLOCK_AND_CONTAIN');
   });
 });
+
+function groqResponse(message: Record<string, unknown>) {
+  return new Response(
+    JSON.stringify({
+      id: 'completion-test',
+      object: 'chat.completion',
+      created: 1,
+      model: 'openai/gpt-oss-20b',
+      choices: [{ index: 0, message: { role: 'assistant', ...message }, finish_reason: 'stop' }],
+      usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 },
+    }),
+    { status: 200, headers: { 'content-type': 'application/json' } },
+  );
+}

@@ -46,7 +46,7 @@ test('runs the adaptive low-risk path with one inspectable evidence call', async
   await expect(toolCount.locator('span')).toHaveText('of 5 allowed tools selected');
   await expect(page.getByText('Why these network signals?')).toBeVisible();
   await expect(
-    page.getByText('Confirm attachment to the expected mobile data network.'),
+    page.getByText('Confirm attachment to the expected mobile data network.', { exact: true }),
   ).toBeVisible();
 });
 

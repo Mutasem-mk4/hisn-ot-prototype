@@ -930,6 +930,97 @@
   .selection-rationale li span {
     display: block;
   }
+  .agent-run {
+    margin-top: 1rem;
+    border: 1px solid var(--line);
+    background: var(--ink-1);
+  }
+  .agent-run__heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .agent-run__heading h2 {
+    margin: 0.3rem 0 0;
+    font-size: 1rem;
+  }
+  .agent-run ol {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .agent-run li {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    gap: 0.8rem;
+    align-items: start;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .agent-run li:last-child {
+    border-bottom: 0;
+  }
+  .agent-run li > span {
+    color: var(--sand);
+    font: 700 0.7rem var(--mono);
+  }
+  .agent-run li small,
+  .agent-run li b {
+    display: block;
+  }
+  .agent-run li small {
+    color: var(--cyan);
+    font: 0.58rem var(--mono);
+    text-transform: uppercase;
+  }
+  .agent-run li b {
+    margin-top: 0.18rem;
+    font-size: 0.76rem;
+  }
+  .agent-run li p {
+    margin: 0.2rem 0 0;
+    color: var(--muted);
+    font-size: 0.68rem;
+    line-height: 1.45;
+  }
+  .agent-report-trace {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1px;
+    padding: 1px;
+    background: oklch(75% 0.02 220);
+    list-style: none;
+  }
+  .agent-report-trace li {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 0.65rem;
+    padding: 0.75rem;
+    background: oklch(94% 0.01 80);
+  }
+  .agent-report-trace li > span,
+  .agent-report-trace small {
+    font-family: var(--mono);
+  }
+  .agent-report-trace li > span {
+    color: oklch(42% 0.12 55);
+    font-weight: 700;
+  }
+  .agent-report-trace small,
+  .agent-report-trace b {
+    display: block;
+  }
+  .agent-report-trace small {
+    color: oklch(38% 0.03 220);
+    text-transform: uppercase;
+  }
+  .agent-report-trace p {
+    margin: 0.25rem 0 0;
+  }
   .selection-rationale li b {
     color: var(--cyan);
     font: 700 0.62rem var(--mono);

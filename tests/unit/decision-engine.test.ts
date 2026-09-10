@@ -181,7 +181,9 @@ describe('authoritative decisions', () => {
       policy,
     });
     expect(result.state).toBe('BLOCK');
-    expect(result.failedPolicies).toContain('SIM_SWAP required evidence was not collected');
+    expect(result.failedPolicies).toContain(
+      'LOCATION_VERIFICATION required evidence was not collected',
+    );
   });
 
   it('applies the configured location match threshold', () => {

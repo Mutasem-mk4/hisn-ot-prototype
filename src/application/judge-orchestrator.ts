@@ -14,6 +14,7 @@ import { assertTransition, isTerminalState, nextWorkflowState } from '../domain/
 import {
   AgentPlanSchema,
   AgentRecommendationSchema,
+  AgentTraceStepSchema,
   DecisionRecordSchema,
   EnforcementCallSchema,
   EvidenceCallSchema,
@@ -398,12 +399,17 @@ export class JudgeOrchestrator {
     scenario: Scenario,
     artifacts: WorkflowArtifacts,
   ): Promise<StateResult> {
-    const plan = requireArtifact(artifacts.plan, 'agent plan');
-    const signal = AbortSignal.timeout(
-      this.policy.providers.timeoutMs * this.policy.providers.maximumAttempts,
-    );
-    const evidence = await Promise.all(
-      plan.selectedTools.map(async (tool) => {
+    const initialPlan = requireArtifact(artifacts.plan, 'agent plan');
+    const signal = AbortSignal.timeout(this.policy.agent.maximumRuntimeMs);
+    const investigation = await this.reasoner.investigate(
+      {
+        command: run.command,
+        principal: scenario.principal,
+        policy: this.policy,
+        twin: run.twin,
+      },
+      initialPlan,
+      async (tool, agentSignal) => {
         const started = performance.now();
         try {
           const call = EvidenceCallSchema.parse(
@@ -411,7 +417,7 @@ export class JudgeOrchestrator {
               this.evidenceProvider.collect(
                 tool,
                 { correlationId: run.correlationId, scenario, policy: this.policy },
-                signal,
+                agentSignal,
               ),
               this.policy.providers.timeoutMs * this.policy.providers.maximumAttempts,
             ),
@@ -434,14 +440,20 @@ export class JudgeOrchestrator {
             correlationId: run.correlationId,
           });
         }
-      }),
+      },
+      signal,
     );
+    assertPlanAssurance(investigation.plan, run.command, this.policy);
+    const evidence = investigation.evidence;
     return {
       eventType: 'NETWORK_EVIDENCE_COMPLETE',
       payload: {
         headline: 'Network evidence collected',
         detail: `${evidence.filter((call) => call.requestStatus === 'SUCCEEDED').length}/${evidence.length} evidence calls returned usable results.`,
+        plan: investigation.plan,
         evidence,
+        agentTrace: investigation.trace,
+        agentFramework: investigation.framework,
       },
     };
   }
@@ -769,6 +781,8 @@ function artifactsFrom(events: DomainEvent[]): WorkflowArtifacts {
     if (event.payload.plan) artifacts.plan = zodPayload(event.payload.plan, AgentPlanSchema);
     if (event.payload.evidence)
       artifacts.evidence = zodPayload(event.payload.evidence, EvidenceCallSchema.array());
+    if (event.payload.agentTrace)
+      artifacts.agentTrace = zodPayload(event.payload.agentTrace, AgentTraceStepSchema.array());
     if (event.payload.safety)
       artifacts.safety = zodPayload(event.payload.safety, SafetyEvaluationSchema);
     if (event.payload.recommendation) {

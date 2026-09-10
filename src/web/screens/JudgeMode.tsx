@@ -50,7 +50,7 @@ export function JudgeMode({
         <div>
           <span>Agent reasoning</span>
           <StatusMark status={snapshot.integration.agentReasoner} />
-          <small>Structured output, deterministic authority</small>
+          <small>LangGraph tool loop, deterministic authority</small>
         </div>
         <div>
           <span>Industrial process</span>

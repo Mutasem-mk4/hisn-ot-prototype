@@ -1,5 +1,6 @@
 import type {
   AgentPlan,
+  AgentInvestigation,
   AgentRecommendation,
   Command,
   DecisionRecord,
@@ -33,8 +34,14 @@ export type AgentRecommendationRequest = AgentPlanRequest & {
 };
 
 export interface AgentReasoner {
-  readonly mode: 'DETERMINISTIC' | 'LIVE_LLM';
+  readonly mode: 'DETERMINISTIC' | 'LANGGRAPH';
   plan(request: AgentPlanRequest, signal: AbortSignal): Promise<AgentPlan>;
+  investigate(
+    request: AgentPlanRequest,
+    initialPlan: AgentPlan,
+    executeTool: (tool: EvidenceTool, signal: AbortSignal) => Promise<EvidenceCall>,
+    signal: AbortSignal,
+  ): Promise<AgentInvestigation>;
   recommend(request: AgentRecommendationRequest, signal: AbortSignal): Promise<AgentRecommendation>;
 }
 
@@ -106,7 +113,7 @@ export type IntegrationReadiness = {
   enforcementProvider: 'AVAILABLE' | 'DEGRADED' | 'UNAVAILABLE';
   evidenceSource: ProviderSource;
   enforcementSource: ProviderSource;
-  agentReasoner: 'DETERMINISTIC' | 'LIVE_LLM';
+  agentReasoner: 'DETERMINISTIC' | 'LANGGRAPH';
 };
 
 export type EventAppend = {
@@ -138,6 +145,7 @@ export type WorkflowArtifacts = {
   risk?: RiskLevel | undefined;
   plan?: AgentPlan | undefined;
   evidence?: EvidenceCall[] | undefined;
+  agentTrace?: AgentInvestigation['trace'] | undefined;
   safety?: SafetyEvaluation | undefined;
   recommendation?: AgentRecommendation | undefined;
   decision?: DecisionRecord | undefined;

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policyVersion": "desalination-safety-2026.3",
+  "policyVersion": "desalination-safety-2026.4",
   "assetId": "asset-desalination-line-a",
   "safePressureBand": { "minimumPercent": 42, "maximumPercent": 52 },
   "commands": {
@@ -12,13 +12,7 @@
     "SET_PRESSURE": {
       "risk": "CRITICAL",
       "maximumSetpointPercent": 60,
-      "requiredEvidence": [
-        "NUMBER_VERIFICATION",
-        "SIM_SWAP",
-        "DEVICE_SWAP",
-        "LOCATION_VERIFICATION",
-        "DEVICE_REACHABILITY"
-      ]
+      "requiredEvidence": ["NUMBER_VERIFICATION", "LOCATION_VERIFICATION", "DEVICE_REACHABILITY"]
     }
   },
   "evidence": {
@@ -31,6 +25,7 @@
   "agent": {
     "maximumToolCalls": 5,
     "maximumRetries": 1,
+    "maximumRuntimeMs": 20000,
     "allowedTools": [
       "NUMBER_VERIFICATION",
       "SIM_SWAP",

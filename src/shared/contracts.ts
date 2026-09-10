@@ -163,6 +163,7 @@ export const PolicySchema = z
       .object({
         maximumToolCalls: z.number().int().min(1).max(12),
         maximumRetries: z.number().int().min(0).max(3),
+        maximumRuntimeMs: z.number().int().min(1_000).max(60_000),
         allowedTools: z.array(EvidenceToolSchema).min(1),
       })
       .strict(),
@@ -244,6 +245,17 @@ export const AgentRecommendationSchema = z
   })
   .strict();
 
+export const AgentTraceStepSchema = z
+  .object({
+    sequence: z.number().int().positive(),
+    phase: z.enum(['GOAL', 'TOOL_REQUEST', 'OBSERVATION', 'ADAPTATION', 'FALLBACK']),
+    headline: z.string().min(3).max(120),
+    detail: z.string().min(3).max(360),
+    tool: EvidenceToolSchema.optional(),
+    status: EvidenceRequestStatusSchema.optional(),
+  })
+  .strict();
+
 export const EvidenceCallSchema = z
   .object({
     id: z.string(),
@@ -255,6 +267,15 @@ export const EvidenceCallSchema = z
     latencyMs: z.number().nonnegative(),
     timestamp: z.string().datetime(),
     correlationId: z.string(),
+  })
+  .strict();
+
+export const AgentInvestigationSchema = z
+  .object({
+    plan: AgentPlanSchema,
+    evidence: z.array(EvidenceCallSchema),
+    trace: z.array(AgentTraceStepSchema).min(1).max(24),
+    framework: z.enum(['LANGGRAPH', 'DETERMINISTIC']),
   })
   .strict();
 
@@ -322,6 +343,7 @@ export const IncidentReportSchema = z
       z.object({ tool: EvidenceToolSchema, provenance: EvidenceProvenanceSchema }).strict(),
     ),
     safetyPolicyEvaluation: SafetyEvaluationSchema,
+    agentTrace: z.array(AgentTraceStepSchema).default([]),
     agentRecommendation: AgentRecommendationSchema,
     authoritativeDecision: DecisionRecordSchema,
     networkEnforcement: z.array(EnforcementCallSchema),
@@ -343,6 +365,8 @@ export const ControlRequestSchema = z
   .strict();
 
 export type AgentPlan = z.infer<typeof AgentPlanSchema>;
+export type AgentInvestigation = z.infer<typeof AgentInvestigationSchema>;
+export type AgentTraceStep = z.infer<typeof AgentTraceStepSchema>;
 export type AgentRecommendation = z.infer<typeof AgentRecommendationSchema>;
 export type Command = z.infer<typeof CommandSchema>;
 export type DecisionRecord = z.infer<typeof DecisionRecordSchema>;

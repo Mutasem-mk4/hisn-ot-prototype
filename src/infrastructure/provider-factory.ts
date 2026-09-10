@@ -1,5 +1,5 @@
 import type { AgentReasoner, EnforcementProvider, EvidenceProvider } from '../application/ports.js';
-import { DeterministicAgentReasoner, HostedAgentReasoner } from './agent-reasoners.js';
+import { DeterministicAgentReasoner, LangGraphAgentReasoner } from './agent-reasoners.js';
 import type { AppConfiguration } from './configuration.js';
 import {
   NokiaSimulatorEnforcementProvider,
@@ -20,7 +20,7 @@ export type ProviderSet = {
 
 export function createProviders(configuration: AppConfiguration): ProviderSet {
   const reasoner = configuration.llm
-    ? new HostedAgentReasoner(
+    ? new LangGraphAgentReasoner(
         configuration.llm,
         configuration.policy.providers.timeoutMs,
         configuration.policy.agent.maximumRetries,

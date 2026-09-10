@@ -1,4 +1,5 @@
 import { resolve } from 'node:path';
+import { config as loadEnvironmentFile } from 'dotenv';
 import Fastify from 'fastify';
 import { JudgeOrchestrator } from './application/judge-orchestrator.js';
 import { loadConfiguration } from './infrastructure/configuration.js';
@@ -6,6 +7,9 @@ import { createProviders } from './infrastructure/provider-factory.js';
 import { SqliteAuditStore } from './infrastructure/sqlite-audit-store.js';
 import { fastifyOptions, registerApplication } from './server/app.js';
 import { EventHub } from './server/event-hub.js';
+
+loadEnvironmentFile({ path: resolve(process.cwd(), '.env.local'), quiet: true });
+loadEnvironmentFile({ path: resolve(process.cwd(), '.env'), quiet: true });
 
 const configuration = loadConfiguration(process.env, process.cwd());
 const store = new SqliteAuditStore(

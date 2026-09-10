@@ -30,6 +30,7 @@ const EnvironmentSchema = z
     HISN_LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
+    HISN_AGENT_PROVIDER: z.enum(['AUTO', 'DETERMINISTIC', 'GROQ']).default('AUTO'),
     HISN_SESSION_SECRET: z.string().min(32).optional(),
     VERCEL: z.literal('1').optional(),
     HISN_NOKIA_SIMULATOR: z.enum(['true', 'false']).default('false'),
@@ -82,6 +83,7 @@ export type AppConfiguration = {
   sessionSecret: string;
   secureCookies: boolean;
   rehearsalRateLimitMax: number;
+  agentProvider: z.infer<typeof EnvironmentSchema>['HISN_AGENT_PROVIDER'];
   nokiaSimulatorEnabled: boolean;
   policy: Policy;
   scenarios: Scenario[];
@@ -101,6 +103,7 @@ export function loadConfiguration(
     ScenarioFileSchema,
   );
   const nac = nacCredentials(parsedEnvironment);
+  const llm = llmCredentials(parsedEnvironment);
   assertLiveConfiguration(parsedEnvironment.HISN_MODE, nac);
   if (parsedEnvironment.HISN_NOKIA_SIMULATOR === 'true' && nac === null) {
     throw configurationError('HISN_NOKIA_SIMULATOR requires Nokia simulator configuration');
@@ -113,11 +116,12 @@ export function loadConfiguration(
     sessionSecret: sessionSecret(parsedEnvironment),
     secureCookies: parsedEnvironment.VERCEL === '1' || parsedEnvironment.HISN_MODE === 'LIVE',
     rehearsalRateLimitMax: parsedEnvironment.HISN_REHEARSAL_RATE_LIMIT_MAX,
+    agentProvider: parsedEnvironment.HISN_AGENT_PROVIDER,
     nokiaSimulatorEnabled: parsedEnvironment.HISN_NOKIA_SIMULATOR === 'true',
     policy,
     scenarios: scenariosFile.scenarios,
     nac,
-    llm: llmCredentials(parsedEnvironment),
+    llm,
   };
 }
 
@@ -202,12 +206,17 @@ function nacCredentials(environment: z.infer<typeof EnvironmentSchema>): NacCred
 }
 
 function llmCredentials(environment: z.infer<typeof EnvironmentSchema>): LlmCredentials | null {
+  if (environment.HISN_AGENT_PROVIDER === 'DETERMINISTIC') return null;
   const entries = [
     environment.HISN_LLM_BASE_URL,
     environment.HISN_LLM_API_KEY,
     environment.HISN_LLM_MODEL,
   ];
-  if (entries.every((entry) => entry === undefined)) return null;
+  if (entries.every((entry) => entry === undefined)) {
+    if (environment.HISN_AGENT_PROVIDER === 'GROQ')
+      throw configurationError('HISN_AGENT_PROVIDER=GROQ requires all HISN_LLM_* values');
+    return null;
+  }
   if (entries.some((entry) => entry === undefined))
     throw configurationError('All HISN_LLM_* values must be set together');
   return { baseUrl: entries[0]!, apiKey: entries[1]!, model: entries[2]! };

@@ -6,16 +6,20 @@ import type {
 } from '../application/ports.js';
 import { assessEvidence, failedEvidencePolicies } from '../domain/evidence.js';
 import {
+  AgentInvestigationSchema,
   AgentPlanSchema,
   AgentRecommendationSchema,
   type AgentPlan,
+  type AgentInvestigation,
   type AgentRecommendation,
   type Command,
   type DecisionState,
+  type EvidenceCall,
   type EvidenceTool,
 } from '../shared/contracts.js';
 import type { LlmCredentials } from './configuration.js';
-import { assertPlanAssurance } from '../domain/agent-plan.js';
+import { assertPlanAssurance, minimumEvidenceForCommand } from '../domain/agent-plan.js';
+import { LangGraphEvidenceAgent } from './langgraph-evidence-agent.js';
 
 const CONSEQUENCES: Record<Command['kind'], string> = {
   READ_STATUS: 'Observes process state without changing the physical operating envelope.',
@@ -47,8 +51,8 @@ export class DeterministicAgentReasoner implements AgentReasoner {
   plan(request: AgentPlanRequest, signal: AbortSignal) {
     signal.throwIfAborted();
     const commandPolicy = request.policy.commands[request.command.kind];
-    const selectedTools = commandPolicy.requiredEvidence.filter((tool) =>
-      request.policy.agent.allowedTools.includes(tool),
+    const selectedTools = minimumEvidenceForCommand(request.command, request.policy).filter(
+      (tool) => request.policy.agent.allowedTools.includes(tool),
     );
     const boundedTools = selectedTools.slice(0, request.policy.agent.maximumToolCalls);
     return Promise.resolve(
@@ -62,6 +66,50 @@ export class DeterministicAgentReasoner implements AgentReasoner {
         reasoningProvenance: 'SIMULATED',
       }),
     );
+  }
+
+  async investigate(
+    request: AgentPlanRequest,
+    initialPlan: AgentPlan,
+    executeTool: (tool: EvidenceTool, signal: AbortSignal) => Promise<EvidenceCall>,
+    signal: AbortSignal,
+  ): Promise<AgentInvestigation> {
+    const evidence = await Promise.all(
+      initialPlan.selectedTools.map((evidenceTool) => executeTool(evidenceTool, signal)),
+    );
+    const trace: AgentInvestigation['trace'] = [
+      {
+        sequence: 1,
+        phase: 'GOAL',
+        headline: 'Deterministic evidence fallback active',
+        detail:
+          'The safe fallback applies the configured minimum-evidence plan without model inference.',
+      },
+    ];
+    for (const [index, evidenceTool] of initialPlan.selectedTools.entries()) {
+      const call = evidence[index]!;
+      trace.push({
+        sequence: trace.length + 1,
+        phase: 'TOOL_REQUEST',
+        headline: `Fallback requested ${evidenceTool.replaceAll('_', ' ').toLowerCase()}`,
+        detail: `Deterministic fallback reason: ${initialPlan.selectionReasons[evidenceTool] ?? 'Required by policy.'}`,
+        tool: evidenceTool,
+      });
+      trace.push({
+        sequence: trace.length + 1,
+        phase: 'OBSERVATION',
+        headline: `${evidenceTool.replaceAll('_', ' ')} returned ${call.requestStatus}`,
+        detail: `${call.provenance} evidence recorded by the trusted executor.`,
+        tool: evidenceTool,
+        status: call.requestStatus,
+      });
+    }
+    return AgentInvestigationSchema.parse({
+      plan: initialPlan,
+      evidence,
+      trace,
+      framework: 'DETERMINISTIC',
+    });
   }
 
   recommend(request: AgentRecommendationRequest, signal: AbortSignal) {
@@ -86,15 +134,18 @@ export class DeterministicAgentReasoner implements AgentReasoner {
   }
 }
 
-export class HostedAgentReasoner implements AgentReasoner {
-  readonly mode = 'LIVE_LLM' as const;
+export class LangGraphAgentReasoner implements AgentReasoner {
+  readonly mode = 'LANGGRAPH' as const;
   private readonly fallback = new DeterministicAgentReasoner();
+  private readonly graphAgent: LangGraphEvidenceAgent;
 
   constructor(
     private readonly credentials: LlmCredentials,
     private readonly timeoutMs: number,
     private readonly maximumRetries = 0,
-  ) {}
+  ) {
+    this.graphAgent = new LangGraphEvidenceAgent(credentials, timeoutMs);
+  }
 
   async plan(request: AgentPlanRequest, signal: AbortSignal): Promise<AgentPlan> {
     try {
@@ -124,6 +175,33 @@ export class HostedAgentReasoner implements AgentReasoner {
       if (signal.aborted || !isRecoverableReasonerFailure(error)) throw error;
       const result = await this.fallback.recommend(request, signal);
       return { ...result, reasoningProvenance: 'FALLBACK' };
+    }
+  }
+
+  async investigate(
+    request: AgentPlanRequest,
+    initialPlan: AgentPlan,
+    executeTool: (tool: EvidenceTool, signal: AbortSignal) => Promise<EvidenceCall>,
+    signal: AbortSignal,
+  ): Promise<AgentInvestigation> {
+    try {
+      return await this.graphAgent.investigate(request, initialPlan, executeTool, signal);
+    } catch (error) {
+      if (signal.aborted) throw error;
+      const result = await this.fallback.investigate(request, initialPlan, executeTool, signal);
+      return AgentInvestigationSchema.parse({
+        ...result,
+        plan: { ...result.plan, reasoningProvenance: 'FALLBACK' },
+        trace: [
+          {
+            sequence: 1,
+            phase: 'FALLBACK',
+            headline: 'LangGraph provider unavailable',
+            detail: 'The investigation continued with the bounded deterministic evidence plan.',
+          },
+          ...result.trace.map((step, index) => ({ ...step, sequence: index + 2 })),
+        ],
+      });
     }
   }
 
@@ -211,8 +289,9 @@ function hostedResponseFormat(input: AgentPlanRequest | AgentRecommendationReque
 
 function strictPlanJsonSchema(input: AgentPlanRequest | AgentRecommendationRequest) {
   const commandPolicy = input.policy.commands[input.command.kind];
+  const requiredEvidence = minimumEvidenceForCommand(input.command, input.policy);
   const reasonProperties = Object.fromEntries(
-    commandPolicy.requiredEvidence.map((tool) => [
+    input.policy.agent.allowedTools.map((tool) => [
       tool,
       { type: 'string', minLength: 3, maxLength: 180 },
     ]),
@@ -224,14 +303,14 @@ function strictPlanJsonSchema(input: AgentPlanRequest | AgentRecommendationReque
       consequence: { type: 'string', minLength: 8, maxLength: 280 },
       selectedTools: {
         type: 'array',
-        items: { type: 'string', enum: commandPolicy.requiredEvidence },
-        minItems: commandPolicy.requiredEvidence.length,
-        maxItems: commandPolicy.requiredEvidence.length,
+        items: { type: 'string', enum: input.policy.agent.allowedTools },
+        minItems: requiredEvidence.length,
+        maxItems: input.policy.agent.maximumToolCalls,
       },
       selectionReasons: {
         type: 'object',
         properties: reasonProperties,
-        required: commandPolicy.requiredEvidence,
+        required: requiredEvidence,
         additionalProperties: false,
       },
     },
@@ -280,10 +359,12 @@ function reasonerTaskInstruction(
     ].join(' ');
   }
   const commandPolicy = input.policy.commands[input.command.kind];
+  const requiredEvidence = minimumEvidenceForCommand(input.command, input.policy);
   return [
     'This task plans evidence collection before any evidence calls.',
     `Set risk to ${commandPolicy.risk}.`,
-    `Select every required tool exactly once: ${commandPolicy.requiredEvidence.join(', ')}.`,
+    `Select every current minimum-evidence tool exactly once: ${requiredEvidence.join(', ')}.`,
+    'You may add other allowlisted tools only when the command context makes them proportionate.',
     'Give a selection reason for each selected tool.',
   ].join(' ');
 }
