@@ -309,7 +309,7 @@ function strictPlanJsonSchema(input: AgentPlanRequest | AgentRecommendationReque
       consequence: { type: 'string' },
       selectedTools: {
         type: 'array',
-        items: { type: 'string', enum: input.policy.agent.allowedTools },
+        items: { type: 'string', enum: requiredEvidence },
       },
       selectionReasons: {
         type: 'object',
@@ -366,9 +366,10 @@ function reasonerTaskInstruction(
   return [
     'This task plans evidence collection before any evidence calls.',
     `Set risk to ${commandPolicy.risk}.`,
-    `Select every current minimum-evidence tool exactly once: ${requiredEvidence.join(', ')}.`,
-    'You may add other allowlisted tools only when the command context makes them proportionate.',
-    'Give a selection reason for each selected tool.',
+    `Set selectedTools to exactly ${JSON.stringify(requiredEvidence)} in that order.`,
+    `Set selectionReasons to exactly these keys: ${requiredEvidence.join(', ')}.`,
+    'Keep the consequence below 240 characters and each selection reason below 160 characters.',
+    'The later observation loop may add another allowlisted tool when live evidence justifies it.',
   ].join(' ');
 }
 
