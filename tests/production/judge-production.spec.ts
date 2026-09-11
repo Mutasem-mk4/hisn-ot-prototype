@@ -35,7 +35,7 @@ test('production deployment serves the application and completes the attack proo
   await expect(
     page.getByRole('heading', { name: /Stop dangerous industrial commands/i }),
   ).toBeVisible();
-  await expect(page.getByText('desalination-safety-2026.4')).toBeVisible();
+  await expect(page.getByText('desalination-safety-2026.5')).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
