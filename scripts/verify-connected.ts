@@ -32,6 +32,7 @@ const configuration = loadConfiguration(
     HISN_MODE: 'SANDBOX',
     HISN_AGENT_PROVIDER: 'AUTO',
     HISN_NOKIA_SIMULATOR: 'false',
+    HISN_SESSION_SECRET: randomUUID(),
   },
   process.cwd(),
 );
