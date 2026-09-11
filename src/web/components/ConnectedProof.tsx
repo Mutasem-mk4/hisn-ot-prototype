@@ -113,7 +113,11 @@ function ConnectedReadiness({
       </StatusMark>
       <small>
         Number Verification:{' '}
-        {preflight.subscriberAuthorizationConfigured ? 'authorized' : 'OAuth required'}
+        {preflight.subscriberAuthorizationMode === 'SIMULATOR_FAST_OAUTH'
+          ? 'simulator OAuth ready'
+          : preflight.subscriberAuthorizationConfigured
+            ? 'subscriber authorization ready'
+            : 'OAuth required'}
       </small>
     </div>
   );
@@ -133,11 +137,7 @@ function EvidenceComparison({ comparison }: { comparison: ConnectedEvidenceCompa
         {comparison.executions.map((execution) => (
           <div key={execution.context}>
             <h4>Context {execution.context}</h4>
-            <p>
-              {execution.assessment.compromised.length === 0
-                ? 'No compromise signal returned'
-                : `${execution.assessment.compromised.length} compromise signals returned`}
-            </p>
+            <p>{compromiseSummary(execution.assessment.compromised.length)}</p>
             <dl>
               {execution.evidence.map((call) => (
                 <div key={call.tool}>
@@ -222,6 +222,11 @@ function evidenceLabel(tool: EvidenceCall['tool']) {
   }[tool];
 }
 
+function compromiseSummary(count: number) {
+  if (count === 0) return 'No compromise signal returned';
+  return `${count} compromise signal${count === 1 ? '' : 's'} returned`;
+}
+
 function evidenceValue(call: EvidenceCall) {
   const value = call.redactedResult;
   if (call.requestStatus !== 'SUCCEEDED') {
@@ -229,8 +234,12 @@ function evidenceValue(call: EvidenceCall) {
     if (failureCode === 'SUBSCRIBER_AUTHORIZATION_REQUIRED') return 'OAuth required';
     return failureCode ? humanize(failureCode) : 'Unavailable';
   }
-  if (call.tool === 'NUMBER_VERIFICATION')
-    return value.verified === true ? 'Verified' : 'Not verified';
+  if (call.tool === 'NUMBER_VERIFICATION') {
+    const result = value.verified === true ? 'Verified' : 'Not verified';
+    return value.authorizationFlow === 'SIMULATOR_FAST_OAUTH'
+      ? `${result} · simulator OAuth`
+      : result;
+  }
   if (call.tool === 'SIM_SWAP' || call.tool === 'DEVICE_SWAP')
     return value.swapped === true ? 'Recent change' : 'No recent change';
   if (call.tool === 'LOCATION_VERIFICATION')

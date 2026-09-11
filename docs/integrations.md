@@ -2,15 +2,15 @@
 
 ## Capability ledger
 
-| Capability              | Adapter                                  | Decision purpose                              | Public provenance                                      |
-| ----------------------- | ---------------------------------------- | --------------------------------------------- | ------------------------------------------------------ |
-| Number Verification     | Nokia Number Verification V1 or fallback | Bind the session to the enrolled number       | Implemented locally until subscriber OAuth is supplied |
-| SIM Swap                | Nokia SIM Swap                           | Detect recent subscription reassignment       | Nokia sandbox                                          |
-| Device Swap             | Nokia Device Swap                        | Detect endpoint replacement                   | Nokia sandbox                                          |
-| Location Verification   | Nokia Location Verification              | Require presence inside the facility boundary | Nokia sandbox                                          |
-| Device Reachability     | Nokia Device Status                      | Confirm current mobile-data reachability      | Nokia sandbox                                          |
-| Quality on Demand       | Nokia QoD                                | Protect a separately addressed backup flow    | Nokia sandbox; pending remains pending                 |
-| Slice Device Attachment | Nokia slice attachment                   | Remove a configured device attachment         | Implemented locally until a real attachment exists     |
+| Capability              | Adapter                      | Decision purpose                              | Public provenance                                  |
+| ----------------------- | ---------------------------- | --------------------------------------------- | -------------------------------------------------- |
+| Number Verification     | Nokia Number Verification V1 | Bind the session to the enrolled number       | Nokia sandbox fast OAuth in strict connected proof |
+| SIM Swap                | Nokia SIM Swap               | Detect recent subscription reassignment       | Nokia sandbox                                      |
+| Device Swap             | Nokia Device Swap            | Detect endpoint replacement                   | Nokia sandbox                                      |
+| Location Verification   | Nokia Location Verification  | Require presence inside the facility boundary | Nokia sandbox                                      |
+| Device Reachability     | Nokia Device Status          | Confirm current mobile-data reachability      | Nokia sandbox                                      |
+| Quality on Demand       | Nokia QoD                    | Protect a separately addressed backup flow    | Nokia sandbox; pending remains pending             |
+| Slice Device Attachment | Nokia slice attachment       | Remove a configured device attachment         | Implemented locally until a real attachment exists |
 
 A successful HTTP response is transport evidence, not proof of trust. The policy evaluates returned fields such as `swapped`, `verificationResult`, `reachable`, freshness, duplicates, and correlation binding.
 
@@ -40,13 +40,14 @@ Groq credentials:
 - `HISN_LLM_API_KEY`
 - `HISN_LLM_MODEL`
 
-Required Nokia sandbox values are listed in `.env.example`. Number Verification additionally requires `NOKIA_NAC_ACCESS_TOKEN`. Real slice detachment requires both an operational slice ID and gateway network-access identifier.
+Required Nokia sandbox values are listed in `.env.example`. Strict connected verification obtains a one-time Nokia simulator fast-flow code for Number Verification. `NOKIA_NAC_ACCESS_TOKEN` is only used when a bearer from a subscriber authorization flow is supplied. Real slice detachment requires both an operational slice ID and gateway network-access identifier.
 
 ## Provenance rules
 
 - `LIVE` describes schema-valid hosted model output.
 - `LANGGRAPH AGENT` describes the active orchestration framework.
 - `NOKIA SANDBOX` describes an authenticated Nokia response using simulator identities.
+- `SIMULATOR_FAST_OAUTH` describes Nokia's one-time simulator authorization flow; it is not live subscriber consent.
 - `IMPLEMENTED LOCALLY` describes digital-twin behavior or an explicit local fallback.
 - `UNAVAILABLE` never counts as trusted evidence.
 

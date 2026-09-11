@@ -6,7 +6,7 @@ import { loadConfiguration } from '../../src/infrastructure/configuration.js';
 import { verifyConnectedEvidenceComparison } from '../../src/infrastructure/connected-verification.js';
 
 describe('direct connected evidence diagnostic', () => {
-  it('uses provider responses for the same command and exposes missing subscriber authorization', async () => {
+  it('uses simulator OAuth and five provider responses for each comparison context', async () => {
     const provider = createServer((request, response) => {
       let body = '';
       request.setEncoding('utf8');
@@ -14,6 +14,41 @@ describe('direct connected evidence diagnostic', () => {
         body += chunk;
       });
       request.on('end', () => {
+        const requestUrl = new URL(request.url ?? '/', `http://${request.headers.host}`);
+        if (requestUrl.pathname === '/oauth2/v1/auth/clientcredentials') {
+          response.writeHead(200, { 'content-type': 'application/json' });
+          response.end(
+            JSON.stringify({ client_id: 'simulator-client', client_secret: 'redacted' }),
+          );
+          return;
+        }
+        if (requestUrl.pathname === '/.well-known/oauth-authorization-server') {
+          const origin = `http://${request.headers.host}`;
+          response.writeHead(200, { 'content-type': 'application/json' });
+          response.end(
+            JSON.stringify({
+              authorization_endpoint: `${origin}/oauth2/v1/authorize`,
+              token_endpoint: `${origin}/oauth2/v1/token`,
+              fast_flow_csp_auth_endpoint: `${origin}/oauth2/v1/retrieve_csp_auth_url`,
+            }),
+          );
+          return;
+        }
+        if (requestUrl.pathname === '/oauth2/v1/retrieve_csp_auth_url') {
+          const redirect = new URL(requestUrl.searchParams.get('redirect_uri')!);
+          redirect.searchParams.set('code', 'single-use-simulator-code');
+          redirect.searchParams.set('state', requestUrl.searchParams.get('state')!);
+          response.writeHead(302, { location: redirect.toString() });
+          response.end();
+          return;
+        }
+        if (requestUrl.pathname.includes('/number-verification/')) {
+          response.writeHead(200, { 'content-type': 'application/json' });
+          response.end(
+            JSON.stringify({ devicePhoneNumberVerified: body.includes('+99999991000') }),
+          );
+          return;
+        }
         const adverse = body.includes('+99999991000');
         response.writeHead(200, { 'content-type': 'application/json' });
         response.end(
@@ -53,21 +88,20 @@ describe('direct connected evidence diagnostic', () => {
       expect(first.command.requestedSetpointPercent).toBe(52);
       if (first.stage !== 'evidence' || second.stage !== 'evidence')
         throw new Error('Expected evidence probe');
-      expect(first.assessment.compromised).toEqual([]);
+      expect(first.assessment.compromised).toEqual(['NUMBER_VERIFICATION']);
       expect(second.assessment.compromised).toEqual(
         expect.arrayContaining(['SIM_SWAP', 'DEVICE_SWAP', 'LOCATION_VERIFICATION']),
       );
       for (const execution of [first, second]) {
         expect(execution.enforcementExecuted).toBe(false);
-        expect(execution.evidence.filter((call) => call.provenance === 'SANDBOX')).toHaveLength(4);
+        expect(execution.evidence.filter((call) => call.provenance === 'SANDBOX')).toHaveLength(5);
         expect(
           execution.evidence.find((call) => call.tool === 'NUMBER_VERIFICATION'),
         ).toMatchObject({
-          requestStatus: 'UNAVAILABLE',
-          provenance: 'UNAVAILABLE',
+          requestStatus: 'SUCCEEDED',
+          provenance: 'SANDBOX',
           redactedResult: {
-            failureCode: 'SUBSCRIBER_AUTHORIZATION_REQUIRED',
-            externalRequestMade: false,
+            authorizationFlow: 'SIMULATOR_FAST_OAUTH',
           },
         });
       }

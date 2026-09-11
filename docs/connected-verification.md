@@ -2,7 +2,7 @@
 
 The deployed hybrid demonstration can replace failed Nokia requests with labeled local fixtures. It is not strict connected verification. `HISN_MODE=SANDBOX` selects direct Nokia sandbox providers without those fallbacks; `LIVE` selects operator providers. Connected modes use a hosted agent or fail closed when no model is configured.
 
-Authorization checks evidence provenance both when issuing a decision and before executing an allowed command. Sandbox verification rejects simulated and cached evidence. Live verification also rejects sandbox evidence. The policy still requires Number Verification, Location Verification, and Device Reachability for a 52% command. Subscriber authorization is therefore a dependency, not an optional substitute.
+Authorization checks evidence provenance both when issuing a decision and before executing an allowed command. Sandbox verification rejects simulated and cached evidence. Live verification also rejects sandbox evidence. Strict sandbox verification obtains a one-time Nokia fast-flow authorization code before calling Number Verification. This proves the simulator OAuth and CAMARA request path; it does not represent consent from a live subscriber.
 
 ## Run the connected comparison
 
@@ -20,7 +20,7 @@ The command type-checks its implementation, forces direct sandbox adapters, uses
 
 Output is JSON lines containing configuration availability, run and correlation IDs, provider evidence, agent actions, advisory recommendation, policy decision, and elapsed time. API keys and phone numbers are not printed. Redirect output to a private local file when an execution record is needed.
 
-Exit code zero requires two completed investigations with the required successful sandbox evidence, one ALLOW decision and one non-ALLOW decision. A provider failure, missing evidence, missing configuration, or no demonstrated contrast produces exit code one. This proves an authorization contrast only; it does not prove real-network enforcement, plant actuation, or an advantage over a fixed investigation workflow.
+Exit code zero requires two completed investigations with the required successful sandbox evidence and two distinct policy decisions. Nokia's documented simulator fixtures intentionally distribute reassuring and adverse signals across different numbers, so this check does not require an `ALLOW` result. A provider failure, missing evidence, missing configuration, or no demonstrated decision contrast produces exit code one. This proves an authorization contrast only; it does not prove real-network enforcement, plant actuation, or an advantage over a fixed investigation workflow.
 
 Vercel sensitive environment variables may export as `[SENSITIVE]`. The command rejects these placeholders before sending requests. Actual credentials must be supplied through a protected local environment or a runner where the secrets are available.
 
@@ -30,7 +30,7 @@ Vercel sensitive environment variables may export as `[SENSITIVE]`. The command 
 
 The DEMO server exposes `/api/v1/connected-verification` behind its session guard. GET reports provider configuration availability without secrets. POST requires the session CSRF token and a body with `context` (`A`, `B`, or `BOTH`) and `stage` (`evidence` or `investigation`). `BOTH` is valid only for the evidence stage and runs the two contexts sequentially to limit request bursts. The route allows two requests per minute per rate-limit key; this limit is process-local on serverless deployments.
 
-The `evidence` stage calls the five configured allowlisted Nokia evidence tools directly, using the same 52% command and alternative sandbox devices. It labels collection as `FIXED_PROVIDER_PROBE`, makes no Groq request, and reports each provider response without local substitutes. Missing subscriber authorization reports `SUBSCRIBER_AUTHORIZATION_REQUIRED` and `externalRequestMade: false` for Number Verification. SDK timeouts and retry limits apply to each Nokia call.
+The `evidence` stage calls the five configured allowlisted Nokia evidence tools directly, using the same 52% command and alternative sandbox devices. It labels collection as `FIXED_PROVIDER_PROBE`, makes no Groq request, and reports each provider response without local substitutes. For Number Verification, it obtains client metadata, creates unique state and nonce values, follows only trusted Nokia simulator redirects, validates the returned state, and consumes the one-time code. SDK timeouts and retry limits apply to each Nokia call.
 
 The `investigation` stage uses Groq and the direct sandbox adapters with an isolated in-memory audit store. It stops at authorization before any command execution or enforcement. It does not modify the main demonstration's run. Both stages report `enforcementExecuted: false`.
 
@@ -43,10 +43,10 @@ The primary Judge Mode flow and this diagnostic have separate reasoner selection
 - Structured Groq planning/recommendation requests stop retrying immediately on HTTP 429. LangGraph SDK retry behavior is unchanged.
 - Rate-limit failures retain a sanitized quota category when the provider message identifies tokens or requests per day or minute; otherwise the category is UNKNOWN. Provider response bodies are not exposed in the failure record.
 - The initial plan still follows the policy evidence floor. Groq's advisory recommendation can now select any defined decision state instead of being restricted to a precomputed verdict. The authoritative policy engine independently decides authorization and containment, including when it disagrees with the model. Observation-driven tool selection already exists, but its benefit over fixed baselines has not been measured.
-- A successful Nokia sandbox observation contrast is verified below. A complete authorization contrast remains blocked by subscriber OAuth for Number Verification.
+- The Nokia simulator fast OAuth and Number Verification request were verified locally against the external sandbox on 2026-09-11. Public deployment verification is recorded separately below after release.
 - Provider-specific quota diagnosis is implemented. Baseline measurements and repeated successful public Groq rehearsals remain pending.
 
-## Public provider evidence — 2026-09-11
+## Earlier public provider evidence — 2026-09-11
 
 The hosted fixed provider probes at 03:02 UTC used the same 52% command and different configured Nokia sandbox devices. Four external calls succeeded in each context, with no simulated substitutes:
 
@@ -67,4 +67,4 @@ A subsequent Context B investigation, correlation ID `hisn-aaffb177-17d9-4667-a0
 
 Judge Mode exposes this check under the collapsed **Verify real API calls** section. The comparison runs both configured contexts for the same command, labels each result by provenance, and displays the complete correlation IDs. The adjacent Groq action runs one connected LangGraph investigation; it remains separate because it consumes provider quota.
 
-The manual **Hosted DEMO smoke** GitHub Actions workflow repeats the fixed Nokia comparison from an independent runner. It requires at least four successful sandbox responses per context, rejects simulated or cached evidence, verifies the contrasting SIM Swap result, and records both correlation IDs in the job log. It does not invoke Groq.
+The manual **Hosted DEMO smoke** GitHub Actions workflow repeats the fixed Nokia comparison from an independent runner. For releases with simulator OAuth support, it requires all five sandbox responses per context, checks Number Verification's authorization provenance, rejects simulated or cached evidence, verifies the contrasting SIM Swap result, and records both correlation IDs in the job log. It does not invoke Groq.

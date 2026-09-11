@@ -53,17 +53,17 @@ The final decision remains deterministic. Model output cannot change the 60% com
 
 ## Honest integration status
 
-| Capability            | Deployed path                         | Boundary                                                     |
-| --------------------- | ------------------------------------- | ------------------------------------------------------------ |
-| Agent orchestration   | LangGraph.js with a hosted Groq model | Advisory evidence selection and recommendation; fails closed |
-| SIM Swap              | Authenticated Nokia sandbox API       | Simulator identity                                           |
-| Device Swap           | Authenticated Nokia sandbox API       | Simulator identity                                           |
-| Location Verification | Authenticated Nokia sandbox API       | Simulator identity                                           |
-| Device Reachability   | Authenticated Nokia sandbox API       | Simulator identity                                           |
-| Number Verification   | Local CAMARA-shaped fallback          | Subscriber OAuth is not configured                           |
-| Quality on Demand     | Authenticated Nokia sandbox request   | Observed sessions may remain pending; no handover is claimed |
-| Slice detachment      | Guarded local implementation          | No operational slice attachment is configured                |
-| Plant and PLC         | Stateful digital twin                 | No physical PLC or calibrated plant claim                    |
+| Capability            | Deployed path                               | Boundary                                                     |
+| --------------------- | ------------------------------------------- | ------------------------------------------------------------ |
+| Agent orchestration   | LangGraph.js with a hosted Groq model       | Advisory evidence selection and recommendation; fails closed |
+| SIM Swap              | Authenticated Nokia sandbox API             | Simulator identity                                           |
+| Device Swap           | Authenticated Nokia sandbox API             | Simulator identity                                           |
+| Location Verification | Authenticated Nokia sandbox API             | Simulator identity                                           |
+| Device Reachability   | Authenticated Nokia sandbox API             | Simulator identity                                           |
+| Number Verification   | Nokia sandbox fast OAuth in connected proof | Simulator authorization; not live subscriber consent         |
+| Quality on Demand     | Authenticated Nokia sandbox request         | Observed sessions may remain pending; no handover is claimed |
+| Slice detachment      | Guarded local implementation                | No operational slice attachment is configured                |
+| Plant and PLC         | Stateful digital twin                       | No physical PLC or calibrated plant claim                    |
 
 The UI uses the same provenance vocabulary throughout: `LANGGRAPH AGENT`, `NOKIA SANDBOX`, `LIVE`, `FALLBACK`, `UNAVAILABLE`, and `IMPLEMENTED LOCALLY`.
 

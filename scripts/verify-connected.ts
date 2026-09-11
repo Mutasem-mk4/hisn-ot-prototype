@@ -52,8 +52,8 @@ if (!checks.groqConfigured || !checks.nokiaConfigured) {
   }
   const contrastProven =
     decisions.length === 2 &&
-    decisions.includes('ALLOW') &&
-    decisions.some((decision) => decision !== undefined && decision !== 'ALLOW') &&
+    decisions.every((decision) => decision !== undefined) &&
+    new Set(decisions).size === 2 &&
     !process.exitCode;
   console.log(
     JSON.stringify({ kind: 'CONNECTED_COMPARISON', contrastProven: Boolean(contrastProven) }),

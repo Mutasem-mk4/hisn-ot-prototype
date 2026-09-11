@@ -29,6 +29,7 @@ jobs:
           assert.equal(preflightResponse.status, 200, preflightBody);
           const preflight = JSON.parse(preflightBody);
           assert.equal(preflight.nokiaConfigured, true);
+          assert.equal(preflight.subscriberAuthorizationMode, 'SIMULATOR_FAST_OAUTH');
           assert.equal(preflight.fallbackAllowed, false);
           const comparisonResponse = await fetch(`${base}/api/v1/connected-verification`, {
             method: 'POST',
@@ -43,8 +44,11 @@ jobs:
           assert.equal(comparison.executions.length, 2);
           for (const execution of comparison.executions) {
             assert.equal(execution.command.requestedSetpointPercent, 52);
-            assert.ok(execution.evidence.filter(call => call.requestStatus === 'SUCCEEDED' && call.provenance === 'SANDBOX').length >= 4);
+            assert.equal(execution.evidence.filter(call => call.requestStatus === 'SUCCEEDED' && call.provenance === 'SANDBOX').length, 5);
             assert.equal(execution.evidence.some(call => call.provenance === 'SIMULATED' || call.provenance === 'CACHE'), false);
+            const numberVerification = execution.evidence.find(call => call.tool === 'NUMBER_VERIFICATION');
+            assert.equal(numberVerification.requestStatus, 'SUCCEEDED');
+            assert.equal(numberVerification.redactedResult.authorizationFlow, 'SIMULATOR_FAST_OAUTH');
           }
           const simSwap = execution => {
             const evidence = execution.evidence.find(call => call.tool === 'SIM_SWAP');

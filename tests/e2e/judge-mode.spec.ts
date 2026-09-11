@@ -59,8 +59,10 @@ test('shows a real-provider comparison without adding it to the primary demo flo
     proof.getByRole('heading', { name: 'Same request, different network evidence' }),
   ).toBeVisible();
   await expect(proof.getByText('52% requested in both')).toBeVisible();
-  await expect(proof.getByText('No compromise signal returned')).toBeVisible();
+  await expect(proof.getByText('1 compromise signal returned')).toBeVisible();
   await expect(proof.getByText('3 compromise signals returned')).toBeVisible();
+  await expect(proof.getByText('Not verified · simulator OAuth', { exact: true })).toBeVisible();
+  await expect(proof.getByText('Verified · simulator OAuth', { exact: true })).toBeVisible();
   await expect(proof.getByText('Outside approved area')).toBeVisible();
 });
 
@@ -266,7 +268,8 @@ function connectedPreflight() {
   return {
     groqConfigured: true,
     nokiaConfigured: true,
-    subscriberAuthorizationConfigured: false,
+    subscriberAuthorizationConfigured: true,
+    subscriberAuthorizationMode: 'SIMULATOR_FAST_OAUTH',
     environment: 'SANDBOX',
     fallbackAllowed: false,
     enforcementExecuted: false,
@@ -288,16 +291,19 @@ function connectedComparisonResponse() {
     collectionMethod: 'FIXED_PROVIDER_PROBE',
     evidence: connectedEvidence(context),
     assessment: {
-      unknown: ['NUMBER_VERIFICATION: missing, stale, conflicting or unusable evidence'],
+      unknown: [],
       failures:
         context === 'A'
-          ? []
+          ? ['Number is not verified']
           : [
               'Recent SIM swap violates critical-command policy',
               'Recent device swap violates critical-command policy',
               'Device is outside the approved facility geofence',
             ],
-      compromised: context === 'A' ? [] : ['SIM_SWAP', 'DEVICE_SWAP', 'LOCATION_VERIFICATION'],
+      compromised:
+        context === 'A'
+          ? ['NUMBER_VERIFICATION']
+          : ['SIM_SWAP', 'DEVICE_SWAP', 'LOCATION_VERIFICATION'],
     },
   });
   return {
@@ -327,12 +333,10 @@ function connectedEvidence(context: 'A' | 'B') {
     correlationId: `connected-${context.toLowerCase()}`,
   });
   return [
-    call(
-      'NUMBER_VERIFICATION',
-      { failureCode: 'SUBSCRIBER_AUTHORIZATION_REQUIRED' },
-      'UNAVAILABLE',
-      'UNAVAILABLE',
-    ),
+    call('NUMBER_VERIFICATION', {
+      verified: adverse,
+      authorizationFlow: 'SIMULATOR_FAST_OAUTH',
+    }),
     call('SIM_SWAP', { swapped: adverse }),
     call('DEVICE_SWAP', { swapped: adverse }),
     call('LOCATION_VERIFICATION', { verificationResult: adverse ? 'FALSE' : 'TRUE' }),

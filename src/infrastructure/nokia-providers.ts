@@ -22,6 +22,7 @@ import {
   type RuntimeMode,
 } from '../shared/contracts.js';
 import type { NacCredentials } from './configuration.js';
+import { getSimulatorNumberAuthorization } from './nokia-simulator-oauth.js';
 
 type ToolResult = Record<string, unknown>;
 
@@ -50,7 +51,11 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
 
   async collect(tool: EvidenceTool, context: EvidenceContext, signal: AbortSignal) {
     const startedAt = performance.now();
-    if (tool === 'NUMBER_VERIFICATION' && !this.credentials.accessToken) {
+    if (
+      tool === 'NUMBER_VERIFICATION' &&
+      !this.credentials.accessToken &&
+      !this.credentials.simulatorNumberAuthorization
+    ) {
       return this.call(
         tool,
         context,
@@ -107,14 +112,29 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
   }
 
   private async verifyNumber(context: EvidenceContext, signal: AbortSignal) {
-    if (!this.credentials.accessToken) {
-      throw new TypeError('Subscriber authorization is not configured');
-    }
+    const phoneNumber = this.phoneNumber(context);
+    const authorization = this.credentials.accessToken
+      ? null
+      : await getSimulatorNumberAuthorization({
+          client: this.client,
+          credentials: this.credentials,
+          phoneNumber,
+          correlationId: context.correlationId,
+          timeoutMs: this.timeoutMs,
+          signal,
+        });
     const response = await this.client.numberVerification.verify(
-      { phoneNumber: this.phoneNumber(context) },
+      {
+        phoneNumber,
+        ...(authorization ? { code: authorization.code, state: authorization.state } : {}),
+      },
       this.requestOptions(context, signal),
     );
-    return { verified: response.devicePhoneNumberVerified, subject: 'operator-number:redacted' };
+    return {
+      verified: response.devicePhoneNumberVerified,
+      subject: 'operator-number:redacted',
+      authorizationFlow: authorization ? 'SIMULATOR_FAST_OAUTH' : 'SUBSCRIBER_BEARER',
+    };
   }
 
   private async checkSimSwap(context: EvidenceContext, signal: AbortSignal) {

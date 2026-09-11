@@ -42,7 +42,7 @@ No. It selects evidence and recommends a response. The deterministic policy engi
 
 ### Are Nokia calls real?
 
-SIM Swap, Device Swap, Location Verification, Device Reachability, and QoD use authenticated Nokia sandbox calls in the configured public deployment. Number Verification and slice detachment retain visible local fallbacks because subscriber OAuth and an operational attachment are absent.
+SIM Swap, Device Swap, Location Verification, Device Reachability, and QoD use authenticated Nokia sandbox calls in the configured public deployment. The strict connected diagnostic also obtains a Nokia simulator fast-flow authorization code before calling Number Verification. This proves the sandbox OAuth path, not consent from a live subscriber. Slice detachment retains a visible local fallback because no operational attachment is configured.
 
 ### Why not call every API every time?
 

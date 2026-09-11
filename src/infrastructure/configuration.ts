@@ -64,6 +64,7 @@ export type NacCredentials = {
   apiKey: string;
   rapidapiHost: string;
   accessToken?: string | undefined;
+  simulatorNumberAuthorization?: boolean | undefined;
   operatorPhone: string;
   backupPhone: string;
   gatewayNai?: string | undefined;

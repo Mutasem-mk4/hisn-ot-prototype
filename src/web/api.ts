@@ -120,6 +120,7 @@ const ConnectedPreflightSchema = z
     groqConfigured: z.boolean(),
     nokiaConfigured: z.boolean(),
     subscriberAuthorizationConfigured: z.boolean(),
+    subscriberAuthorizationMode: z.enum(['BEARER', 'SIMULATOR_FAST_OAUTH', 'UNAVAILABLE']),
     environment: z.literal('SANDBOX'),
     fallbackAllowed: z.literal(false),
     enforcementExecuted: z.literal(false),

@@ -10,10 +10,18 @@ import { createProviders } from './provider-factory.js';
 import { SqliteAuditStore } from './sqlite-audit-store.js';
 
 export function connectedPreflight(configuration: AppConfiguration) {
+  const simulatorOauthAvailable = configuration.nac !== null;
   return {
     groqConfigured: configuration.llm !== null,
     nokiaConfigured: configuration.nac !== null,
-    subscriberAuthorizationConfigured: Boolean(configuration.nac?.accessToken),
+    subscriberAuthorizationConfigured: Boolean(
+      configuration.nac?.accessToken || simulatorOauthAvailable,
+    ),
+    subscriberAuthorizationMode: configuration.nac?.accessToken
+      ? ('BEARER' as const)
+      : simulatorOauthAvailable
+        ? ('SIMULATOR_FAST_OAUTH' as const)
+        : ('UNAVAILABLE' as const),
     environment: 'SANDBOX' as const,
     fallbackAllowed: false,
     enforcementExecuted: false,
@@ -53,6 +61,10 @@ export async function verifyConnectedContext(
     mode: 'SANDBOX',
     agentProvider: request.stage === 'investigation' ? 'GROQ' : configuration.agentProvider,
     nokiaSimulatorEnabled: false,
+    nac: {
+      ...configuration.nac,
+      simulatorNumberAuthorization: true,
+    },
   });
   const scenario = comparisonScenario(configuration, request.context);
   if (request.stage === 'evidence') {
