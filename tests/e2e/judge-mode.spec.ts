@@ -40,6 +40,33 @@ test('explains the product immediately and exposes the primary action', async ({
   expect(primaryAction?.y).toBeLessThan(768);
 });
 
+test('replay gives judges time to read and respects pause and speed changes', async ({ page }) => {
+  await openDemoControls(page);
+  await expect(page.getByLabel('Simulation playback speed')).toHaveValue('0.5');
+  await page.clock.install();
+  await page.clock.pauseAt(new Date());
+  await page.getByRole('button', { name: /Run attack demonstration/ }).click();
+  await expect(page.getByRole('button', { name: 'Pause simulation' })).toBeEnabled();
+  const sequence = page.locator('.event-sequence');
+  await expect(sequence).toHaveText('01');
+  await page.clock.runFor(2999);
+  await expect(sequence).toHaveText('01');
+  await page.clock.runFor(1);
+  await expect(sequence).toHaveText('02');
+  await page.getByRole('button', { name: 'Pause simulation' }).click();
+  await page.clock.runFor(6000);
+  await expect(sequence).toHaveText('02');
+  await page.getByLabel('Simulation playback speed').selectOption('4');
+  await page.getByRole('button', { name: 'Run simulation' }).click();
+  await page.clock.runFor(375);
+  await expect(sequence).toHaveText('03');
+  await page.clock.runFor(10000);
+  const finalSequence = await sequence.textContent();
+  await expect(page.locator('.judge-result')).toContainText('BLOCK AND CONTAIN');
+  await page.clock.runFor(10000);
+  await expect(sequence).toHaveText(finalSequence!);
+});
+
 test('runs the adaptive low-risk path with one inspectable evidence call', async ({ page }) => {
   await openDemoControls(page);
   await page.getByLabel('Simulation playback speed').selectOption('4');

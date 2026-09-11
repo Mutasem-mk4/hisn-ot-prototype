@@ -30,7 +30,7 @@ export function App() {
       .then(getJudgeRun)
       .then((initial) => {
         if (cancelled) return;
-        setSnapshot(initial);
+        setSnapshot(playbackFrame(initial, false, 0.5));
       })
       .catch((reason: Error) => setError(reason.message));
     return () => {
@@ -69,18 +69,15 @@ export function App() {
     (frames: RunSnapshot[], startIndex: number, speed: number) => {
       const generation = ++playbackGeneration.current;
       showFrame(frames, startIndex, true, speed);
-      const advance = (index: number, firstFrame: boolean) => {
-        window.setTimeout(
-          () => {
-            if (playbackGeneration.current !== generation) return;
-            const nextIndex = index + 1;
-            showFrame(frames, nextIndex, nextIndex < frames.length - 1, speed);
-            if (nextIndex < frames.length - 1) advance(nextIndex, false);
-          },
-          firstFrame ? 750 : Math.max(250, 750 / speed),
-        );
+      const advance = (index: number) => {
+        window.setTimeout(() => {
+          if (playbackGeneration.current !== generation) return;
+          const nextIndex = index + 1;
+          showFrame(frames, nextIndex, nextIndex < frames.length - 1, speed);
+          if (nextIndex < frames.length - 1) advance(nextIndex);
+        }, 1500 / speed);
       };
-      if (startIndex < frames.length - 1) advance(startIndex, true);
+      if (startIndex < frames.length - 1) advance(startIndex);
     },
     [showFrame],
   );
@@ -175,7 +172,7 @@ export function App() {
     const frames = await prepareRehearsal('judge-degraded-provider');
     if (frames) {
       window.location.hash = 'judge';
-      playFrames(frames, 0, snapshot?.run.speed ?? 1);
+      playFrames(frames, 0, snapshot?.run.speed ?? 0.5);
     }
   };
 

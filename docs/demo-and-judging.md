@@ -2,6 +2,8 @@
 
 ## Two-minute demonstration
 
+Playback starts at 0.5× with a three-second pause on every recorded step, including the first. A 13-frame attack replay takes about 36 seconds after API execution finishes. Provider calls run at normal speed; the interface labels the presentation as recorded execution replay. Change speed, pause, or advance manually under **Demo controls**. The final result stays visible until another action is selected.
+
 ### 0:00–0:20 — State the problem
 
 “Credentials can be stolen. HISN-OT asks whether this command has current network proof before it can affect a pump.” Point to the valid-credentials attack scenario and the recommended action.

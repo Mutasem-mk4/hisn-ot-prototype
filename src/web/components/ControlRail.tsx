@@ -62,6 +62,9 @@ export function ControlRail({
         </button>
       </div>
 
+      <p className="replay-note">
+        Recorded execution replay · 3 seconds per step at 0.5×. API calls run at normal speed.
+      </p>
       <details className="demo-controls">
         <summary>Demo controls</summary>
         <div className="demo-controls__body" role="group" aria-label="Simulation playback">

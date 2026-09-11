@@ -86,6 +86,12 @@
 .demo-controls {
   border: 0;
 }
+.replay-note {
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
 .demo-controls > summary {
   padding: 8px 0 14px;
   font: 0.8rem var(--sans);
