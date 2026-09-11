@@ -1,6 +1,6 @@
-# HISN-OT
+# HISN-Oil
 
-**A LangGraph and CAMARA safety agent for critical infrastructure**
+**Agentic Network-Enforced Safety Gate for Remote Energy Infrastructure**
 
 > No critical command becomes a physical action without network proof.
 
@@ -8,7 +8,7 @@
 [![Verify](https://img.shields.io/github/actions/workflow/status/Mutasem-mk4/hisn-ot-prototype/ci.yml?branch=main&style=for-the-badge&label=VERIFY)](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/workflows/ci.yml)
 [![Theme](https://img.shields.io/badge/MENA_IGNITE-INDUSTRIAL_AI-e7b36f?style=for-the-badge)](https://www.hackerearth.com/community/challenges/hackathon/mena-ignite-hackathon/)
 
-HISN-OT protects a connected desalination facility from valid-credential attacks. A bounded LangGraph agent selects Nokia Network as Code/CAMARA evidence tools, observes their results, and can adapt its next call. A separate deterministic policy engine decides whether the command may reach the modeled controller.
+HISN-Oil protects a remote oil pumping station from valid-credential attacks. A bounded LangGraph agent selects Nokia Network as Code/CAMARA evidence tools, observes their results, and can adapt its next call. A separate deterministic policy engine decides whether the command may reach the modeled controller.
 
 The industrial plant is a clearly labeled digital twin. Nokia responses show their real provenance, and the model never receives provider credentials or physical authority.
 
@@ -39,15 +39,16 @@ flowchart LR
   F -->|authorized containment| I[Guarded response workflow]
 ```
 
-The model chooses from five allowlisted, typed tools:
+The primary connected agent chooses from four allowlisted, typed tools:
 
-- Number Verification
 - SIM Swap
 - Device Swap
 - Location Verification
 - Device Reachability
 
 LangGraph executes the model/tool/observation loop. The application injects trusted run context, invokes the existing Nokia adapters, validates every result with Zod, enforces a five-call budget, rejects duplicate calls, and records an inspectable action trace. The graph reminds the model when required evidence is missing; if the model still stops early or becomes unavailable, the workflow fails closed without substituting a rule-based recommendation.
+
+Number Verification remains available in the separate five-API diagnostic with Nokia simulator OAuth. The judged simulator policy does not establish live subscriber possession: it requires location and reachability for 52%, adding SIM Swap and Device Swap above the observed 52% band. This narrower assurance profile must be revisited for operator deployment.
 
 The final decision remains deterministic. Model output cannot change the 60% command maximum, authorize missing evidence, detach a gateway, or activate backup control by itself.
 
@@ -62,7 +63,7 @@ The final decision remains deterministic. Model output cannot change the 60% com
 | Device Reachability   | Authenticated Nokia sandbox API             | Simulator identity                                           |
 | Number Verification   | Nokia sandbox fast OAuth in connected proof | Simulator authorization; not live subscriber consent         |
 | Quality on Demand     | Authenticated Nokia sandbox request         | Observed sessions may remain pending; no handover is claimed |
-| Slice detachment      | Guarded local implementation                | No operational slice attachment is configured                |
+| Slice detachment      | Guarded Nokia attachment adapter            | Unavailable unless the targeted attachment exists            |
 | Plant and PLC         | Stateful digital twin                       | No physical PLC or calibrated plant claim                    |
 
 The UI uses the same provenance vocabulary throughout: `LANGGRAPH AGENT`, `NOKIA SANDBOX`, `LIVE`, `FALLBACK`, `UNAVAILABLE`, and `IMPLEMENTED LOCALLY`.
@@ -105,4 +106,4 @@ npm run audit:deps
 - [Product definition](PRODUCT.md)
 - [Interface design system](DESIGN.md)
 
-HISN-OT aligns with the MENA Ignite **Industrial & Enterprise AI Automation** theme and uses desalination as its anchor MENA water-security use case. The same network proof-of-authority pattern can extend to energy, ports, oil and gas, factories, airports, and hospitals.
+HISN-Oil aligns with the MENA Ignite **Industrial & Enterprise AI Automation** theme and uses a simulated remote oil pumping station as its anchor MENA energy-infrastructure use case. The same network proof-of-authority pattern can extend to energy, ports, oil and gas, factories, airports, and hospitals.

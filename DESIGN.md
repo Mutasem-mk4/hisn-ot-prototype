@@ -2,11 +2,11 @@
 
 ## Operating scene
 
-A hackathon judge views HISN-OT on a laptop or projector in a bright presentation room. The interface must communicate the safety result in seconds, remain readable at a distance, and keep implementation evidence available without turning the first view into a control room.
+A hackathon judge views HISN-Oil on a laptop or projector in a bright presentation room. The interface must communicate the safety result in seconds, remain readable at a distance, and keep implementation evidence available without turning the first view into a control room.
 
 ## Design direction
 
-HISN-OT uses a warm light background, dark readable text, and a restrained deep-green primary action. The presentation room is bright, so broad dark panels and luminous status colors have been replaced with quiet surfaces and thin neutral dividers.
+HISN-Oil uses a warm light background, dark readable text, and a restrained deep-green primary action. The presentation room is bright, so broad dark panels and luminous status colors have been replaced with quiet surfaces and thin neutral dividers.
 
 The demonstration and result share one rounded container. Technical details use native disclosure rows. Layout overrides live in `src/web/presentation.css`; semantic color tokens remain in `src/web/styles.css`.
 

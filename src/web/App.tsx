@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { IncidentReport, RunSnapshot } from '../application/ports.js';
 import { Brand } from './components/Brand.js';
 import { StatusMark } from './components/StatusMark.js';
-import { getJudgeRun, initializeSession, rehearseJudgeRun } from './api.js';
+import { getJudgeRun, initializeSession, rehearseJudgeRun, type RehearsalResult } from './api.js';
 import { ArchitectureView } from './screens/ArchitectureView.js';
 import { EvidenceTrace } from './screens/EvidenceTrace.js';
 import { IncidentReportView } from './screens/IncidentReportView.js';
@@ -17,6 +17,8 @@ export function App() {
   const [snapshot, setSnapshot] = useState<RunSnapshot | null>(null);
   const [report, setReport] = useState<IncidentReport | null>(null);
   const [busy, setBusy] = useState(false);
+  const [recordedReplay, setRecordedReplay] = useState(false);
+  const lastCompleted = useRef<RehearsalResult | null>(null);
   const controlPending = useRef(false);
   const rehearsalFrames = useRef<RunSnapshot[]>([]);
   const rehearsalIndex = useRef(0);
@@ -72,9 +74,12 @@ export function App() {
   const prepareRehearsal = useCallback(
     async (scenarioId: string, continuingTwin?: RunSnapshot['run']['twin']) => {
       setBusy(true);
+      playbackGeneration.current += 1;
+      setRecordedReplay(false);
       setError(null);
       try {
         const result = await rehearseJudgeRun(scenarioId, continuingTwin);
+        if (result.frames.at(-1)?.run.playbackStatus === 'COMPLETE') lastCompleted.current = result;
         rehearsalFrames.current = result.frames;
         rehearsalIndex.current = 0;
         setReport(result.incident);
@@ -175,7 +180,7 @@ export function App() {
     }
   };
 
-  if (error && !snapshot) return <SystemState title="HISN-OT failed safe" detail={error} />;
+  if (error && !snapshot) return <SystemState title="HISN-Oil failed safe" detail={error} />;
   if (!snapshot)
     return (
       <SystemState
@@ -213,6 +218,28 @@ export function App() {
           <button onClick={() => setError(null)} aria-label="Dismiss error">
             ×
           </button>
+        </div>
+      )}
+      {screen === 'judge' && (
+        <div className="replay-note" role="status">
+          {recordedReplay && (
+            <b>RECORDED RUN · {snapshot.run.createdAt} · no new provider calls. </b>
+          )}
+          {lastCompleted.current && (
+            <button
+              disabled={busy}
+              onClick={() => {
+                const recorded = lastCompleted.current!;
+                setRecordedReplay(true);
+                setError(null);
+                setReport(recorded.incident);
+                rehearsalFrames.current = recorded.frames;
+                playFrames(recorded.frames, 0, snapshot.run.speed);
+              }}
+            >
+              Replay completed recorded run
+            </button>
+          )}
         </div>
       )}
       {screen === 'judge' && (

@@ -25,7 +25,7 @@ import { LangGraphEvidenceAgent } from './langgraph-evidence-agent.js';
 const CONSEQUENCES: Record<Command['kind'], string> = {
   READ_STATUS: 'Observes process state without changing the physical operating envelope.',
   SET_PRESSURE:
-    'May change membrane and pump pressure, affecting equipment integrity and water production.',
+    'May change pump discharge pressure, affecting equipment integrity and oil transfer.',
 };
 
 const TOOL_REASONS: Record<EvidenceTool, string> = {

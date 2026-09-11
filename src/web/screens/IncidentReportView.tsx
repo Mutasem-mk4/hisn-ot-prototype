@@ -1,5 +1,5 @@
 import type { IncidentReport, RunSnapshot } from '../../application/ports.js';
-import { incidentDownloadUrl } from '../api.js';
+import { useEffect, useRef } from 'react';
 import { StatusMark } from '../components/StatusMark.js';
 import { statusLabel } from '../status-label.js';
 import { ScreenIntro } from './LiveOperations.js';
@@ -11,6 +11,15 @@ export function IncidentReportView({
   snapshot: RunSnapshot;
   report: IncidentReport | null;
 }) {
+  const downloadLink = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    if (!report) return;
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }),
+    );
+    if (downloadLink.current) downloadLink.current.href = url;
+    return () => URL.revokeObjectURL(url);
+  }, [report]);
   if (!report) {
     return (
       <main className="content-screen" id="main-content">
@@ -34,16 +43,18 @@ export function IncidentReportView({
       <ScreenIntro
         kicker={`Incident ${report.correlationId.slice(-12)}`}
         title="Network-context safety incident"
-        text="A print-ready, evidence-bound record generated from the persisted event stream."
+        text="An evidence-bound record returned with this run. Download it to preserve a copy."
       />
       <div className="report-actions no-print">
         <button onClick={() => window.print()}>Print report</button>
-        <a href={incidentDownloadUrl(snapshot.run.id)}>Export JSON</a>
+        <a ref={downloadLink} href="#" download={`hisn-oil-incident-${report.correlationId}.json`}>
+          Export JSON
+        </a>
       </div>
       <article className="incident-document">
         <header className="incident-masthead">
           <div>
-            <span>HISN—OT / INCIDENT</span>
+            <span>HISN—Oil / INCIDENT</span>
             <h2>{decision.state}</h2>
           </div>
           <StatusMark status={report.runtimeMode}>{report.runtimeMode} evidence mode</StatusMark>

@@ -10,6 +10,7 @@ import { ControlRequestSchema, TwinStateSchema } from '../shared/contracts.js';
 import { HisnError } from '../shared/errors.js';
 import type { EventHub } from './event-hub.js';
 import { SessionGuard } from './session-guard.js';
+import { createRehearsalExecutor, judgeBaseline } from '../infrastructure/judge-rehearsal.js';
 import {
   connectedPreflight,
   verifyConnectedContext,
@@ -55,6 +56,7 @@ export async function registerApplication(
   eventHub: EventHub,
 ) {
   const sessions = new SessionGuard(configuration.sessionSecret, configuration.secureCookies);
+  const executeRehearsal = createRehearsalExecutor(configuration);
   await server.register(rateLimit, { global: false });
   server.addHook('onRequest', (request, _reply, done) => {
     if (configuration.mode !== 'DEMO' && request.url.startsWith('/api/')) {
@@ -148,6 +150,7 @@ export async function registerApplication(
   );
   server.get('/api/v1/judge-run', async (request) => {
     sessions.authorize(request);
+    if (configuration.nokiaSimulatorEnabled) return judgeBaseline(configuration);
     return orchestrator.ensureRun();
   });
   server.post(
@@ -178,26 +181,7 @@ export async function registerApplication(
     async (request) => {
       sessions.verifyMutation(request);
       const body = RehearsalRequestSchema.parse(request.body);
-      const frames = [
-        await orchestrator.createRun(body.scenarioId, body.idempotencyKey, body.continuingTwin),
-      ];
-      for (let step = 0; step < 16; step += 1) {
-        const current = frames.at(-1)!;
-        if (['COMPLETE', 'FAILED_SAFE'].includes(current.run.playbackStatus)) break;
-        frames.push(await orchestrator.control('NEXT'));
-      }
-      const finalFrame = frames.at(-1)!;
-      if (!['COMPLETE', 'FAILED_SAFE'].includes(finalFrame.run.playbackStatus)) {
-        throw new HisnError('INVALID_TRANSITION', 'Rehearsal exceeded its workflow bound', 500);
-      }
-      if (finalFrame.artifacts.decision?.state === 'ALLOW') {
-        frames.push(await orchestrator.control('PLAY'));
-        for (let sample = 0; sample < 12; sample += 1) {
-          frames.push(await orchestrator.simulate(250));
-        }
-        frames.push(await orchestrator.control('PAUSE'));
-      }
-      return { frames, incident: orchestrator.incident(finalFrame.run.id) };
+      return executeRehearsal(sessions.authorize(request).id, body);
     },
   );
   server.post(
@@ -218,7 +202,7 @@ export async function registerApplication(
       if (request.query && (request.query as Record<string, string>).download === '1') {
         reply.header(
           'content-disposition',
-          `attachment; filename="hisn-ot-incident-${report.correlationId}.json"`,
+          `attachment; filename="hisn-oil-incident-${report.correlationId}.json"`,
         );
       }
       return report;

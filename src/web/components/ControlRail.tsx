@@ -70,6 +70,12 @@ export function ControlRail({
       <details className="demo-controls">
         <summary>Demo controls</summary>
         <div className="demo-controls__body" role="group" aria-label="Simulation playback">
+          <button onClick={() => onCommand('judge-hard-limit')} disabled={busy}>
+            Test hard limit · 88%
+          </button>
+          <button onClick={() => onCommand('judge-degraded-provider')} disabled={busy}>
+            Test evidence outage · 58%
+          </button>
           <button
             className="control-primary"
             onClick={() => onControl(playing ? 'PAUSE' : 'PLAY')}

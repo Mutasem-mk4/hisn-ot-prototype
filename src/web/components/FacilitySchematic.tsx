@@ -36,7 +36,7 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
       <header className="facility__header">
         <div>
           <span className="eyebrow">State-bound facility view</span>
-          <h2 id="facility-heading">Desalination line A</h2>
+          <h2 id="facility-heading">Oil pumping station A</h2>
         </div>
         <div className="facility__clock" data-paused={paused}>
           <span>{paused ? 'SIMULATION PAUSED' : `${snapshot.run.speed}× SIMULATION`}</span>
@@ -48,10 +48,10 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
       <div className="facility__layout">
         <div className="facility__canvas">
           <svg viewBox="0 0 1000 560" aria-labelledby="facility-svg-title facility-svg-desc">
-            <title id="facility-svg-title">HISN-OT desalination process and command paths</title>
+            <title id="facility-svg-title">HISN-Oil oil pumping process and command paths</title>
             <desc id="facility-svg-desc">
-              Physical water moves left to right through two tanks, a pump, treatment stage and
-              valve. Digital commands move above the process through the HISN gate to primary or
+              Modeled fluid moves left to right through two tanks, a pump, pressure-control stage
+              and valve. Digital commands move above the process through the HISN gate to primary or
               backup control. The operator-facing primary edge and separately enrolled backup edge
               are independent paths.
             </desc>
@@ -340,7 +340,7 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
                 }
                 role="button"
                 tabIndex={0}
-                aria-label="Inspect reverse osmosis treatment"
+                aria-label="Inspect pressure-control stage"
                 onClick={() => select('treatment')}
                 onKeyDown={(event) => keySelect(event, 'treatment')}
               >
@@ -349,7 +349,7 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
                   <path key={index} d={`M${492 + index * 34} 350v92`} />
                 ))}
                 <text x="545" y="489" textAnchor="middle">
-                  RO TREATMENT
+                  PRESSURE CONTROL
                 </text>
                 <text className="asset-value" x="545" y="508" textAnchor="middle">
                   {twin.actualPressurePercent.toFixed(1)}% PRESSURE
@@ -391,7 +391,7 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
                 }
                 role="button"
                 tabIndex={0}
-                aria-label="Inspect product water tank"
+                aria-label="Inspect downstream storage tank"
                 onClick={() => select('output')}
                 onKeyDown={(event) => keySelect(event, 'output')}
               >
@@ -414,8 +414,8 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
 
               <g className="intake-source">
                 <path d="M20 348c14-10 28 10 42 0s28 10 42 0" />
-                <text x="34" y="328">
-                  SEAWATER
+                <text x="62" y="328" textAnchor="middle">
+                  UPSTREAM INLET
                 </text>
               </g>
               <text className="flow-readout" x="490" y="301">
@@ -428,7 +428,7 @@ export function FacilitySchematic({ snapshot }: { snapshot: RunSnapshot }) {
           </svg>
           <div className="facility__legend" aria-label="Schematic legend">
             <span>
-              <i className="legend-water" /> Physical water
+              <i className="legend-water" /> Modeled oil flow
             </span>
             <span>
               <i className="legend-digital" /> Digital command
@@ -520,8 +520,8 @@ function componentDetail(key: ComponentKey, snapshot: RunSnapshot) {
     { name: string; summary: string; metrics: [string, string][] }
   > = {
     intake: {
-      name: 'Intake tank',
-      summary: 'Raw seawater buffer feeding the high-pressure process.',
+      name: 'Inlet buffer tank',
+      summary: 'Upstream buffer feeding the modeled pumping stage.',
       metrics: [
         ['Level', `${twin.inletTankLevelPercent.toFixed(1)}%`],
         ['Telemetry', twin.telemetryStatus],
@@ -537,8 +537,8 @@ function componentDetail(key: ComponentKey, snapshot: RunSnapshot) {
       ],
     },
     treatment: {
-      name: 'Reverse-osmosis treatment',
-      summary: 'Modeled membrane stage; pressure and flow respond progressively.',
+      name: 'Pressure-control stage',
+      summary: 'Modeled pressure-control stage; pressure and flow respond progressively.',
       metrics: [
         ['Pressure', `${twin.actualPressurePercent.toFixed(1)}%`],
         ['Flow', `${twin.flowRateM3PerHour.toFixed(0)} m³/h`],
@@ -554,8 +554,8 @@ function componentDetail(key: ComponentKey, snapshot: RunSnapshot) {
       ],
     },
     output: {
-      name: 'Product-water tank',
-      summary: 'Treated-water inventory changes with modeled production flow.',
+      name: 'Downstream storage',
+      summary: 'Downstream inventory changes with modeled oil transfer.',
       metrics: [
         ['Level', `${twin.outputTankLevelPercent.toFixed(1)}%`],
         ['Flow in', `${twin.flowRateM3PerHour.toFixed(0)} m³/h`],

@@ -2,7 +2,7 @@
 
 ## Authority model
 
-HISN-OT separates three responsibilities:
+HISN-Oil separates three responsibilities:
 
 1. The LangGraph agent selects and interprets network evidence.
 2. Nokia Network as Code adapters execute typed CAMARA requests with server-held credentials.
@@ -17,7 +17,7 @@ flowchart TD
   TOOLS --> NAC[Nokia Network as Code]
   NAC --> GRAPH
   GRAPH --> POLICY[Deterministic policy engine]
-  POLICY --> TWIN[Desalination digital twin]
+  POLICY --> TWIN[Oil pumping station digital twin]
   POLICY --> RESPONSE[Guarded containment and continuity]
   ORCH --> AUDIT[(SQLite hash-linked audit)]
 ```
@@ -77,4 +77,6 @@ The command is held before reasoning or network calls. Every transition is persi
 
 ## Deployment boundary
 
-The deployed application is a single-process prototype. Local SQLite persistence does not provide durable, isolated multi-user state on Vercel. Production use would require durable tenant-scoped storage, enterprise identity, certified OT integration, operator-approved network actions, reconciliation workers, and formal safety/security validation.
+Each primary rehearsal owns an isolated in-memory audit store and returns its frames and incident together. The browser exports that exact report without relying on a later request reaching the same Vercel instance. Duplicate requests are bounded within a warm process; this is not durable, distributed idempotency. Legacy control endpoints retain their process-local state and are not the primary judged path.
+
+Production use would require durable tenant-scoped storage, enterprise identity, certified OT integration, operator-approved network actions, reconciliation workers, and formal safety/security validation. No physical PLC is actuated by this application.

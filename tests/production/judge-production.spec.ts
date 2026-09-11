@@ -35,7 +35,7 @@ test('production deployment serves the application and completes the attack proo
   await expect(
     page.getByRole('heading', { name: /Stop dangerous industrial commands/i }),
   ).toBeVisible();
-  await expect(page.getByText('desalination-safety-2026.6')).toBeVisible();
+  await expect(page.getByText('oil-pressure-safety-2026.6')).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -75,7 +75,7 @@ test('production deployment serves the application and completes the attack proo
   await page.getByRole('link', { name: 'Evidence Trace', exact: true }).click();
   const evidenceTable = page.getByRole('table', { name: 'Pre-decision telecom evidence calls' });
   await expect(evidenceTable).toBeVisible();
-  await expect(evidenceTable.locator('tbody tr')).toHaveCount(5);
+  await expect(evidenceTable.locator('tbody tr')).toHaveCount(4);
   await expect(
     page.getByRole('heading', { name: 'Goal → tool → observation → adaptation' }),
   ).toBeVisible();

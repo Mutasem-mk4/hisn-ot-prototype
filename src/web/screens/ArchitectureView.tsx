@@ -17,11 +17,11 @@ export function ArchitectureView({
         title="Small system. Hard boundaries."
         text="A modular monolith separates presentation, orchestration, deterministic domain rules, and swappable infrastructure adapters."
       />
-      <section className="architecture-map" aria-label="HISN-OT clean architecture">
+      <section className="architecture-map" aria-label="HISN-Oil clean architecture">
         <div className="arch-layer arch-presentation">
           <span>01</span>
           <b>Presentation</b>
-          <small>React · SSE · print report</small>
+          <small>React · isolated rehearsal · report export</small>
         </div>
         <div className="arch-gate">Validated API boundary</div>
         <div className="arch-layer arch-application">

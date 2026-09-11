@@ -15,6 +15,7 @@ import {
 export class UnavailableEvidenceProvider implements EvidenceProvider {
   readonly mode = 'SANDBOX' as const;
   readonly source = 'UNAVAILABLE' as const;
+  constructor(private readonly reason = 'Provider credentials are not configured') {}
 
   async collect(tool: EvidenceTool, context: EvidenceContext) {
     return Promise.resolve(
@@ -23,7 +24,7 @@ export class UnavailableEvidenceProvider implements EvidenceProvider {
         tool,
         purpose: evidencePurpose(tool),
         requestStatus: 'UNAVAILABLE',
-        redactedResult: { reason: 'Provider credentials are not configured' },
+        redactedResult: { reason: this.reason, externalRequestMade: false },
         provenance: 'UNAVAILABLE',
         latencyMs: 0,
         timestamp: new Date().toISOString(),

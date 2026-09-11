@@ -266,7 +266,7 @@ export class LangGraphEvidenceAgent {
 function systemPrompt(request: AgentPlanRequest, initialPlan: AgentPlan): string {
   const required = minimumEvidenceForCommand(request.command, request.policy);
   return [
-    'You are the bounded HISN-OT network-evidence agent running inside LangGraph.',
+    'You are the bounded HISN-Oil network-evidence agent running inside LangGraph.',
     'Choose and call Nokia CAMARA tools as trusted real-time data sources for the supplied command.',
     'Batch independent required signals when useful, inspect their observations, and then decide whether another tool is justified.',
     `The server-enforced authorization floor requires these signals: ${required.join(', ')}.`,

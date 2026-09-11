@@ -10,6 +10,32 @@ import { completeRun, createHarness } from '../helpers/harness.js';
 import { testPolicy, testScenario } from '../helpers/fixtures.js';
 
 describe('adversarial workflow outcomes', () => {
+  it.each([{ cleanup: 'RELEASED' }, { cleanup: 'FAILED' }, { identitiesDistinct: false }])(
+    'withholds backup ownership when successful QoD has invalid continuity proof: %j',
+    async (redactedResult) => {
+      const simulation = new SimulatedEnforcementProvider();
+      const harness = createHarness(undefined, {
+        enforcement: {
+          mode: 'DEMO',
+          health: () => simulation.health(),
+          detachGateway: (context, signal) => simulation.detachGateway(context, signal),
+          async protectBackup(context, signal) {
+            return { ...(await simulation.protectBackup(context, signal)), redactedResult };
+          },
+        },
+      });
+      try {
+        const result = await completeRun(harness.orchestrator, harness.scenarioId);
+        expect(result.run.twin.activeController).toBe('PRIMARY');
+        expect(result.run.twin.pumpState).toBe('STOPPED');
+        expect(result.run.twin.acceptedPressurePercent).toBe(46);
+        expect(result.run.twin.commandHistory[0]?.outcome).toBe('BLOCKED');
+      } finally {
+        harness.close();
+      }
+    },
+  );
+
   it('bounds a hanging evidence adapter and records uncertainty without containment', async () => {
     vi.useFakeTimers();
     const harness = createHarness(undefined, {

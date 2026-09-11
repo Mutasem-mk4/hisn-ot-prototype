@@ -6,6 +6,7 @@ import { JudgeProofFlow } from '../components/JudgeProofFlow.js';
 import { ProcessTwin } from '../components/ProcessTwin.js';
 import { StatusMark } from '../components/StatusMark.js';
 import { ConnectedProof } from '../components/ConnectedProof.js';
+import { RunProof } from '../components/RunProof.js';
 
 type ControlAction = 'PLAY' | 'PAUSE' | 'NEXT' | 'PREVIOUS' | 'RESET' | 'SET_SPEED';
 
@@ -36,7 +37,7 @@ export function JudgeMode({
     <main className="judge-screen" id="main-content">
       <section className="judge-intro">
         <div>
-          <span className="eyebrow">HISN-OT / Industrial safety</span>
+          <span className="eyebrow">HISN-Oil / Remote oil pumping station</span>
           <h1>Stop dangerous industrial commands before they reach the plant.</h1>
           <p>{agentIntroduction(displayedAgentStatus)}</p>
         </div>
@@ -81,6 +82,7 @@ export function JudgeMode({
         </div>
         <OutcomeFacts snapshot={snapshot} />
       </section>
+      <RunProof snapshot={snapshot} />
       <details className="investigation-details">
         <summary>
           <span>How was this decision made?</span>
@@ -105,7 +107,7 @@ export function JudgeMode({
           />
           <section className="proof-compact" aria-labelledby="adaptive-heading">
             <span className="eyebrow">Evidence scales with consequence</span>
-            <h2 id="adaptive-heading">One check for observation. Five for physical control.</h2>
+            <h2 id="adaptive-heading">One check for observation. Four for elevated control.</h2>
             <div className="plan-compare">
               <div>
                 <span>Read-only inspection</span>
@@ -287,7 +289,7 @@ function agentIntroduction(reasoner: RunSnapshot['integration']['agentReasoner']
   if (reasoner === 'DETERMINISTIC') {
     return 'Valid credentials can hide a compromised device. This reproducible local replay uses the same bounded evidence policy without claiming a live AI run.';
   }
-  return 'Valid credentials can hide a compromised device. With AI unavailable, HISN-OT keeps the command held and grants no physical authority.';
+  return 'Valid credentials can hide a compromised device. With AI unavailable, HISN-Oil keeps the command held and grants no physical authority.';
 }
 
 function networkProofCopy(source: RunSnapshot['integration']['evidenceSource']) {

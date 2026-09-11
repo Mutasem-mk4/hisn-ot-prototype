@@ -10,7 +10,7 @@ The primary user is a MENA Ignite hackathon judge evaluating the product for the
 
 ## Product Purpose
 
-HISN-OT prevents valid-credential attacks from becoming unsafe industrial actions. It holds a command, lets a bounded LangGraph agent select trusted Nokia/CAMARA network evidence, and gives final authority to a deterministic safety policy. Success means a first-time viewer can see that an unsafe request was blocked, the accepted plant state did not change, and every external or simulated result is labeled accurately.
+HISN-Oil prevents valid-credential attacks from becoming unsafe industrial actions. It holds a command, lets a bounded LangGraph agent select trusted Nokia/CAMARA network evidence, and gives final authority to a deterministic safety policy. Success means a first-time viewer can see that an unsafe request was blocked, the accepted plant state did not change, and every external or simulated result is labeled accurately.
 
 ## Brand Personality
 

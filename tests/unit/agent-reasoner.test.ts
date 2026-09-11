@@ -40,7 +40,15 @@ describe('bounded evidence planning', () => {
       signal,
     );
     expect(low.selectedTools).toEqual(['DEVICE_REACHABILITY']);
-    expect(critical.selectedTools).toHaveLength(5);
+    expect(critical.selectedTools).toEqual(
+      expect.arrayContaining([
+        'SIM_SWAP',
+        'DEVICE_SWAP',
+        'LOCATION_VERIFICATION',
+        'DEVICE_REACHABILITY',
+      ]),
+    );
+    expect(critical.selectedTools).not.toContain('NUMBER_VERIFICATION');
     expect(critical.selectedTools.length).toBeGreaterThan(low.selectedTools.length);
   });
 

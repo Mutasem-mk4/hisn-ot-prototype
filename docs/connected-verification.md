@@ -1,6 +1,6 @@
 # Connected verification
 
-The deployed hybrid demonstration can replace failed Nokia requests with labeled local fixtures. It is not strict connected verification. `HISN_MODE=SANDBOX` selects direct Nokia sandbox providers without those fallbacks; `LIVE` selects operator providers. Connected modes use a hosted agent or fail closed when no model is configured.
+The primary judged rehearsal now uses direct sandbox evidence and hosted LangGraph whenever Nokia is enabled. Legacy control endpoints retain the older hybrid providers and are not the primary connected proof. `HISN_MODE=SANDBOX` selects direct Nokia sandbox providers without those fallbacks; `LIVE` selects operator providers. Connected modes use a hosted agent or fail closed when no model is configured.
 
 Authorization checks evidence provenance both when issuing a decision and before executing an allowed command. Sandbox verification rejects simulated and cached evidence. Live verification also rejects sandbox evidence. Strict sandbox verification obtains a one-time Nokia fast-flow authorization code before calling Number Verification. This proves the simulator OAuth and CAMARA request path; it does not represent consent from a live subscriber.
 
@@ -47,7 +47,7 @@ The primary Judge Mode flow and this diagnostic have separate reasoner selection
 - The official simulator fixtures do not contain one identity that both passes Number Verification and returns reassuring SIM, device, and location evidence. A connected `ALLOW` is therefore not claimed; producing one requires live subscriber onboarding. The policy is not weakened and evidence from different identities is never combined.
 - Provider-specific quota diagnosis is implemented. Baseline measurements and repeated successful public Groq rehearsals remain pending.
 
-## Current public provider evidence — 2026-09-11
+## Previous release public provider evidence — 2026-09-11
 
 Production deployment `dpl_9wHL6MLjj18RnxtLhyF4dMTHDmHJ`, built from commit `2367254`, passed the independent [Hosted DEMO smoke](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34614581435). Both comparison contexts returned exactly five successful `SANDBOX` observations with no simulated or cached evidence. Number Verification completed through `SIMULATOR_FAST_OAUTH`: Context A returned not verified and Context B returned verified. The comparison correlation IDs were `70e329f3-ac7d-4ee9-b261-b218aae590cb` and `3d94745c-1df1-47e2-8f75-97e1e2a86fd8`.
 

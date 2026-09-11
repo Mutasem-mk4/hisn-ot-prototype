@@ -6,7 +6,7 @@ Playback starts at 0.5× with a three-second pause on every recorded step, inclu
 
 ### 0:00–0:20 — State the problem
 
-“Credentials can be stolen. HISN-OT asks whether this command has current network proof before it can affect a pump.” Point to the valid-credentials attack scenario and the recommended action.
+“Credentials can be stolen. HISN-Oil asks whether this command has current network proof before it can affect a pump.” Point to the valid-credentials attack scenario and the recommended action.
 
 ### 0:20–0:55 — Run the attack demonstration
 
@@ -34,7 +34,7 @@ Point to the provenance strip and explain whether the current run uses Nokia san
 
 ### Is the agent real?
 
-Yes. The hosted path uses LangGraph and Groq. The model issues typed tool calls, the trusted executor invokes Nokia adapters, observations return to the graph, and the model may choose another tool. If the hosted agent fails, HISN-OT records `AGENT_UNAVAILABLE` and keeps the command held; it does not substitute a rule-based AI recommendation.
+Yes. The hosted path uses LangGraph and Groq. The model issues typed tool calls, the trusted executor invokes Nokia adapters, observations return to the graph, and the model may choose another tool. If the hosted agent fails, HISN-Oil records `AGENT_UNAVAILABLE` and keeps the command held; it does not substitute a rule-based AI recommendation.
 
 ### Does the AI decide whether the pump runs?
 
@@ -42,11 +42,11 @@ No. It selects evidence and recommends a response. The deterministic policy engi
 
 ### Are Nokia calls real?
 
-SIM Swap, Device Swap, Location Verification, Device Reachability, and QoD use authenticated Nokia sandbox calls in the configured public deployment. The strict connected diagnostic also obtains a Nokia simulator fast-flow authorization code before calling Number Verification. This proves the sandbox OAuth path, not consent from a live subscriber. Slice detachment retains a visible local fallback because no operational attachment is configured.
+SIM Swap, Device Swap, Location Verification, Device Reachability, and QoD use authenticated Nokia sandbox calls in the configured public deployment. The strict connected diagnostic also obtains a Nokia simulator fast-flow authorization code before calling Number Verification. This proves the sandbox OAuth path, not consent from a live subscriber. The primary connected rehearsal reports slice detachment UNAVAILABLE unless the implicated gateway attachment actually exists. It never substitutes successful local detachment.
 
 ### Why not call every API every time?
 
-The evidence floor scales with consequence: one signal for read-only access, three for an in-band physical change, and five for a command above the observed safe band. The model can add proportionate allowlisted evidence and adapts after observations.
+The evidence floor scales with consequence: one signal for read-only access, two for an in-band physical change, and four for a command above the observed safe band. The model can add proportionate allowlisted evidence and adapts after observations.
 
 ### Why is the plant simulated?
 
@@ -64,5 +64,5 @@ The product creates one evidence trail connecting operator context, mobile-netwo
 
 - If Groq is unavailable, show `AGENT_UNAVAILABLE` and explain that the held command fails closed without a substitute recommendation.
 - If Nokia is unavailable, show the `BLOCK` result and fail-closed behavior.
-- If QoD stays pending, explain that HISN-OT correctly withholds backup ownership.
+- If QoD stays pending, explain that HISN-Oil correctly withholds backup ownership.
 - If a prior run ended in containment, choose any scenario to start a fresh labeled demo baseline.

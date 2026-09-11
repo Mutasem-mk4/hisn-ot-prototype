@@ -1,4 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
+import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 import { startScenario } from '../../scripts/browser-scenario.mjs';
 
@@ -218,6 +219,18 @@ test('completes the backend workflow, exposes trace, and exports the incident', 
   await expectNoSeriousViolations(page);
   await page.getByRole('link', { name: 'Incident' }).click();
   await expect(page.getByRole('link', { name: 'Export JSON' })).toBeVisible();
+  const downloaded = page.waitForEvent('download');
+  await page.getByRole('link', { name: 'Export JSON' }).click();
+  const download = await downloaded;
+  const report = JSON.parse(await readFile(await download.path(), 'utf8'));
+  expect(report.authoritativeDecision.state).toBe('BLOCK_AND_CONTAIN');
+  expect(download.suggestedFilename()).toContain(report.correlationId);
+  expect(report.identityAndNetworkEvidence.length).toBeGreaterThanOrEqual(4);
+  expect(
+    report.identityAndNetworkEvidence.every(
+      (call: { correlationId: string }) => call.correlationId === report.correlationId,
+    ),
+  ).toBe(true);
   await expectNoSeriousViolations(page);
   await page.screenshot({ path: testInfo.outputPath('incident.png'), fullPage: true });
 });

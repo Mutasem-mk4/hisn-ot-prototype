@@ -1,4 +1,4 @@
-name: Hosted DEMO smoke
+name: Hosted connected rehearsal
 on:
   workflow_dispatch:
 permissions:
@@ -57,26 +57,27 @@ jobs:
           };
           assert.equal(simSwap(comparison.executions[0]), false);
           assert.equal(simSwap(comparison.executions[1]), true);
-          async function control(action) {
-            const response = await fetch(`${base}/api/v1/judge-run/control`, {method: 'POST', headers, body: JSON.stringify({action})});
-            assert.equal(response.status, 200);
-            return response.json();
-          }
-          let snapshot = await control('RESET');
-          for (let step = 0; step < 20 && snapshot.run.playbackStatus !== 'COMPLETE'; step++) {
-            snapshot = await control('NEXT');
-            assert.notEqual(snapshot.run.playbackStatus, 'FAILED_SAFE');
-          }
+          const response = await fetch(`${base}/api/v1/judge-run/rehearsal`, {
+            method: 'POST', headers,
+            body: JSON.stringify({scenarioId: 'judge-valid-credentials-compromised-context', idempotencyKey: crypto.randomUUID()}),
+          });
+          assert.equal(response.status, 200);
+          const result = await response.json();
+          const snapshot = result.frames.at(-1);
           assert.equal(snapshot.run.playbackStatus, 'COMPLETE');
-          assert.equal(snapshot.artifacts.decision.state, 'BLOCK_AND_CONTAIN');
+          assert.equal(snapshot.run.runtimeMode, 'SANDBOX');
+          assert.equal(snapshot.artifacts.recommendation.reasoningProvenance, 'LIVE');
+          assert.ok(['BLOCK', 'BLOCK_AND_CONTAIN'].includes(snapshot.artifacts.decision.state));
+          assert.equal(snapshot.run.twin.acceptedPressurePercent, 46);
+          assert.equal(snapshot.run.command.requestedSetpointPercent, 58);
+          assert.equal(snapshot.artifacts.evidence.length, 4);
+          assert.ok(snapshot.artifacts.evidence.every(call => call.provenance === 'SANDBOX' && call.requestStatus === 'SUCCEEDED'));
           assert.equal(snapshot.incidentAvailable, true);
-          const report = await fetch(`${base}/api/v1/judge-run/${snapshot.run.id}/incident`, {headers});
-          assert.equal(report.status, 200);
+          assert.equal(result.incident.correlationId, snapshot.run.correlationId);
           console.log(JSON.stringify({
             runId: snapshot.run.id,
             decision: snapshot.artifacts.decision.state,
             report: 'exported',
             connectedCorrelationIds: comparison.executions.map(execution => execution.correlationId),
           }));
-          await control('RESET');
           JS

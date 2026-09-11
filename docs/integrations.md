@@ -10,7 +10,7 @@
 | Location Verification   | Nokia Location Verification  | Require presence inside the facility boundary | Nokia sandbox                                      |
 | Device Reachability     | Nokia Device Status          | Confirm current mobile-data reachability      | Nokia sandbox                                      |
 | Quality on Demand       | Nokia QoD                    | Protect a separately addressed backup flow    | Nokia sandbox; pending remains pending             |
-| Slice Device Attachment | Nokia slice attachment       | Remove a configured device attachment         | Implemented locally until a real attachment exists |
+| Slice Device Attachment | Nokia slice attachment       | Remove a configured device attachment         | UNAVAILABLE until the targeted attachment exists   |
 
 A successful HTTP response is transport evidence, not proof of trust. The policy evaluates returned fields such as `swapped`, `verificationResult`, `reachable`, freshness, duplicates, and correlation binding.
 
@@ -20,11 +20,11 @@ Evidence tools are read-only and may run before the authoritative decision. QoD 
 
 ## Runtime modes
 
-| Mode      | Behavior                                                                                                                                |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `DEMO`    | Deterministic fixtures by default; with Nokia simulator enabled, attempts Nokia first and visibly falls back per unsupported capability |
-| `SANDBOX` | Configured Nokia adapters without fixture fallback; interactive control remains restricted                                              |
-| `LIVE`    | Requires complete Nokia configuration; does not imply certified physical control                                                        |
+| Mode      | Behavior                                                                                                              |
+| --------- | --------------------------------------------------------------------------------------------------------------------- |
+| `DEMO`    | Local fixtures without Nokia configuration; the primary rehearsal uses strict sandbox providers when Nokia is enabled |
+| `SANDBOX` | Configured Nokia adapters without fixture fallback; interactive control remains restricted                            |
+| `LIVE`    | Requires complete Nokia configuration; does not imply certified physical control                                      |
 
 Run `npm run doctor` to see the active configuration without printing secrets. Local `.env.local` is loaded automatically. Vercel uses project environment variables.
 
@@ -33,7 +33,8 @@ Agent selection:
 - `HISN_AGENT_PROVIDER=AUTO` uses Groq when all model credentials are present and otherwise labels a local deterministic replay.
 - `HISN_AGENT_PROVIDER=GROQ` requires Groq in local operation and fails closed if it is unavailable.
 - `HISN_AGENT_PROVIDER=DETERMINISTIC` remains available for a quota-independent, explicitly labeled replay.
-- The connected verification action uses Groq explicitly when all three credentials below are present.
+- The judged rehearsal forces Groq and direct sandbox evidence when Nokia is enabled. No evidence or AI fallback is permitted in that path.
+- The separate connected diagnostic includes Number Verification simulator OAuth; it stops before enforcement.
 
 Groq credentials:
 

@@ -28,7 +28,7 @@ The automated suite covers:
 A release is complete only after checking the canonical public URL:
 
 1. `/`, `/healthz`, and `/readyz` return successful responses.
-2. Judge Mode reports policy `desalination-safety-2026.6`.
+2. Judge Mode reports policy `oil-pressure-safety-2026.6`.
 3. Read-only inspection shows LangGraph, its Device Reachability minimum, and live model tool requests.
 4. Safe 52% reaches `ALLOW` and accepted pressure becomes 52%.
 5. The within-limit 58% attack reaches the authoritative blocked/containment result without changing accepted pressure, proving that network context is decisive.

@@ -302,6 +302,14 @@ export class NokiaEnforcementProvider implements EnforcementProvider {
 
   async protectBackup(context: EnforcementContext, signal: AbortSignal) {
     return this.execute(context, 'QUALITY_ON_DEMAND', signal, async () => {
+      const primaryPhone =
+        context.scenario.telecomDevice?.phoneNumber ?? this.credentials.operatorPhone;
+      if (primaryPhone === this.credentials.backupPhone) {
+        return {
+          status: 'UNAVAILABLE' as const,
+          result: { reason: 'Backup identity must differ from the implicated primary identity' },
+        };
+      }
       const response = await this.client.qod.createSessionV1(
         {
           device: { phoneNumber: this.credentials.backupPhone },
@@ -340,6 +348,10 @@ export class NokiaEnforcementProvider implements EnforcementProvider {
               : ('UNAVAILABLE' as const),
         result: {
           qosStatus: current.qosStatus,
+          target: 'trusted-backup-cellular-flow',
+          primaryIdentity: `primary:***${primaryPhone.slice(-4)}`,
+          backupIdentity: `backup:***${this.credentials.backupPhone.slice(-4)}`,
+          identitiesDistinct: true,
           lifecycle,
           session: 'qod-session:redacted',
           duration: response.duration,
@@ -405,7 +417,18 @@ export class NokiaEnforcementProvider implements EnforcementProvider {
       action,
       status,
       provenance: status === 'SUCCEEDED' || status === 'PENDING' ? this.mode : 'UNAVAILABLE',
-      redactedResult,
+      redactedResult: {
+        ...redactedResult,
+        target:
+          action === 'DETACH_GATEWAY'
+            ? 'suspicious-primary-cellular-gateway-attachment'
+            : 'trusted-backup-cellular-flow',
+        primaryIdentity: `primary:***${(context.scenario.telecomDevice?.phoneNumber ?? this.credentials.operatorPhone).slice(-4)}`,
+        backupIdentity: `backup:***${this.credentials.backupPhone.slice(-4)}`,
+        identitiesDistinct:
+          (context.scenario.telecomDevice?.phoneNumber ?? this.credentials.operatorPhone) !==
+          this.credentials.backupPhone,
+      },
       latencyMs: Math.round(performance.now() - startedAt),
       timestamp: new Date().toISOString(),
       correlationId: context.correlationId,

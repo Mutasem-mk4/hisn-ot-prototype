@@ -168,7 +168,7 @@ export class JudgeOrchestrator {
 
   async simulate(elapsedMs: number) {
     const run = this.requireCurrentRun();
-    if (this.evidenceProvider.mode !== 'DEMO' || run.twin.simulationPaused) {
+    if (this.evidenceProvider.mode === 'LIVE' || run.twin.simulationPaused) {
       return this.snapshot(run);
     }
     const twin = advanceSimulation(run.twin, Math.max(0, elapsedMs) * run.speed);
@@ -542,7 +542,11 @@ export class JudgeOrchestrator {
       ),
     );
     const safeControl = this.store.saveEnforcement(safeControlCall(run), run.id);
-    const handoverSucceeded = qod.status === 'SUCCEEDED' && safeControl.status === 'SUCCEEDED';
+    const handoverSucceeded =
+      qod.status === 'SUCCEEDED' &&
+      safeControl.status === 'SUCCEEDED' &&
+      qod.redactedResult.cleanup === undefined &&
+      qod.redactedResult.identitiesDistinct !== false;
     const qodStatus =
       typeof qod.redactedResult.qosStatus === 'string' ? qod.redactedResult.qosStatus : qod.status;
     const twin = handoverSucceeded

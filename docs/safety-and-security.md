@@ -2,7 +2,7 @@
 
 ## Safety claim
 
-For configured commands, HISN-OT prevents an unverified or physically unsafe request from changing accepted control state.
+For configured commands, HISN-Oil prevents an unverified or physically unsafe request from changing accepted control state.
 
 The claim applies to the software prototype and digital twin. It is not a certification of a real plant, PLC, operator network, or safety instrumented system.
 

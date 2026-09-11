@@ -13,7 +13,7 @@ export function ProcessTwin({
   return (
     <section className="process-instrument" aria-labelledby="process-heading">
       <div className="section-kicker">
-        <span>Process A · RO membrane feed</span>
+        <span>Station A · Pump discharge · illustrative model</span>
         <StatusMark status={twin.pumpState === 'STOPPED' ? 'FAILED' : 'AVAILABLE'}>
           {twin.pumpState.replaceAll('_', ' ')}
         </StatusMark>
