@@ -46,6 +46,12 @@ The primary Judge Mode flow and this diagnostic have separate reasoner selection
 - The Nokia simulator fast OAuth and Number Verification request were verified locally against the external sandbox on 2026-09-11. Public deployment verification is recorded separately below after release.
 - Provider-specific quota diagnosis is implemented. Baseline measurements and repeated successful public Groq rehearsals remain pending.
 
+## Current public provider evidence — 2026-09-11
+
+Production deployment `dpl_9wHL6MLjj18RnxtLhyF4dMTHDmHJ`, built from commit `2367254`, passed the independent [Hosted DEMO smoke](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34614581435). Both comparison contexts returned exactly five successful `SANDBOX` observations with no simulated or cached evidence. Number Verification completed through `SIMULATOR_FAST_OAUTH`: Context A returned not verified and Context B returned verified. The comparison correlation IDs were `70e329f3-ac7d-4ee9-b261-b218aae590cb` and `3d94745c-1df1-47e2-8f75-97e1e2a86fd8`.
+
+The same smoke run completed the attack rehearsal with `BLOCK_AND_CONTAIN` and exported its incident report. A separate [production browser smoke](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34614636485) then passed the public attack, read-only, safe-command, evidence, incident, layout, and browser-console checks.
+
 ## Earlier public provider evidence — 2026-09-11
 
 The hosted fixed provider probes at 03:02 UTC used the same 52% command and different configured Nokia sandbox devices. Four external calls succeeded in each context, with no simulated substitutes:
