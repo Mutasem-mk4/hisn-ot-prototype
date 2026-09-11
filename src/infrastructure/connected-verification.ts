@@ -123,3 +123,15 @@ export async function verifyConnectedContext(
     store.close();
   }
 }
+
+export async function verifyConnectedEvidenceComparison(configuration: AppConfiguration) {
+  const first = await verifyConnectedContext(configuration, { context: 'A', stage: 'evidence' });
+  const second = await verifyConnectedContext(configuration, { context: 'B', stage: 'evidence' });
+  const executions = [first, second] as const;
+  return {
+    ...connectedPreflight(configuration),
+    stage: 'evidence-comparison' as const,
+    command: executions[0].command,
+    executions,
+  };
+}

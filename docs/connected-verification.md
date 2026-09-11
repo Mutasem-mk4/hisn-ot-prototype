@@ -28,7 +28,7 @@ Vercel sensitive environment variables may export as `[SENSITIVE]`. The command 
 
 ### Hosted diagnostic
 
-The DEMO server exposes `/api/v1/connected-verification` behind its session guard. GET reports provider configuration availability without secrets. POST requires the session CSRF token and a body with `context` (`A` or `B`) and `stage` (`evidence` or `investigation`). The route allows two requests per minute per rate-limit key; this limit is process-local on serverless deployments.
+The DEMO server exposes `/api/v1/connected-verification` behind its session guard. GET reports provider configuration availability without secrets. POST requires the session CSRF token and a body with `context` (`A`, `B`, or `BOTH`) and `stage` (`evidence` or `investigation`). `BOTH` is valid only for the evidence stage and runs the two contexts sequentially to limit request bursts. The route allows two requests per minute per rate-limit key; this limit is process-local on serverless deployments.
 
 The `evidence` stage calls the five configured allowlisted Nokia evidence tools directly, using the same 52% command and alternative sandbox devices. It labels collection as `FIXED_PROVIDER_PROBE`, makes no Groq request, and reports each provider response without local substitutes. Missing subscriber authorization reports `SUBSCRIBER_AUTHORIZATION_REQUIRED` and `externalRequestMade: false` for Number Verification. SDK timeouts and retry limits apply to each Nokia call.
 
@@ -41,5 +41,26 @@ The CLI and hosted investigation share the same implementation. Hosted execution
 - Structured Groq planning/recommendation requests stop retrying immediately on HTTP 429. LangGraph SDK retry behavior is unchanged.
 - Rate-limit failures retain a sanitized quota category when the provider message identifies tokens or requests per day or minute; otherwise the category is UNKNOWN. Provider response bodies are not exposed in the failure record.
 - The initial plan still follows the policy evidence floor. Groq's advisory recommendation can now select any defined decision state instead of being restricted to a precomputed verdict. The authoritative policy engine independently decides authorization and containment, including when it disagrees with the model. Observation-driven tool selection already exists, but its benefit over fixed baselines has not been measured.
-- A successful connected contrast is not yet verified. The local rehearsal was stopped by unavailable exported Groq and Nokia secrets; the hosted diagnostic provides a path to verify providers without exporting secrets.
-- The comparison UI, provider-specific quota diagnosis, baseline measurements, and repeated successful public connected rehearsals remain pending.
+- A successful Nokia sandbox observation contrast is verified below. A complete authorization contrast remains blocked by subscriber OAuth for Number Verification.
+- Provider-specific quota diagnosis is implemented. Baseline measurements and repeated successful public Groq rehearsals remain pending.
+
+## Public provider evidence — 2026-09-11
+
+The hosted fixed provider probes at 03:02 UTC used the same 52% command and different configured Nokia sandbox devices. Four external calls succeeded in each context, with no simulated substitutes:
+
+| Observation           | Context A            | Context B           |
+| --------------------- | -------------------- | ------------------- |
+| SIM Swap              | swapped=false        | swapped=true        |
+| Device Swap           | swapped=false        | swapped=true        |
+| Location Verification | TRUE                 | FALSE               |
+| Reachability          | reachable=true, DATA | reachable=true, SMS |
+
+Context A correlation ID: `1bae364f-c651-4eb5-8343-049699999bb6`. Context B correlation ID: `e423c9d5-58e2-4a1b-823f-316028c54069`. Deployment implementation: `be37e79`.
+
+Number Verification was UNAVAILABLE in both contexts with `SUBSCRIBER_AUTHORIZATION_REQUIRED`; no external Number Verification request was made. These probes prove contrasting sandbox observations, not completed authorization or AI adaptation. Collection was explicitly labeled FIXED_PROVIDER_PROBE, and no enforcement executed.
+
+A connected Context A investigation also completed through Groq in 2.676 seconds with correlation ID `hisn-4d09e0e6-609a-4e30-b2cd-203c45cfc19a`. Groq requested Nokia Number Verification, Location Verification, and Device Reachability. Number Verification was unavailable, while the latter two returned sandbox responses. Groq advised BLOCK, the independent policy engine issued BLOCK, accepted pressure remained 46%, and no enforcement executed.
+
+A subsequent Context B investigation, correlation ID `hisn-aaffb177-17d9-4667-a0ba-063fa6627669`, failed closed when Groq returned HTTP 429 with quota category `TOKENS_PER_DAY`. It collected no evidence and left accepted pressure at 46%. This records a real provider attempt and a precise quota blocker, not a successful investigation.
+
+Judge Mode exposes this check under the collapsed **Verify real API calls** section. The comparison runs both configured contexts for the same command, labels each result by provenance, and displays the complete correlation IDs. The adjacent Groq action runs one connected LangGraph investigation; it remains separate because it consumes provider quota.

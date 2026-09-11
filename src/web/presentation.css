@@ -187,14 +187,16 @@
   display: none;
 }
 .investigation-details,
-.technical-expansion {
+.technical-expansion,
+.connected-proof {
   border: 0;
   border-bottom: 1px solid var(--line);
   margin: 0;
   background: transparent;
 }
 .investigation-details > summary,
-.technical-expansion > summary {
+.technical-expansion > summary,
+.connected-proof > summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -207,6 +209,161 @@
 .investigation-details > summary > span:last-child {
   color: var(--muted);
   font-size: 0.8rem;
+}
+.connected-proof > summary > span:last-child {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.connected-proof > summary::after {
+  content: '+';
+}
+.connected-proof[open] > summary::after {
+  content: '−';
+}
+.connected-proof__body {
+  padding: 4px 0 24px;
+}
+.connected-proof__intro {
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 20px 24px;
+  background: var(--ink-2);
+  border-radius: 10px 10px 0 0;
+}
+.connected-proof__intro h2 {
+  margin: 6px 0;
+  font-size: 1.25rem;
+}
+.connected-proof__intro p {
+  max-width: 66ch;
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+.connected-proof__readiness {
+  display: flex;
+  min-width: 190px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.connected-proof__readiness small {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.connected-proof__actions {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  border: 1px solid var(--line);
+  border-top: 0;
+}
+.connected-proof__actions button {
+  min-height: 44px;
+}
+.connected-proof__error,
+.connected-proof__note {
+  margin: 0;
+  padding: 12px 24px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.connected-proof__error {
+  color: var(--red);
+}
+.connected-comparison,
+.connected-investigation {
+  border: 1px solid var(--line);
+  border-top: 0;
+}
+.connected-comparison__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 24px;
+}
+.connected-comparison h3,
+.connected-investigation h3 {
+  margin: 5px 0 0;
+  font-size: 1.05rem;
+}
+.connected-comparison__heading > b {
+  font: 600 0.8rem var(--sans);
+  color: var(--muted);
+}
+.connected-comparison__contexts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+.connected-comparison__contexts > div {
+  padding: 18px 24px;
+}
+.connected-comparison__contexts > div + div {
+  border-left: 1px solid var(--line);
+}
+.connected-comparison__contexts h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+.connected-comparison__contexts > div > p {
+  margin: 5px 0 14px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.connected-comparison dl,
+.connected-investigation dl {
+  margin: 0;
+}
+.connected-comparison dl > div,
+.connected-investigation dl > div {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.75fr) minmax(130px, 1fr) auto;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.connected-comparison dt,
+.connected-investigation dt {
+  color: var(--muted);
+}
+.connected-comparison dd,
+.connected-investigation dd {
+  margin: 0;
+  font-weight: 600;
+}
+.connected-comparison small,
+.connected-comparison code,
+.connected-investigation code {
+  color: var(--muted);
+  font: 0.7rem var(--mono);
+}
+.connected-proof__correlation {
+  display: block;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.connected-investigation {
+  padding: 20px 24px;
+}
+.connected-investigation > p {
+  max-width: 70ch;
+  margin: 8px 0 16px;
+  line-height: 1.55;
+}
+.connected-investigation dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+.connected-investigation dl > div {
+  display: block;
+  padding-right: 12px;
+}
+.connected-investigation dd {
+  margin-top: 4px;
 }
 .investigation-details > summary::after {
   content: '+';
@@ -257,6 +414,26 @@
   }
   .investigation-details > summary > span:last-child {
     display: none;
+  }
+  .connected-proof > summary > span:last-child {
+    display: none;
+  }
+  .connected-proof__intro {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .connected-proof__readiness {
+    min-width: 0;
+  }
+  .connected-comparison__contexts {
+    grid-template-columns: 1fr;
+  }
+  .connected-comparison__contexts > div + div {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .connected-investigation dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .judge-result .event-banner {
     flex-wrap: wrap;

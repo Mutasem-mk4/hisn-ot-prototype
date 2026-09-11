@@ -115,6 +115,55 @@ const RehearsalResultSchema = z
   .strict();
 export type RehearsalResult = z.infer<typeof RehearsalResultSchema>;
 
+const ConnectedPreflightSchema = z
+  .object({
+    groqConfigured: z.boolean(),
+    nokiaConfigured: z.boolean(),
+    subscriberAuthorizationConfigured: z.boolean(),
+    environment: z.literal('SANDBOX'),
+    fallbackAllowed: z.literal(false),
+    enforcementExecuted: z.literal(false),
+  })
+  .strict();
+const ConnectedEvidenceProbeSchema = ConnectedPreflightSchema.extend({
+  stage: z.literal('evidence'),
+  context: z.enum(['A', 'B']),
+  correlationId: z.string(),
+  command: CommandSchema,
+  collectionMethod: z.literal('FIXED_PROVIDER_PROBE'),
+  evidence: z.array(EvidenceCallSchema),
+  assessment: z
+    .object({
+      unknown: z.array(z.string()),
+      failures: z.array(z.string()),
+      compromised: z.array(EvidenceCallSchema.shape.tool),
+    })
+    .strict(),
+});
+const ConnectedEvidenceComparisonSchema = ConnectedPreflightSchema.extend({
+  stage: z.literal('evidence-comparison'),
+  command: CommandSchema,
+  executions: z.array(ConnectedEvidenceProbeSchema).length(2),
+});
+const ConnectedInvestigationSchema = ConnectedPreflightSchema.extend({
+  stage: z.literal('investigation'),
+  context: z.enum(['A', 'B']),
+  runId: z.string(),
+  correlationId: z.string(),
+  command: CommandSchema,
+  durationMs: z.number().nonnegative(),
+  requiredEvidenceComplete: z.boolean(),
+  evidence: z.array(EvidenceCallSchema),
+  trace: z.array(AgentTraceStepSchema).optional(),
+  recommendation: AgentRecommendationSchema.optional(),
+  decision: DecisionRecordSchema.optional(),
+  acceptedPressurePercent: z.number().nullable(),
+  failure: z.record(z.string(), z.unknown()).nullable(),
+});
+export type ConnectedPreflight = z.infer<typeof ConnectedPreflightSchema>;
+export type ConnectedEvidenceComparison = z.infer<typeof ConnectedEvidenceComparisonSchema>;
+export type ConnectedInvestigation = z.infer<typeof ConnectedInvestigationSchema>;
+
 let session: Session | null = null;
 
 export async function initializeSession(): Promise<Session> {
@@ -124,6 +173,26 @@ export async function initializeSession(): Promise<Session> {
 
 export function getJudgeRun(): Promise<RunSnapshot> {
   return request('/api/v1/judge-run', RunSnapshotSchema);
+}
+
+export function getConnectedPreflight(): Promise<ConnectedPreflight> {
+  return request('/api/v1/connected-verification', ConnectedPreflightSchema);
+}
+
+export function compareConnectedEvidence(): Promise<ConnectedEvidenceComparison> {
+  return mutate(
+    '/api/v1/connected-verification',
+    { context: 'BOTH', stage: 'evidence' },
+    ConnectedEvidenceComparisonSchema,
+  );
+}
+
+export function investigateConnectedContext(): Promise<ConnectedInvestigation> {
+  return mutate(
+    '/api/v1/connected-verification',
+    { context: 'A', stage: 'investigation' },
+    ConnectedInvestigationSchema,
+  );
 }
 
 export function createJudgeRun(scenarioId: string): Promise<RunSnapshot> {

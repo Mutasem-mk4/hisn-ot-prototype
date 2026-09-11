@@ -3,7 +3,7 @@ import { once } from 'node:events';
 import type { AddressInfo } from 'node:net';
 import { describe, expect, it } from 'vitest';
 import { loadConfiguration } from '../../src/infrastructure/configuration.js';
-import { verifyConnectedContext } from '../../src/infrastructure/connected-verification.js';
+import { verifyConnectedEvidenceComparison } from '../../src/infrastructure/connected-verification.js';
 
 describe('direct connected evidence diagnostic', () => {
   it('uses provider responses for the same command and exposes missing subscriber authorization', async () => {
@@ -46,14 +46,9 @@ describe('direct connected evidence diagnostic', () => {
         },
         process.cwd(),
       );
-      const first = await verifyConnectedContext(configuration, {
-        context: 'A',
-        stage: 'evidence',
-      });
-      const second = await verifyConnectedContext(configuration, {
-        context: 'B',
-        stage: 'evidence',
-      });
+      const comparison = await verifyConnectedEvidenceComparison(configuration);
+      const [first, second] = comparison.executions;
+      expect(comparison.stage).toBe('evidence-comparison');
       expect(first.command).toEqual(second.command);
       expect(first.command.requestedSetpointPercent).toBe(52);
       if (first.stage !== 'evidence' || second.stage !== 'evidence')

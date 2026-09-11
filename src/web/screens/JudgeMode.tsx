@@ -5,6 +5,7 @@ import { FacilitySchematic } from '../components/FacilitySchematic.js';
 import { JudgeProofFlow } from '../components/JudgeProofFlow.js';
 import { ProcessTwin } from '../components/ProcessTwin.js';
 import { StatusMark } from '../components/StatusMark.js';
+import { ConnectedProof } from '../components/ConnectedProof.js';
 
 type ControlAction = 'PLAY' | 'PAUSE' | 'NEXT' | 'PREVIOUS' | 'RESET' | 'SET_SPEED';
 
@@ -130,6 +131,7 @@ export function JudgeMode({
           <a href="#incident">Open incident report</a>
         </nav>
       </details>
+      <ConnectedProof />
       {explained && (
         <aside className="explain-drawer" aria-label="Current event explanation">
           <span className="eyebrow">Presenter cue</span>

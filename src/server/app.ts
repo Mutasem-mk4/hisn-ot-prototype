@@ -13,6 +13,7 @@ import { SessionGuard } from './session-guard.js';
 import {
   connectedPreflight,
   verifyConnectedContext,
+  verifyConnectedEvidenceComparison,
 } from '../infrastructure/connected-verification.js';
 
 const NewRunSchema = z
@@ -134,10 +135,15 @@ export async function registerApplication(
     async (request) => {
       sessions.verifyMutation(request);
       const body = z
-        .object({ context: z.enum(['A', 'B']), stage: z.enum(['evidence', 'investigation']) })
+        .object({
+          context: z.enum(['A', 'B', 'BOTH']),
+          stage: z.enum(['evidence', 'investigation']),
+        })
         .strict()
+        .refine((input) => input.context !== 'BOTH' || input.stage === 'evidence')
         .parse(request.body);
-      return verifyConnectedContext(configuration, body);
+      if (body.context === 'BOTH') return verifyConnectedEvidenceComparison(configuration);
+      return verifyConnectedContext(configuration, { context: body.context, stage: body.stage });
     },
   );
   server.get('/api/v1/judge-run', async (request) => {

@@ -40,6 +40,30 @@ test('explains the product immediately and exposes the primary action', async ({
   expect(primaryAction?.y).toBeLessThan(768);
 });
 
+test('shows a real-provider comparison without adding it to the primary demo flow', async ({
+  page,
+}) => {
+  await page.route('**/api/v1/connected-verification', async (route) => {
+    await route.fulfill({
+      json:
+        route.request().method() === 'GET' ? connectedPreflight() : connectedComparisonResponse(),
+    });
+  });
+  await page.reload();
+  const proof = page.locator('.connected-proof');
+  await expect(proof.getByRole('heading', { name: /network evidence changes/i })).toBeHidden();
+  await proof.getByText('Verify real API calls', { exact: true }).click();
+  await expect(proof.getByText('Nokia configured')).toBeVisible();
+  await proof.getByRole('button', { name: 'Compare Nokia responses' }).click();
+  await expect(
+    proof.getByRole('heading', { name: 'Same request, different network evidence' }),
+  ).toBeVisible();
+  await expect(proof.getByText('52% requested in both')).toBeVisible();
+  await expect(proof.getByText('No compromise signal returned')).toBeVisible();
+  await expect(proof.getByText('3 compromise signals returned')).toBeVisible();
+  await expect(proof.getByText('Outside approved area')).toBeVisible();
+});
+
 test('replay gives judges time to read and respects pause and speed changes', async ({ page }) => {
   await openDemoControls(page);
   await expect(page.getByLabel('Simulation playback speed')).toHaveValue('0.5');
@@ -236,4 +260,82 @@ async function openDemoControls(page: Page) {
   if (!(await controls.evaluate((element) => (element as HTMLDetailsElement).open))) {
     await controls.getByText('Demo controls').click();
   }
+}
+
+function connectedPreflight() {
+  return {
+    groqConfigured: true,
+    nokiaConfigured: true,
+    subscriberAuthorizationConfigured: false,
+    environment: 'SANDBOX',
+    fallbackAllowed: false,
+    enforcementExecuted: false,
+  };
+}
+
+function connectedComparisonResponse() {
+  const command = {
+    kind: 'SET_PRESSURE',
+    requestedSetpointPercent: 52,
+    reason: 'Judge-requested production increase',
+  };
+  const execution = (context: 'A' | 'B') => ({
+    ...connectedPreflight(),
+    stage: 'evidence',
+    context,
+    correlationId: `connected-${context.toLowerCase()}`,
+    command,
+    collectionMethod: 'FIXED_PROVIDER_PROBE',
+    evidence: connectedEvidence(context),
+    assessment: {
+      unknown: ['NUMBER_VERIFICATION: missing, stale, conflicting or unusable evidence'],
+      failures:
+        context === 'A'
+          ? []
+          : [
+              'Recent SIM swap violates critical-command policy',
+              'Recent device swap violates critical-command policy',
+              'Device is outside the approved facility geofence',
+            ],
+      compromised: context === 'A' ? [] : ['SIM_SWAP', 'DEVICE_SWAP', 'LOCATION_VERIFICATION'],
+    },
+  });
+  return {
+    ...connectedPreflight(),
+    stage: 'evidence-comparison',
+    command,
+    executions: [execution('A'), execution('B')],
+  };
+}
+
+function connectedEvidence(context: 'A' | 'B') {
+  const adverse = context === 'B';
+  const call = (
+    tool: string,
+    redactedResult: Record<string, unknown>,
+    requestStatus = 'SUCCEEDED',
+    provenance = 'SANDBOX',
+  ) => ({
+    id: `${context}-${tool}`,
+    tool,
+    purpose: `Connected check for ${tool}`,
+    requestStatus,
+    redactedResult,
+    provenance,
+    latencyMs: 120,
+    timestamp: '2026-09-11T03:02:17.000Z',
+    correlationId: `connected-${context.toLowerCase()}`,
+  });
+  return [
+    call(
+      'NUMBER_VERIFICATION',
+      { failureCode: 'SUBSCRIBER_AUTHORIZATION_REQUIRED' },
+      'UNAVAILABLE',
+      'UNAVAILABLE',
+    ),
+    call('SIM_SWAP', { swapped: adverse }),
+    call('DEVICE_SWAP', { swapped: adverse }),
+    call('LOCATION_VERIFICATION', { verificationResult: adverse ? 'FALSE' : 'TRUE' }),
+    call('DEVICE_REACHABILITY', { reachable: true, connectivity: [adverse ? 'SMS' : 'DATA'] }),
+  ];
 }
