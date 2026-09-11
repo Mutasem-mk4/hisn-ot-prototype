@@ -38,15 +38,18 @@ A release is complete only after checking the canonical public URL:
 
 ## Release evidence
 
-### 2026-09-11 light-interface follow-up
+### 2026-09-11 light-interface and replay follow-up
 
 - Copy refinement commit: `9ea7334`. The hero identifies LangGraph and Nokia/CAMARA, and the 60% boundary is explicitly named the command hard limit.
-- Local verification passed: 76 tests across 12 files, formatting, lint, type checks, and production build. Browser verification passed 22 tests with 2 intentional viewport skips.
+- Replay timing commit: `427d52b`. Recorded execution now defaults to 0.5× with a three-second hold per step; provider calls still run at normal speed, and the final result remains visible.
+- Local verification passed: 76 tests across 12 files, formatting, lint, type checks, and production build. Browser verification passed 26 tests with 2 intentional viewport skips.
 - The rebuilt local application returned HTTP 200 from `/readyz`, rendered the updated copy without page errors, and had no horizontal overflow at 1280 pixels.
 - Public rehearsals used the existing light-interface deployment `dpl_DWDNnQSn549qwbWmuFyiKbvxF3vy`. Read-only inspection completed with live planning and recommendation, one successful Nokia Sandbox reachability result, and `ALLOW`; accepted pressure stayed at 46%.
 - The public safe command completed with live planning and recommendation and `ALLOW`; accepted pressure became 52%. Location and reachability came from successful Nokia Sandbox calls. Number Verification remained simulated.
 - The following public attack attempt returned `HTTP_429` from the hosted agent after live planning. It reached `FAILED_SAFE` and retained 46% accepted pressure. A fresh successful attack rehearsal is not claimed here.
-- Vercel rejected deployment of the copy refinement with `api-deployments-free-per-day` and instructed retry after 24 hours. The canonical public alias therefore still serves the previously deployed light redesign; the new wording is available locally and on GitHub.
+- GitHub verification run [34551723765](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34551723765) passed for replay commit `427d52b`.
+- Production deployment `dpl_CEzeeoF1FpmzAQXCHQErJwVbAKx8` is Ready at the [deployment URL](https://hisn-ot-prototype-7t8l4bhbo-mutasem-mk4s-projects.vercel.app) and serves the canonical [Judge Mode](https://hisn-ot-prototype.vercel.app/#judge). A fresh browser check confirmed the 0.5× default, three-second replay notice, command-hard-limit wording, no horizontal overflow at 1280×720, and no console errors.
+- Production smoke run [34553252098](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34553252098) reached the hosted agent twice. Both attempts returned `HTTP_429` after `EVIDENCE_COLLECTING`, surfaced `AGENT_UNAVAILABLE`, and failed closed. A fresh successful attack recommendation is therefore still not claimed.
 
 Record the final test counts, Git commit, CI run, Vercel deployment ID, canonical URL, and public rehearsal result here only after fresh verification. Historical results must not be presented as current verification.
 
