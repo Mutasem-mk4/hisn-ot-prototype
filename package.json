@@ -25,6 +25,7 @@
     "visual:qa": "node scripts/capture-visuals.mjs",
     "sample:report": "tsx scripts/generate-sample-report.ts",
     "doctor": "tsx scripts/doctor.ts",
+    "verify:connected": "tsc -p tsconfig.connected.json && tsx scripts/verify-connected.ts",
     "audit:deps": "npm audit --audit-level=high --registry=https://registry.npmjs.org",
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },

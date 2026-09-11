@@ -467,6 +467,7 @@ export class JudgeOrchestrator {
       ),
     );
     const decision = issueDecision({
+      evidenceMode: this.evidenceProvider.mode,
       command: run.command,
       principal: scenario.principal,
       evidence,
@@ -575,6 +576,7 @@ export class JudgeOrchestrator {
     const decision = requireArtifact(artifacts.decision, 'decision');
     if (decision.state === 'ALLOW') {
       const freshDecision = issueDecision({
+        evidenceMode: this.evidenceProvider.mode,
         command: run.command,
         principal: scenario.principal,
         evidence: requireArtifact(artifacts.evidence, 'evidence'),

@@ -419,6 +419,31 @@ describe('bounded evidence planning', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('preserves a Groq quota failure without immediately sending another paid request', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 429 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const reasoner = new LangGraphAgentReasoner(
+      { baseUrl: 'https://reasoner.invalid', apiKey: 'test-key', model: 'test-model' },
+      200,
+      1,
+    );
+    await expect(
+      reasoner.plan(
+        {
+          command: scenario.command,
+          principal: scenario.principal,
+          policy,
+          twin: scenario.initialTwin,
+        },
+        new AbortController().signal,
+      ),
+    ).rejects.toMatchObject({
+      code: 'AGENT_UNAVAILABLE',
+      context: { failureReason: 'HTTP_429' },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('fails closed when a valid-shaped plan omits required critical evidence', async () => {
     vi.stubGlobal(
       'fetch',

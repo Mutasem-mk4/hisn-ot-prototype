@@ -100,6 +100,7 @@ npm run audit:deps
 - [Nokia/CAMARA integrations and provenance](docs/integrations.md)
 - [Safety and security case](docs/safety-and-security.md)
 - [Judge demo and questions](docs/demo-and-judging.md)
+- [Strict connected verification and current limitations](docs/connected-verification.md)
 - [Verification evidence](docs/verification.md)
 - [Product definition](PRODUCT.md)
 - [Interface design system](DESIGN.md)

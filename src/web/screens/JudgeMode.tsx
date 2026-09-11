@@ -274,10 +274,11 @@ function networkProofCopy(source: RunSnapshot['integration']['evidenceSource']) 
       shortDetail: 'Authenticated simulator calls',
     },
     NOKIA_SANDBOX_WITH_FALLBACK: {
-      headline: 'Nokia test network connected',
-      badge: 'NOKIA SANDBOX API',
-      detail: 'Authenticated Nokia transport, simulator identities',
-      shortDetail: 'Authenticated simulator calls',
+      headline: 'Mixed sandbox and local evidence',
+      badge: 'SANDBOX + LOCAL FALLBACK',
+      detail:
+        'Failed Nokia calls can be replaced by labeled local fixtures; this is not strict connected verification',
+      shortDetail: 'Sandbox calls with local substitutes',
     },
     NOKIA_LIVE: {
       headline: 'Nokia operator network configured',

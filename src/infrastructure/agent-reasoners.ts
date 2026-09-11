@@ -200,7 +200,12 @@ export class LangGraphAgentReasoner implements AgentReasoner {
       try {
         return await this.requestOnce(task, input, schema, signal);
       } catch (error) {
-        if (signal.aborted || !isRecoverableReasonerFailure(error)) throw error;
+        if (
+          signal.aborted ||
+          numericProperty(error, 'status') === 429 ||
+          !isRecoverableReasonerFailure(error)
+        )
+          throw error;
         lastFailure = error;
       }
     }
@@ -231,8 +236,14 @@ export class LangGraphAgentReasoner implements AgentReasoner {
       }),
       signal: combined,
     });
-    if (!response.ok)
-      throw new TypeError(`Structured reasoning endpoint returned ${response.status}`);
+    if (!response.ok) {
+      throw Object.assign(
+        new TypeError(`Structured reasoning endpoint returned ${response.status}`),
+        {
+          status: response.status,
+        },
+      );
+    }
     const completion = ChatCompletionSchema.parse(await response.json());
     return schema.parse(JSON.parse(completion.choices[0]!.message.content));
   }

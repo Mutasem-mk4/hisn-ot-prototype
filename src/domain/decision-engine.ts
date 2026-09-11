@@ -6,6 +6,7 @@ import type {
   EvidenceCall,
   Policy,
   Principal,
+  RuntimeMode,
   SafetyEvaluation,
 } from '../shared/contracts.js';
 import { assessEvidence, evidenceSummary } from './evidence.js';
@@ -19,12 +20,17 @@ type DecisionInput = {
   safety: SafetyEvaluation;
   recommendation: AgentRecommendation;
   policy: Policy;
+  evidenceMode?: RuntimeMode;
 };
 
 export function issueDecision(input: DecisionInput): DecisionRecord {
   input = { ...input, safety: evaluatePhysicalSafety(input.command, input.policy) };
   const assessment = assessEvidence(input.evidence, input.policy);
   const missingEvidence = missingRequiredEvidence(input);
+  const untrustedProvenance =
+    input.evidenceMode && input.evidenceMode !== 'DEMO'
+      ? input.evidence.filter((call) => call.provenance !== input.evidenceMode)
+      : [];
   const failedPolicies = [
     ...(!input.principal.credentialsValid ? ['Principal credentials invalid'] : []),
     ...(input.command.kind === 'SET_PRESSURE' && input.principal.role === 'VIEWER'
@@ -33,11 +39,16 @@ export function issueDecision(input: DecisionInput): DecisionRecord {
     ...assessment.failures,
     ...assessment.unknown,
     ...missingEvidence.map((tool) => `${tool} required evidence was not collected`),
+    ...untrustedProvenance.map(
+      (call) =>
+        `${call.tool}: ${call.provenance} cannot satisfy ${input.evidenceMode} verification`,
+    ),
   ];
   const state = policyDecisionState(
     input,
     assessment.compromised.length,
-    missingEvidence.length > 0 ||
+    untrustedProvenance.length > 0 ||
+      missingEvidence.length > 0 ||
       assessment.unknown.length > 0 ||
       assessment.failures.length > assessment.compromised.length,
   );

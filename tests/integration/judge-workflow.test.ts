@@ -1,8 +1,38 @@
 import { describe, expect, it, vi } from 'vitest';
 import { LangGraphAgentReasoner } from '../../src/infrastructure/agent-reasoners.js';
 import { completeRun, createHarness } from '../helpers/harness.js';
+import { evidenceCall, testScenario } from '../helpers/fixtures.js';
 
 describe('complete judge workflow', () => {
+  it.each(['SIMULATED', 'SANDBOX'] as const)(
+    'revalidates %s evidence before changing accepted pressure in sandbox mode',
+    async (provenance) => {
+      const scenario = testScenario('judge-safe-operating-change');
+      const harness = createHarness(scenario.id, {
+        evidence: {
+          mode: 'SANDBOX',
+          source: 'NOKIA_SANDBOX',
+          health: () => Promise.resolve('AVAILABLE'),
+          collect: (tool, context) =>
+            Promise.resolve({
+              ...evidenceCall(tool, scenario.evidence[tool].redacted),
+              provenance,
+              correlationId: context.correlationId,
+            }),
+        },
+      });
+      try {
+        const snapshot = await completeRun(harness.orchestrator, scenario.id);
+        expect(snapshot.artifacts.decision?.state).toBe(
+          provenance === 'SANDBOX' ? 'ALLOW' : 'BLOCK',
+        );
+        expect(snapshot.run.twin.acceptedPressurePercent).toBe(provenance === 'SANDBOX' ? 52 : 46);
+        expect(harness.store.enforcementForRun(snapshot.run.id)).toEqual([]);
+      } finally {
+        harness.close();
+      }
+    },
+  );
   it('authorizes a read-only inspection with one evidence call and no control-state change', async () => {
     const harness = createHarness('judge-read-only-inspection');
     try {

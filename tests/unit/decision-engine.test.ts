@@ -25,6 +25,58 @@ const validEvidence = [
 ];
 
 describe('authoritative decisions', () => {
+  it.each([
+    [[], 'ALLOW'],
+    [[evidenceCall('LOCATION_VERIFICATION', { verificationResult: 'FALSE' })], 'STEP_UP'],
+    [
+      [
+        evidenceCall('LOCATION_VERIFICATION', { verificationResult: 'FALSE' }),
+        evidenceCall('SIM_SWAP', { swapped: true }),
+      ],
+      'BLOCK_AND_CONTAIN',
+    ],
+    [[evidenceCall('NUMBER_VERIFICATION', {}, 'UNAVAILABLE')], 'BLOCK'],
+  ] satisfies Array<[EvidenceCall[], DecisionState]>)(
+    'changes authorization from network evidence for the same 52 percent command (%j → %s)',
+    (changedEvidence, expected) => {
+      const command = { ...safeCommand, requestedSetpointPercent: 52 };
+      const evidence = replaceMany(validEvidence, changedEvidence).map((call) => ({
+        ...call,
+        provenance:
+          call.requestStatus === 'SUCCEEDED' ? ('SANDBOX' as const) : ('UNAVAILABLE' as const),
+      }));
+      expect(
+        issueDecision({
+          command,
+          principal,
+          evidence,
+          policy,
+          safety: evaluatePhysicalSafety(command, policy),
+          recommendation: recommendation('ALLOW'),
+          evidenceMode: 'SANDBOX',
+        }).state,
+      ).toBe(expected);
+    },
+  );
+  it.each([
+    ['SANDBOX', 'SIMULATED', 'BLOCK'],
+    ['SANDBOX', 'CACHED', 'BLOCK'],
+    ['LIVE', 'SANDBOX', 'BLOCK'],
+    ['SANDBOX', 'SANDBOX', 'ALLOW'],
+    ['LIVE', 'LIVE', 'ALLOW'],
+  ] as const)('requires %s evidence, received %s: %s', (evidenceMode, provenance, expected) => {
+    const decision = issueDecision({
+      command: { ...safeCommand, requestedSetpointPercent: 52 },
+      principal,
+      evidence: validEvidence.map((call) => ({ ...call, provenance })),
+      safety: evaluatePhysicalSafety(safeCommand, policy),
+      recommendation: recommendation('ALLOW'),
+      policy,
+      evidenceMode,
+    });
+    expect(decision.state).toBe(expected);
+    if (expected === 'BLOCK') expect(decision.failedPolicies.join(' ')).toContain('cannot satisfy');
+  });
   it.each([59.99, 60, 60.01])('independently evaluates the %s percent boundary', (value) => {
     const command = { ...safeCommand, requestedSetpointPercent: value };
     const result = issueDecision({
