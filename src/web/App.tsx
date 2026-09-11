@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { IncidentReport, RunSnapshot } from '../application/ports.js';
 import { Brand } from './components/Brand.js';
 import { StatusMark } from './components/StatusMark.js';
-import { getIncident, getJudgeRun, initializeSession, rehearseJudgeRun } from './api.js';
+import { getJudgeRun, initializeSession, rehearseJudgeRun } from './api.js';
 import { ArchitectureView } from './screens/ArchitectureView.js';
 import { EvidenceTrace } from './screens/EvidenceTrace.js';
 import { IncidentReportView } from './screens/IncidentReportView.js';
@@ -37,19 +37,6 @@ export function App() {
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    if (!snapshot?.incidentAvailable) return;
-    if (report?.correlationId === snapshot.run.correlationId) return;
-    void getIncident(snapshot.run.id)
-      .then(setReport)
-      .catch((reason: Error) => setError(reason.message));
-  }, [
-    report?.correlationId,
-    snapshot?.incidentAvailable,
-    snapshot?.run.correlationId,
-    snapshot?.run.id,
-  ]);
 
   useEffect(() => {
     const onHash = () => setScreen(screenFromHash());
@@ -124,7 +111,6 @@ export function App() {
       }
       if (action === 'RESET' && frames.length > 0) {
         playbackGeneration.current += 1;
-        setReport(null);
         showFrame(frames, 0, false, speed);
         return;
       }
@@ -241,7 +227,12 @@ export function App() {
       )}
       {screen === 'operations' && <LiveOperations snapshot={snapshot} />}
       {screen === 'evidence' && <EvidenceTrace snapshot={snapshot} />}
-      {screen === 'incident' && <IncidentReportView snapshot={snapshot} report={report} />}
+      {screen === 'incident' && (
+        <IncidentReportView
+          snapshot={snapshot}
+          report={snapshot.incidentAvailable ? report : null}
+        />
+      )}
       {screen === 'architecture' && (
         <ArchitectureView snapshot={snapshot} onDegraded={() => void runDegraded()} />
       )}
