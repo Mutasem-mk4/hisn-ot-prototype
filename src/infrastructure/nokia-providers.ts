@@ -50,6 +50,20 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
 
   async collect(tool: EvidenceTool, context: EvidenceContext, signal: AbortSignal) {
     const startedAt = performance.now();
+    if (tool === 'NUMBER_VERIFICATION' && !this.credentials.accessToken) {
+      return this.call(
+        tool,
+        context,
+        'UNAVAILABLE',
+        'UNAVAILABLE',
+        {
+          reason: 'Subscriber authorization is not configured',
+          failureCode: 'SUBSCRIBER_AUTHORIZATION_REQUIRED',
+          externalRequestMade: false,
+        },
+        startedAt,
+      );
+    }
     try {
       const redactedResult = await this.invoke(tool, context, signal);
       this.healthy = true;
@@ -66,6 +80,7 @@ export class NokiaEvidenceProvider implements EvidenceProvider {
         {
           reason: 'Network evidence provider did not return usable evidence',
           errorType: error.name,
+          ...(error instanceof NetworkAsCodeApiError ? { providerStatus: error.statusCode } : {}),
         },
         startedAt,
       );

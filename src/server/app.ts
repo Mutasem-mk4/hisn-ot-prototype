@@ -10,6 +10,10 @@ import { ControlRequestSchema, TwinStateSchema } from '../shared/contracts.js';
 import { HisnError } from '../shared/errors.js';
 import type { EventHub } from './event-hub.js';
 import { SessionGuard } from './session-guard.js';
+import {
+  connectedPreflight,
+  verifyConnectedContext,
+} from '../infrastructure/connected-verification.js';
 
 const NewRunSchema = z
   .object({ scenarioId: z.string().min(3), idempotencyKey: z.string().uuid() })
@@ -118,6 +122,24 @@ export async function registerApplication(
     sessions.authorize(request);
     return configuration.scenarios.map(({ id, name }) => ({ id, name }));
   });
+  server.get('/api/v1/connected-verification', (request) => {
+    sessions.authorize(request);
+    return connectedPreflight(configuration);
+  });
+  server.post(
+    '/api/v1/connected-verification',
+    {
+      config: { rateLimit: { max: 2, timeWindow: '1 minute' } },
+    },
+    async (request) => {
+      sessions.verifyMutation(request);
+      const body = z
+        .object({ context: z.enum(['A', 'B']), stage: z.enum(['evidence', 'investigation']) })
+        .strict()
+        .parse(request.body);
+      return verifyConnectedContext(configuration, body);
+    },
+  );
   server.get('/api/v1/judge-run', async (request) => {
     sessions.authorize(request);
     return orchestrator.ensureRun();

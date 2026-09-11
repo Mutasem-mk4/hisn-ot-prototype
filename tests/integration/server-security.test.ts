@@ -39,6 +39,30 @@ describe('server security boundary', () => {
     expect(response.statusCode).toBe(401);
     expect(response.json().error.code).toBe('AUTHENTICATION_REQUIRED');
   });
+  it('protects connected diagnostics and reports configuration without exposing secrets', async () => {
+    const path = '/api/v1/connected-verification';
+    expect((await server.inject({ method: 'GET', url: path })).statusCode).toBe(401);
+    const session = await server.inject({ method: 'GET', url: '/api/v1/session' });
+    const cookie = session.headers['set-cookie'];
+    expect(
+      (
+        await server.inject({
+          method: 'POST',
+          url: path,
+          headers: { cookie },
+          payload: { context: 'A', stage: 'evidence' },
+        })
+      ).statusCode,
+    ).toBe(403);
+    const response = await server.inject({ method: 'GET', url: path, headers: { cookie } });
+    expect(response.json()).toMatchObject({
+      nokiaConfigured: false,
+      groqConfigured: false,
+      fallbackAllowed: false,
+      enforcementExecuted: false,
+    });
+    expect(response.body).not.toContain(configuration.sessionSecret);
+  });
 
   it.each(['SANDBOX', 'LIVE'] as const)(
     'does not grant anonymous demo authority in %s mode',

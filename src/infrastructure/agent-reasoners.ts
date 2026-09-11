@@ -168,7 +168,6 @@ export class LangGraphAgentReasoner implements AgentReasoner {
         LiveAgentRecommendationSchema,
         signal,
       );
-      assertRecommendationAssurance(output, request);
       return AgentRecommendationSchema.parse({ ...output, reasoningProvenance: 'LIVE' });
     } catch (error) {
       if (!isRecoverableReasonerFailure(error)) throw error;
@@ -241,6 +240,7 @@ export class LangGraphAgentReasoner implements AgentReasoner {
         new TypeError(`Structured reasoning endpoint returned ${response.status}`),
         {
           status: response.status,
+          quotaType: response.status === 429 ? classifyQuota(await response.text()) : 'UNKNOWN',
         },
       );
     }
@@ -299,9 +299,7 @@ function hostedResponseFormat(input: AgentPlanRequest | AgentRecommendationReque
     json_schema: {
       name: isRecommendation ? 'hisn_agent_recommendation' : 'hisn_agent_plan',
       strict: true,
-      schema: isRecommendation
-        ? strictRecommendationJsonSchema(input)
-        : strictPlanJsonSchema(input),
+      schema: isRecommendation ? strictRecommendationJsonSchema() : strictPlanJsonSchema(input),
     },
   };
 }
@@ -333,17 +331,13 @@ function strictPlanJsonSchema(input: AgentPlanRequest | AgentRecommendationReque
   };
 }
 
-function strictRecommendationJsonSchema(request: AgentRecommendationRequest) {
-  const signals = [
-    ...failedEvidencePolicies(request.evidence, request.policy),
-    ...assessEvidence(request.evidence, request.policy).unknown,
-  ];
+function strictRecommendationJsonSchema() {
   return {
     type: 'object',
     properties: {
       recommendedDecision: {
         type: 'string',
-        enum: [recommendationState(request, signals.length)],
+        enum: ['ALLOW', 'STEP_UP', 'BLOCK', 'BLOCK_AND_CONTAIN'],
       },
       summary: { type: 'string' },
       observedSignals: {
@@ -381,19 +375,6 @@ function reasonerTaskInstruction(
     'Keep the consequence below 240 characters and each selection reason below 160 characters.',
     'The later observation loop may add another allowlisted tool when live evidence justifies it.',
   ].join(' ');
-}
-
-function assertRecommendationAssurance(
-  recommendation: Omit<AgentRecommendation, 'reasoningProvenance'>,
-  request: AgentRecommendationRequest,
-): void {
-  const signals = [
-    ...failedEvidencePolicies(request.evidence, request.policy),
-    ...assessEvidence(request.evidence, request.policy).unknown,
-  ];
-  if (recommendation.recommendedDecision !== recommendationState(request, signals.length)) {
-    throw new TypeError('Agent recommendation violates server assurance policy');
-  }
 }
 
 function reasonerGuardrails(input: AgentPlanRequest | AgentRecommendationRequest) {
@@ -436,6 +417,7 @@ function agentUnavailable(
       stage,
       failureType: failure instanceof Error ? failure.name : 'NOT_CONFIGURED',
       failureReason: safeFailureReason(failure),
+      ...(numericProperty(failure, 'status') === 429 ? { quotaType: quotaType(failure) } : {}),
     },
   );
 }
@@ -459,6 +441,30 @@ function numericProperty(source: unknown, key: string): number | null {
   if (typeof source !== 'object' || source === null) return null;
   const candidate = (source as Record<string, unknown>)[key];
   return typeof candidate === 'number' ? candidate : null;
+}
+
+function classifyQuota(message: string): string {
+  const normalized = message.toLowerCase();
+  for (const [phrase, quota] of [
+    ['tokens per day', 'TOKENS_PER_DAY'],
+    ['tokens per minute', 'TOKENS_PER_MINUTE'],
+    ['requests per day', 'REQUESTS_PER_DAY'],
+    ['requests per minute', 'REQUESTS_PER_MINUTE'],
+  ]) {
+    if (normalized.includes(phrase!)) return quota!;
+  }
+  return 'UNKNOWN';
+}
+
+function quotaType(failure: unknown): string {
+  if (
+    typeof failure === 'object' &&
+    failure !== null &&
+    'quotaType' in failure &&
+    typeof failure.quotaType === 'string'
+  )
+    return failure.quotaType;
+  return failure instanceof Error ? classifyQuota(failure.message) : 'UNKNOWN';
 }
 
 function recommendationState(

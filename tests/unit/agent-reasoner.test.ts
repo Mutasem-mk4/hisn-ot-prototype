@@ -5,6 +5,7 @@ import {
 } from '../../src/infrastructure/agent-reasoners.js';
 import { evaluatePhysicalSafety } from '../../src/domain/safety-engine.js';
 import { minimumEvidenceForCommand } from '../../src/domain/agent-plan.js';
+import { issueDecision } from '../../src/domain/decision-engine.js';
 import { evidenceCall, testPolicy, testScenario } from '../helpers/fixtures.js';
 
 const scenario = testScenario();
@@ -420,7 +421,16 @@ describe('bounded evidence planning', () => {
   });
 
   it('preserves a Groq quota failure without immediately sending another paid request', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 429 }));
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: {
+            message: 'Rate limit reached on tokens per day. Organization: private-org-id',
+          },
+        }),
+        { status: 429 },
+      ),
+    );
     vi.stubGlobal('fetch', fetchMock);
     const reasoner = new LangGraphAgentReasoner(
       { baseUrl: 'https://reasoner.invalid', apiKey: 'test-key', model: 'test-model' },
@@ -439,7 +449,7 @@ describe('bounded evidence planning', () => {
       ),
     ).rejects.toMatchObject({
       code: 'AGENT_UNAVAILABLE',
-      context: { failureReason: 'HTTP_429' },
+      context: { failureReason: 'HTTP_429', quotaType: 'TOKENS_PER_DAY' },
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -533,7 +543,7 @@ describe('bounded evidence planning', () => {
     expect(plan.selectedTools).toEqual(['DEVICE_REACHABILITY', 'NUMBER_VERIFICATION']);
   });
 
-  it('fails closed when a hosted recommendation weakens required containment', async () => {
+  it('records independent model advice while policy still requires containment', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -564,19 +574,29 @@ describe('bounded evidence planning', () => {
       200,
     );
 
-    await expect(
-      reasoner.recommend(
-        {
-          command: scenario.command,
-          principal: scenario.principal,
-          policy,
-          twin: scenario.initialTwin,
-          evidence,
-          safety: evaluatePhysicalSafety(scenario.command, policy),
-        },
-        new AbortController().signal,
-      ),
-    ).rejects.toMatchObject({ code: 'AGENT_UNAVAILABLE' });
+    const advice = await reasoner.recommend(
+      {
+        command: scenario.command,
+        principal: scenario.principal,
+        policy,
+        twin: scenario.initialTwin,
+        evidence,
+        safety: evaluatePhysicalSafety(scenario.command, policy),
+      },
+      new AbortController().signal,
+    );
+    expect(advice.recommendedDecision).toBe('BLOCK');
+    expect(advice.reasoningProvenance).toBe('LIVE');
+    expect(
+      issueDecision({
+        command: scenario.command,
+        principal: scenario.principal,
+        policy,
+        evidence,
+        safety: evaluatePhysicalSafety(scenario.command, policy),
+        recommendation: advice,
+      }).state,
+    ).toBe('BLOCK_AND_CONTAIN');
   });
 });
 

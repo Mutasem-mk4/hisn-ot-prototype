@@ -26,9 +26,20 @@ Vercel sensitive environment variables may export as `[SENSITIVE]`. The command 
 
 ## Implementation status
 
+### Hosted diagnostic
+
+The DEMO server exposes `/api/v1/connected-verification` behind its session guard. GET reports provider configuration availability without secrets. POST requires the session CSRF token and a body with `context` (`A` or `B`) and `stage` (`evidence` or `investigation`). The route allows two requests per minute per rate-limit key; this limit is process-local on serverless deployments.
+
+The `evidence` stage calls the five configured allowlisted Nokia evidence tools directly, using the same 52% command and alternative sandbox devices. It labels collection as `FIXED_PROVIDER_PROBE`, makes no Groq request, and reports each provider response without local substitutes. Missing subscriber authorization reports `SUBSCRIBER_AUTHORIZATION_REQUIRED` and `externalRequestMade: false` for Number Verification. SDK timeouts and retry limits apply to each Nokia call.
+
+The `investigation` stage uses Groq and the direct sandbox adapters with an isolated in-memory audit store. It stops at authorization before any command execution or enforcement. It does not modify the main demonstration's run. Both stages report `enforcementExecuted: false`.
+
+The CLI and hosted investigation share the same implementation. Hosted execution uses existing deployment secrets, so it does not require exporting them to a developer machine.
+
 - Provenance enforcement and the comparison diagnostic are implemented.
 - Regression tests cover the same 52% command with reassuring, suspicious, corroborated, and unavailable evidence. These tests use fixtures and do not prove external API behavior.
 - Structured Groq planning/recommendation requests stop retrying immediately on HTTP 429. LangGraph SDK retry behavior is unchanged.
-- The current hosted initial plan and recommendation remain policy-constrained. Observation-driven tool selection already exists, but its benefit over fixed baselines has not been measured.
-- A successful connected contrast is not yet verified. The local rehearsal was stopped by unavailable exported Groq and Nokia secrets.
+- Rate-limit failures retain a sanitized quota category when the provider message identifies tokens or requests per day or minute; otherwise the category is UNKNOWN. Provider response bodies are not exposed in the failure record.
+- The initial plan still follows the policy evidence floor. Groq's advisory recommendation can now select any defined decision state instead of being restricted to a precomputed verdict. The authoritative policy engine independently decides authorization and containment, including when it disagrees with the model. Observation-driven tool selection already exists, but its benefit over fixed baselines has not been measured.
+- A successful connected contrast is not yet verified. The local rehearsal was stopped by unavailable exported Groq and Nokia secrets; the hosted diagnostic provides a path to verify providers without exporting secrets.
 - The comparison UI, provider-specific quota diagnosis, baseline measurements, and repeated successful public connected rehearsals remain pending.
