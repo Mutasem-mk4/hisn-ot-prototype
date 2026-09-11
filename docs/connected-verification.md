@@ -66,3 +66,5 @@ A connected Context A investigation also completed through Groq in 2.676 seconds
 A subsequent Context B investigation, correlation ID `hisn-aaffb177-17d9-4667-a0ba-063fa6627669`, failed closed when Groq returned HTTP 429 with quota category `TOKENS_PER_DAY`. It collected no evidence and left accepted pressure at 46%. This records a real provider attempt and a precise quota blocker, not a successful investigation.
 
 Judge Mode exposes this check under the collapsed **Verify real API calls** section. The comparison runs both configured contexts for the same command, labels each result by provenance, and displays the complete correlation IDs. The adjacent Groq action runs one connected LangGraph investigation; it remains separate because it consumes provider quota.
+
+The manual **Hosted DEMO smoke** GitHub Actions workflow repeats the fixed Nokia comparison from an independent runner. It requires at least four successful sandbox responses per context, rejects simulated or cached evidence, verifies the contrasting SIM Swap result, and records both correlation IDs in the job log. It does not invoke Groq.
