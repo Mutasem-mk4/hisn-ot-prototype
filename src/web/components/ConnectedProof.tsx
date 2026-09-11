@@ -52,16 +52,16 @@ export function ConnectedProof() {
     <details className="connected-proof">
       <summary>
         <span>Verify real API calls</span>
-        <span>Same 52% command, two Nokia sandbox contexts</span>
+        <span>Five Nokia calls per context, no local substitutes</span>
       </summary>
       <div className="connected-proof__body">
         <div className="connected-proof__intro">
           <div>
             <span className="eyebrow">Strict connected check</span>
-            <h2>See whether network evidence changes the decision.</h2>
+            <h2>Inspect real Nokia evidence and its sandbox boundary.</h2>
             <p>
               These checks call the configured providers now. Local fallback results cannot count as
-              connected proof, and no command or containment action executes.
+              connected proof. No command or containment action executes.
             </p>
           </div>
           <ConnectedReadiness preflight={preflight} unavailable={preflightUnavailable} />
@@ -114,9 +114,9 @@ function ConnectedReadiness({
       <small>
         Number Verification:{' '}
         {preflight.subscriberAuthorizationMode === 'SIMULATOR_FAST_OAUTH'
-          ? 'simulator OAuth ready'
+          ? 'simulator OAuth only, not subscriber consent'
           : preflight.subscriberAuthorizationConfigured
-            ? 'subscriber authorization ready'
+            ? 'subscriber OAuth configured'
             : 'OAuth required'}
       </small>
     </div>
@@ -153,6 +153,13 @@ function EvidenceComparison({ comparison }: { comparison: ConnectedEvidenceCompa
           </div>
         ))}
       </div>
+      <p className="connected-proof__note">
+        Nokia's published free fixtures split assurance across identities: Context A has clean SIM,
+        device and location signals but its number does not verify; Context B verifies the number
+        but returns three compromise signals. A fully trusted connected ALLOW therefore cannot be
+        claimed without live subscriber onboarding. The product does not mix identities or weaken
+        policy to manufacture one.
+      </p>
       <p className="connected-proof__note">
         Fixed provider probe. SANDBOX marks an external Nokia response; UNAVAILABLE does not count
         as provider proof. This does not prove agent-selected tool order.

@@ -10,7 +10,7 @@ HISN-OT uses a warm light background, dark readable text, and a restrained deep-
 
 The demonstration and result share one rounded container. Technical details use native disclosure rows. Layout overrides live in `src/web/presentation.css`; semantic color tokens remain in `src/web/styles.css`.
 
-The hero explains the required technology in one sentence: a LangGraph agent checks Nokia/CAMARA network context before a command can change the plant. References to the 60% authorization boundary must call it the command hard limit so it remains distinct from the 42–52% observed safe band.
+The hero reports the active reasoning path. When Groq is configured, it names the live LangGraph tool loop; in local deterministic mode, it explicitly calls the experience a reproducible replay and makes no live-AI claim. References to the 60% authorization boundary must call it the command hard limit so it remains distinct from the 42–52% observed safe band. The primary 58% attack sits inside that hard limit so adverse network context is visibly decisive.
 
 ## Tokens
 

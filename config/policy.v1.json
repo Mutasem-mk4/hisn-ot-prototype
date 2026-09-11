@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policyVersion": "desalination-safety-2026.5",
+  "policyVersion": "desalination-safety-2026.6",
   "assetId": "asset-desalination-line-a",
   "safePressureBand": { "minimumPercent": 42, "maximumPercent": 52 },
   "commands": {

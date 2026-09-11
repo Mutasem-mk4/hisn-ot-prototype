@@ -36,7 +36,7 @@ The `investigation` stage uses Groq and the direct sandbox adapters with an isol
 
 The CLI and hosted investigation share the same implementation. Hosted execution uses existing deployment secrets, so it does not require exporting them to a developer machine.
 
-The primary Judge Mode flow and this diagnostic have separate reasoner selection. `HISN_AGENT_PROVIDER=DETERMINISTIC` makes the main presentation independent of model quota while retaining configured Groq credentials for the explicit connected investigation. The UI reports the reasoner used by each path; this is not an automatic or hidden AI fallback.
+The primary Judge Mode flow and this diagnostic have separate reasoner selection. `HISN_AGENT_PROVIDER=AUTO` uses Groq in the main presentation when all model credentials are available; otherwise local runs are explicitly labeled deterministic replays. The connected investigation always requests Groq when configured. Hosted model failure keeps the command held and is never replaced by a hidden AI result.
 
 - Provenance enforcement and the comparison diagnostic are implemented.
 - Regression tests cover the same 52% command with reassuring, suspicious, corroborated, and unavailable evidence. These tests use fixtures and do not prove external API behavior.
@@ -44,6 +44,7 @@ The primary Judge Mode flow and this diagnostic have separate reasoner selection
 - Rate-limit failures retain a sanitized quota category when the provider message identifies tokens or requests per day or minute; otherwise the category is UNKNOWN. Provider response bodies are not exposed in the failure record.
 - The initial plan still follows the policy evidence floor. Groq's advisory recommendation can now select any defined decision state instead of being restricted to a precomputed verdict. The authoritative policy engine independently decides authorization and containment, including when it disagrees with the model. Observation-driven tool selection already exists, but its benefit over fixed baselines has not been measured.
 - The Nokia simulator fast OAuth and Number Verification request were verified locally against the external sandbox on 2026-09-11. Public deployment verification is recorded separately below after release.
+- The official simulator fixtures do not contain one identity that both passes Number Verification and returns reassuring SIM, device, and location evidence. A connected `ALLOW` is therefore not claimed; producing one requires live subscriber onboarding. The policy is not weakened and evidence from different identities is never combined.
 - Provider-specific quota diagnosis is implemented. Baseline measurements and repeated successful public Groq rehearsals remain pending.
 
 ## Current public provider evidence — 2026-09-11

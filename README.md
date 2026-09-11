@@ -16,9 +16,9 @@ The industrial plant is a clearly labeled digital twin. Nokia responses show the
 
 ### [Open Judge Mode](https://hisn-ot-prototype.vercel.app/#judge)
 
-1. Select **Run attack demonstration**. A valid account requests an unsafe **88%** pressure setting.
+1. Select **Run attack demonstration**. A valid account requests **58%**, inside the independent **60%** hard limit but above the normal operating band.
 2. Watch the result and compare requested pressure with accepted plant pressure. Open **How was this decision made?** to inspect the four-step protection path and agent evidence.
-3. Confirm the outcome panel shows **88% requested**, the previous accepted setting unchanged, and the independent **60% hard maximum**.
+3. Confirm the outcome panel shows **58% requested**, **hard limit passed**, and the previous accepted setting unchanged. Network context, not the engineering maximum, is the decisive blocker.
 4. Expand **Show technical trace** or open **Evidence Trace** to inspect model-requested tools, observations, provenance, adaptation, recommendation, and the authoritative policy result.
 5. Use **Run safe command** and **Run read-only inspection** as optional comparisons. Open the incident report from the technical view or Evidence Trace after a completed run.
 
@@ -83,7 +83,7 @@ npm start
 
 Open [http://127.0.0.1:4310/#judge](http://127.0.0.1:4310/#judge).
 
-The copied environment starts safely with deterministic reasoning and simulated evidence. Replace the placeholder keys, set `HISN_AGENT_PROVIDER=GROQ`, and set `HISN_NOKIA_SIMULATOR=true` to enable the hosted agent and Nokia test network. `.env.local` and secrets must remain outside Git.
+The copied environment starts safely with a clearly labeled deterministic replay and simulated evidence. Uncomment and configure the three `HISN_LLM_*` values to let `HISN_AGENT_PROVIDER=AUTO` use Groq. Replace the Nokia placeholder key and set `HISN_NOKIA_SIMULATOR=true` to use the test network. `.env.local` and secrets must remain outside Git.
 
 Useful checks:
 

@@ -84,6 +84,8 @@ describe('direct connected evidence diagnostic', () => {
       const comparison = await verifyConnectedEvidenceComparison(configuration);
       const [first, second] = comparison.executions;
       expect(comparison.stage).toBe('evidence-comparison');
+      expect(comparison.subscriberAuthorizationConfigured).toBe(false);
+      expect(comparison.subscriberAuthorizationMode).toBe('SIMULATOR_FAST_OAUTH');
       expect(first.command).toEqual(second.command);
       expect(first.command.requestedSetpointPercent).toBe(52);
       if (first.stage !== 'evidence' || second.stage !== 'evidence')

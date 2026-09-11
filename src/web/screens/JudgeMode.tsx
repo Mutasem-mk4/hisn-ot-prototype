@@ -27,6 +27,7 @@ export function JudgeMode({
   const event = snapshot.currentEvent;
   const decision = snapshot.artifacts.decision;
   const displayedAgentStatus = agentStatus(snapshot);
+  const agentProof = agentProofCopy(displayedAgentStatus);
   const networkProof = networkProofCopy(snapshot.integration.evidenceSource);
   const progress = ['COMPLETE', 'FAILED_SAFE'].includes(snapshot.run.playbackStatus)
     ? 100
@@ -37,10 +38,7 @@ export function JudgeMode({
         <div>
           <span className="eyebrow">HISN-OT / Industrial safety</span>
           <h1>Stop dangerous industrial commands before they reach the plant.</h1>
-          <p>
-            Valid credentials can hide a compromised device. A LangGraph agent checks Nokia/CAMARA
-            network context before a command can change the plant.
-          </p>
+          <p>{agentIntroduction(displayedAgentStatus)}</p>
         </div>
       </section>
       <section className="external-proof" aria-label="Implementation and provider provenance">
@@ -52,7 +50,7 @@ export function JudgeMode({
         <div>
           <span>AI orchestration</span>
           <StatusMark status={displayedAgentStatus} />
-          <small>{agentProofCopy(displayedAgentStatus).short}</small>
+          <small>{agentProof.short}</small>
         </div>
         <div>
           <span>Plant</span>
@@ -162,6 +160,7 @@ function OutcomeFacts({ snapshot }: { snapshot: RunSnapshot }) {
   const accepted = twin.acceptedPressurePercent;
   const outcome = twin.commandHistory.at(-1)?.outcome ?? 'HELD';
   const evidenceCount = snapshot.artifacts.evidence?.length ?? 0;
+  const safety = snapshot.artifacts.safety;
   return (
     <dl className="outcome-facts" aria-label="Physical safety outcome">
       <div>
@@ -169,29 +168,44 @@ function OutcomeFacts({ snapshot }: { snapshot: RunSnapshot }) {
         <dd>{requested === null ? 'Read only' : `${requested.toFixed(0)}%`}</dd>
       </div>
       <div>
-        <dt>Accepted by plant</dt>
-        <dd>{accepted === null ? 'None' : `${accepted.toFixed(0)}%`}</dd>
-      </div>
-      <div>
-        <dt>Physical result</dt>
-        <dd>
-          {snapshot.run.command.kind === 'READ_STATUS'
-            ? 'No change'
-            : outcome === 'BLOCKED'
-              ? 'Unchanged'
-              : humanize(outcome)}
-        </dd>
+        <dt>Hard limit</dt>
+        <dd>{hardLimitText(snapshot, safety)}</dd>
       </div>
       <div>
         <dt>Network evidence</dt>
         <dd>{evidenceCount === 0 ? 'Pending' : `${evidenceCount} recorded`}</dd>
       </div>
+      <div>
+        <dt>Plant state</dt>
+        <dd>{plantStateText(snapshot, outcome, accepted)}</dd>
+      </div>
     </dl>
   );
 }
 
+function hardLimitText(snapshot: RunSnapshot, safety: RunSnapshot['artifacts']['safety']) {
+  if (snapshot.run.command.kind === 'READ_STATUS') return 'Not applicable';
+  if (!safety) return 'Pending';
+  const relation = safety.permitted ? '≤' : '>';
+  return `${safety.permitted ? 'Passed' : 'Failed'} · ${relation}${safety.configuredMaximumPercent}%`;
+}
+
+function plantStateText(
+  snapshot: RunSnapshot,
+  outcome: RunSnapshot['presentationTwin']['commandHistory'][number]['outcome'] | 'HELD',
+  accepted: number | null,
+) {
+  if (snapshot.run.command.kind === 'READ_STATUS') return 'No change';
+  const pressure = accepted?.toFixed(0) ?? 'Previous';
+  if (outcome === 'BLOCKED') return `${pressure}% unchanged`;
+  if (outcome === 'HELD') return `${pressure}% current`;
+  return accepted === null ? humanize(outcome) : `${pressure}% accepted`;
+}
+
 function resultHeadline(snapshot: RunSnapshot, fallback?: string) {
   const decision = snapshot.artifacts.decision?.state;
+  if (decision === 'BLOCK_AND_CONTAIN' && snapshot.artifacts.safety?.permitted)
+    return 'Network compromise blocked the command. Plant unchanged.';
   if (decision === 'BLOCK_AND_CONTAIN') return 'Unsafe command blocked. Plant setting unchanged.';
   if (decision === 'BLOCK') return 'Command blocked before physical execution.';
   if (decision === 'ALLOW' && snapshot.run.command.kind === 'READ_STATUS')
@@ -204,8 +218,13 @@ function resultHeadline(snapshot: RunSnapshot, fallback?: string) {
 function resultDetail(snapshot: RunSnapshot, fallback?: string) {
   const decision = snapshot.artifacts.decision?.state;
   const accepted = snapshot.presentationTwin.acceptedPressurePercent;
+  const requested = snapshot.run.command.requestedSetpointPercent;
+  const hardMaximum = snapshot.artifacts.safety?.configuredMaximumPercent;
   if (decision === 'BLOCK_AND_CONTAIN' || decision === 'BLOCK') {
-    return `The 88% request never became accepted control state. The plant remains at ${accepted?.toFixed(0) ?? 'its previous'}%.`;
+    if (snapshot.artifacts.safety?.permitted) {
+      return `The ${requested}% request passed the ${hardMaximum}% hard limit. Deterministic authorization rejected the network evidence; the plant remains at ${accepted?.toFixed(0) ?? 'its previous'}%.`;
+    }
+    return `The ${requested}% request never became accepted control state. The plant remains at ${accepted?.toFixed(0) ?? 'its previous'}%.`;
   }
   if (decision === 'ALLOW' && snapshot.run.command.kind === 'SET_PRESSURE') {
     return `Network evidence and policy agreed. The digital twin accepted ${accepted?.toFixed(0) ?? 'the requested'}%.`;
@@ -259,6 +278,16 @@ function agentProofCopy(reasoner: RunSnapshot['integration']['agentReasoner']) {
   if (reasoner === 'DETERMINISTIC')
     return { short: 'Local deterministic demo', full: 'Explicit local DEMO reasoner' };
   return { short: 'Commands fail closed', full: 'No AI recommendation' };
+}
+
+function agentIntroduction(reasoner: RunSnapshot['integration']['agentReasoner']) {
+  if (reasoner === 'LANGGRAPH') {
+    return 'Valid credentials can hide a compromised device. A live LangGraph tool loop gathers Nokia/CAMARA network evidence before deterministic policy can authorize a plant change.';
+  }
+  if (reasoner === 'DETERMINISTIC') {
+    return 'Valid credentials can hide a compromised device. This reproducible local replay uses the same bounded evidence policy without claiming a live AI run.';
+  }
+  return 'Valid credentials can hide a compromised device. With AI unavailable, HISN-OT keeps the command held and grants no physical authority.';
 }
 
 function networkProofCopy(source: RunSnapshot['integration']['evidenceSource']) {

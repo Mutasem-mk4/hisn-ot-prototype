@@ -10,11 +10,11 @@ Playback starts at 0.5× with a three-second pause on every recorded step, inclu
 
 ### 0:20–0:55 — Run the attack demonstration
 
-Select **Run attack demonstration**. Follow the result: the gateway holds the 88% request, the agent selects telecom checks, deterministic policy issues `BLOCK_AND_CONTAIN`, and the plant keeps its accepted setting.
+Select **Run attack demonstration**. Follow the result: the gateway holds the 58% request, the agent selects telecom checks, deterministic policy issues `BLOCK_AND_CONTAIN`, and the plant keeps its accepted setting. Because 58% is inside the independent 60% hard limit, the adverse network context is the decisive blocker.
 
 ### 0:55–1:20 — Prove the physical outcome
 
-Use the outcome panel to compare **88% requested** with the unchanged accepted value. The scenario introduction states the independent **60% command hard limit**. The final decision is visible without opening the digital twin.
+Use the outcome panel to compare **58% requested** with the unchanged accepted value. It explicitly shows that the request passed the independent **60% command hard limit**. The final decision is visible without opening the digital twin.
 
 ### 1:20–1:45 — Prove the agent and evidence
 

@@ -28,7 +28,7 @@ describe('stateful digital twin', () => {
   it('keeps requested pressure separate from actual pressure after interception', () => {
     const scenario = testScenario();
     const held = holdCommand(scenario.initialTwin, scenario.command, 'correlation-test');
-    expect(held.requestedPressurePercent).toBe(88);
+    expect(held.requestedPressurePercent).toBe(58);
     expect(held.actualPressurePercent).toBeLessThan(52);
     expect(held.commandHistory[0]?.outcome).toBe('HELD');
   });

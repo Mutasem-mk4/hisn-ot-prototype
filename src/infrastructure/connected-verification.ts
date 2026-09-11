@@ -14,9 +14,7 @@ export function connectedPreflight(configuration: AppConfiguration) {
   return {
     groqConfigured: configuration.llm !== null,
     nokiaConfigured: configuration.nac !== null,
-    subscriberAuthorizationConfigured: Boolean(
-      configuration.nac?.accessToken || simulatorOauthAvailable,
-    ),
+    subscriberAuthorizationConfigured: Boolean(configuration.nac?.accessToken),
     subscriberAuthorizationMode: configuration.nac?.accessToken
       ? ('BEARER' as const)
       : simulatorOauthAvailable

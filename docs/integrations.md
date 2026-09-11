@@ -30,9 +30,10 @@ Run `npm run doctor` to see the active configuration without printing secrets. L
 
 Agent selection:
 
-- `HISN_AGENT_PROVIDER=DETERMINISTIC` keeps the primary demonstration independent of model quota.
-- `HISN_AGENT_PROVIDER=GROQ` uses Groq in the primary demonstration and fails closed if it is unavailable.
-- The connected verification action uses Groq explicitly when all three credentials below are present, even when the primary demonstration is deterministic.
+- `HISN_AGENT_PROVIDER=AUTO` uses Groq when all model credentials are present and otherwise labels a local deterministic replay.
+- `HISN_AGENT_PROVIDER=GROQ` requires Groq in local operation and fails closed if it is unavailable.
+- `HISN_AGENT_PROVIDER=DETERMINISTIC` remains available for a quota-independent, explicitly labeled replay.
+- The connected verification action uses Groq explicitly when all three credentials below are present.
 
 Groq credentials:
 

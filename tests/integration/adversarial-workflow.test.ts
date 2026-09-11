@@ -109,7 +109,9 @@ describe('adversarial workflow outcomes', () => {
   });
 
   it('rejects unsafe input at interception before any reasoning or telecom call', async () => {
-    const harness = createHarness();
+    const scenario = structuredClone(testScenario());
+    scenario.command.requestedSetpointPercent = 88;
+    const harness = createHarness(scenario.id, { scenario });
     try {
       await harness.orchestrator.createRun(harness.scenarioId);
       await harness.orchestrator.control('NEXT');

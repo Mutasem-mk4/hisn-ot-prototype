@@ -129,7 +129,7 @@
       "telecomDevice": { "phoneNumber": "+99999991000" },
       "command": {
         "kind": "SET_PRESSURE",
-        "requestedSetpointPercent": 88,
+        "requestedSetpointPercent": 58,
         "reason": "Remote membrane recovery adjustment"
       },
       "initialTwin": {

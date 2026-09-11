@@ -29,8 +29,8 @@ export function ControlRail({
       <div className="scenario-launcher__intro">
         <h2 id="scenario-launcher-heading">Try a compromised command</h2>
         <p>
-          An 88% pressure request exceeds the {snapshot.setPressureMaximumPercent}% command hard
-          limit.
+          A valid account requests 58%, inside the {snapshot.setPressureMaximumPercent}% hard limit.
+          Compromised SIM, device and location evidence must stop it.
         </p>
       </div>
 
@@ -63,7 +63,9 @@ export function ControlRail({
       </div>
 
       <p className="replay-note">
-        Recorded execution replay · 3 seconds per step at 0.5×. API calls run at normal speed.
+        {snapshot.integration.agentReasoner === 'LANGGRAPH'
+          ? 'Live LangGraph and provider calls run now. The policy decision remains deterministic.'
+          : 'Reproducible local replay. Provider provenance is labeled on every result.'}
       </p>
       <details className="demo-controls">
         <summary>Demo controls</summary>

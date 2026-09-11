@@ -24,8 +24,12 @@ for (const target of [
     if (message.type() === 'error') errors.push(message.text());
   });
   await page.goto(baseURL);
-  const step = page.getByRole('button', { name: 'Advance one backend event' });
   await startScenario(context, page, baseURL, 'judge-safe-operating-change');
+  const controls = page.locator('.demo-controls');
+  if (!(await controls.evaluate((element) => /** @type {HTMLDetailsElement} */ (element).open))) {
+    await controls.getByText('Demo controls').click();
+  }
+  const step = page.getByRole('button', { name: 'Advance one backend event' });
   await expect(step).toBeEnabled();
   await page.evaluate(() => globalThis.scrollTo(0, 0));
   await page.waitForTimeout(250);
@@ -48,7 +52,7 @@ for (const target of [
     path: new URL(`allowed-${target.name}.png`, output).pathname.slice(1),
     fullPage: true,
   });
-  await page.getByRole('button', { name: /Submit unsafe change/ }).click();
+  await page.getByRole('button', { name: /Run attack demonstration/ }).click();
   await page.getByRole('button', { name: 'Pause simulation' }).click();
   await expect(page.getByRole('button', { name: 'Run simulation' })).toBeEnabled();
   for (let count = 0; count < 8; count += 1) {
@@ -65,7 +69,9 @@ for (const target of [
     await step.click();
     if (count < 3) await expect(step).toBeEnabled();
   }
-  await page.getByRole('link', { name: 'Incident' }).click();
+  await page.evaluate(() => {
+    globalThis.location.hash = '#incident';
+  });
   await page.getByRole('link', { name: 'Export JSON' }).waitFor();
   await page.evaluate(() => globalThis.scrollTo(0, 0));
   await page.waitForTimeout(250);

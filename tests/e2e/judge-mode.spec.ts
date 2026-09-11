@@ -19,7 +19,9 @@ test('explains the product immediately and exposes the primary action', async ({
   ).toBeVisible();
   await expect(page.getByRole('button', { name: /Run attack demonstration/i })).toBeVisible();
   await expect(
-    page.getByText('An 88% pressure request exceeds the 60% command hard limit.'),
+    page.getByText(
+      'A valid account requests 58%, inside the 60% hard limit. Compromised SIM, device and location evidence must stop it.',
+    ),
   ).toBeVisible();
   const workflow = page.locator('.agent-workflow');
   await expect(workflow).toBeHidden();
@@ -51,7 +53,7 @@ test('shows a real-provider comparison without adding it to the primary demo flo
   });
   await page.reload();
   const proof = page.locator('.connected-proof');
-  await expect(proof.getByRole('heading', { name: /network evidence changes/i })).toBeHidden();
+  await expect(proof.getByRole('heading', { name: /real Nokia evidence/i })).toBeHidden();
   await proof.getByText('Verify real API calls', { exact: true }).click();
   await expect(proof.getByText('Nokia configured')).toBeVisible();
   await proof.getByRole('button', { name: 'Compare Nokia responses' }).click();
@@ -110,8 +112,8 @@ test('runs the adaptive low-risk path with one inspectable evidence call', async
   await expect(workflow.getByText(/^Observation/).first()).toBeVisible();
   await expect(workflow.getByText('Allow recommended from recorded evidence')).toBeVisible();
   const outcome = page.locator('.outcome-facts');
-  await expect(outcome).toContainText('Accepted by plant46%');
-  await expect(outcome).toContainText('Physical resultNo change');
+  await expect(outcome).toContainText('Network evidence1 recorded');
+  await expect(outcome).toContainText('Plant stateNo change');
 
   await page.getByRole('link', { name: 'Evidence Trace' }).click();
   const table = page.getByRole('table', { name: 'Pre-decision telecom evidence calls' });
@@ -139,9 +141,9 @@ test('supports keyboard stepping while keeping requested and actual pressure dis
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Gateway holds physical command' })).toBeVisible();
   const outcome = page.locator('.outcome-facts');
-  await expect(outcome).toContainText('Accepted by plant46%');
-  await expect(outcome).toContainText('Requested88%');
-  await expect(outcome).toContainText('Physical resultUnchanged');
+  await expect(outcome).toContainText('Requested58%');
+  await expect(outcome).toContainText('Hard limitPassed · ≤60%');
+  await expect(outcome).toContainText('Plant state46% current');
 });
 
 test('shows an allowed plant response followed by an intercepted unsafe command', async ({
@@ -179,7 +181,7 @@ test('shows an allowed plant response followed by an intercepted unsafe command'
   await stepProof(page, 12);
   await expect(page.getByText('BLOCK AND CONTAIN', { exact: true }).first()).toBeVisible();
   await expect(process).toContainText('Accepted setpoint52%');
-  await expect(process).toContainText('Requested setpoint88%');
+  await expect(process).toContainText('Requested setpoint58%');
   await expect(process).toContainText('BLOCKED');
   await expect(process).toContainText('ControllerBACKUP');
   await expect(process).toContainText('GatewayDETACHED');
@@ -205,7 +207,7 @@ test('completes the backend workflow, exposes trace, and exports the incident', 
     if (count < 11) await expect(step).toBeEnabled();
   }
   await expect(
-    page.getByRole('heading', { name: 'Unsafe command blocked. Plant setting unchanged.' }),
+    page.getByRole('heading', { name: 'Network compromise blocked the command. Plant unchanged.' }),
   ).toBeVisible();
   await expect(page.getByText('BLOCK AND CONTAIN', { exact: true }).first()).toBeVisible();
   await page.getByRole('link', { name: 'Evidence Trace' }).click();
@@ -268,7 +270,7 @@ function connectedPreflight() {
   return {
     groqConfigured: true,
     nokiaConfigured: true,
-    subscriberAuthorizationConfigured: true,
+    subscriberAuthorizationConfigured: false,
     subscriberAuthorizationMode: 'SIMULATOR_FAST_OAUTH',
     environment: 'SANDBOX',
     fallbackAllowed: false,

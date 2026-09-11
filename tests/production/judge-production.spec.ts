@@ -35,7 +35,7 @@ test('production deployment serves the application and completes the attack proo
   await expect(
     page.getByRole('heading', { name: /Stop dangerous industrial commands/i }),
   ).toBeVisible();
-  await expect(page.getByText('desalination-safety-2026.5')).toBeVisible();
+  await expect(page.getByText('desalination-safety-2026.6')).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -55,8 +55,9 @@ test('production deployment serves the application and completes the attack proo
   expect(finalFrame.run.playbackStatus).toBe('COMPLETE');
 
   const outcome = (await page.locator('.outcome-facts').innerText()).replaceAll('\n', ' ');
-  expect(outcome).toMatch(/Requested 88%/i);
-  expect(outcome).toMatch(/Physical result (Unchanged|Held)/i);
+  expect(outcome).toMatch(/Requested 58%/i);
+  expect(outcome).toMatch(/Hard limit Passed/i);
+  expect(outcome).toMatch(/Plant state 46% unchanged/i);
 
   const evidence = (await page.locator('.external-proof').innerText()).replaceAll('\n', ' ');
   const headline = await page.locator('#judge-result-heading').innerText();

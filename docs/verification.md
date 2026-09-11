@@ -28,10 +28,10 @@ The automated suite covers:
 A release is complete only after checking the canonical public URL:
 
 1. `/`, `/healthz`, and `/readyz` return successful responses.
-2. Judge Mode reports policy `desalination-safety-2026.5`.
+2. Judge Mode reports policy `desalination-safety-2026.6`.
 3. Read-only inspection shows LangGraph, its Device Reachability minimum, and live model tool requests.
 4. Safe 52% reaches `ALLOW` and accepted pressure becomes 52%.
-5. Unsafe 88% reaches the authoritative blocked/containment result without changing accepted pressure.
+5. The within-limit 58% attack reaches the authoritative blocked/containment result without changing accepted pressure, proving that network context is decisive.
 6. Evidence Trace contains tool requests, observations, adaptations, provenance, timestamps, latency, and correlation IDs.
 7. Incident export contains the agent trace, evidence, policy result, enforcement status, and recovery requirements.
 8. The page has no horizontal overflow and no browser-console errors.
