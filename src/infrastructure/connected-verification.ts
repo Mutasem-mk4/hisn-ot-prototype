@@ -51,6 +51,7 @@ export async function verifyConnectedContext(
   const providers = createProviders({
     ...configuration,
     mode: 'SANDBOX',
+    agentProvider: request.stage === 'investigation' ? 'GROQ' : configuration.agentProvider,
     nokiaSimulatorEnabled: false,
   });
   const scenario = comparisonScenario(configuration, request.context);

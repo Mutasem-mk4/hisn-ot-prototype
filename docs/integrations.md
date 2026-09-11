@@ -28,9 +28,14 @@ Evidence tools are read-only and may run before the authoritative decision. QoD 
 
 Run `npm run doctor` to see the active configuration without printing secrets. Local `.env.local` is loaded automatically. Vercel uses project environment variables.
 
-Required hosted-agent values:
+Agent selection:
 
-- `HISN_AGENT_PROVIDER=GROQ`
+- `HISN_AGENT_PROVIDER=DETERMINISTIC` keeps the primary demonstration independent of model quota.
+- `HISN_AGENT_PROVIDER=GROQ` uses Groq in the primary demonstration and fails closed if it is unavailable.
+- The connected verification action uses Groq explicitly when all three credentials below are present, even when the primary demonstration is deterministic.
+
+Groq credentials:
+
 - `HISN_LLM_BASE_URL`
 - `HISN_LLM_API_KEY`
 - `HISN_LLM_MODEL`

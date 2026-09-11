@@ -28,6 +28,27 @@ describe('runtime-mode configuration', () => {
     expect(createProviders(configuration).reasoner.mode).toBe('UNAVAILABLE');
   });
 
+  it('keeps hosted Groq credentials available while the primary demo is deterministic', () => {
+    const configuration = loadConfiguration(
+      {
+        HISN_MODE: 'DEMO',
+        VERCEL: '1',
+        HISN_AGENT_PROVIDER: 'DETERMINISTIC',
+        HISN_SESSION_SECRET: 'test-session-signing-key-at-least-32-characters',
+        HISN_LLM_BASE_URL: 'https://api.groq.com/openai/v1/chat/completions',
+        HISN_LLM_API_KEY: 'test-groq-api-key',
+        HISN_LLM_MODEL: 'test-model',
+      },
+      process.cwd(),
+    );
+
+    expect(configuration.llm).not.toBeNull();
+    expect(createProviders(configuration).reasoner.mode).toBe('DETERMINISTIC');
+    expect(
+      createProviders({ ...configuration, mode: 'SANDBOX', agentProvider: 'GROQ' }).reasoner.mode,
+    ).toBe('LANGGRAPH');
+  });
+
   it('refuses LIVE startup when Nokia configuration is incomplete', () => {
     expect(() =>
       loadConfiguration(

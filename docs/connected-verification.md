@@ -36,6 +36,8 @@ The `investigation` stage uses Groq and the direct sandbox adapters with an isol
 
 The CLI and hosted investigation share the same implementation. Hosted execution uses existing deployment secrets, so it does not require exporting them to a developer machine.
 
+The primary Judge Mode flow and this diagnostic have separate reasoner selection. `HISN_AGENT_PROVIDER=DETERMINISTIC` makes the main presentation independent of model quota while retaining configured Groq credentials for the explicit connected investigation. The UI reports the reasoner used by each path; this is not an automatic or hidden AI fallback.
+
 - Provenance enforcement and the comparison diagnostic are implemented.
 - Regression tests cover the same 52% command with reassuring, suspicious, corroborated, and unavailable evidence. These tests use fixtures and do not prove external API behavior.
 - Structured Groq planning/recommendation requests stop retrying immediately on HTTP 429. LangGraph SDK retry behavior is unchanged.

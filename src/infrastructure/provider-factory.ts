@@ -26,15 +26,18 @@ export function createProviders(configuration: AppConfiguration): ProviderSet {
   const modelTimeoutMs = Math.floor(
     configuration.policy.agent.maximumRuntimeMs / (configuration.policy.agent.maximumRetries + 1),
   );
-  const reasoner = configuration.llm
-    ? new LangGraphAgentReasoner(
-        configuration.llm,
-        modelTimeoutMs,
-        configuration.policy.agent.maximumRetries,
-      )
-    : configuration.mode === 'DEMO' && !configuration.hosted
+  const reasoner =
+    configuration.agentProvider === 'DETERMINISTIC'
       ? new DeterministicAgentReasoner()
-      : new UnavailableAgentReasoner();
+      : configuration.llm
+        ? new LangGraphAgentReasoner(
+            configuration.llm,
+            modelTimeoutMs,
+            configuration.policy.agent.maximumRetries,
+          )
+        : configuration.mode === 'DEMO' && !configuration.hosted
+          ? new DeterministicAgentReasoner()
+          : new UnavailableAgentReasoner();
   if (configuration.mode === 'DEMO') {
     if (configuration.nokiaSimulatorEnabled && configuration.nac) {
       return {

@@ -212,7 +212,6 @@ function llmCredentials(
   environment: z.infer<typeof EnvironmentSchema>,
   hosted: boolean,
 ): LlmCredentials | null {
-  if (environment.HISN_AGENT_PROVIDER === 'DETERMINISTIC') return null;
   const entries = [
     environment.HISN_LLM_BASE_URL,
     environment.HISN_LLM_API_KEY,
