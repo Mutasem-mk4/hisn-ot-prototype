@@ -38,6 +38,15 @@ A release is complete only after checking the canonical public URL:
 
 ## Release evidence
 
+### 2026-09-12 policy 2026.8 adaptive proof
+
+- Code commit `94954c0` passed [CI 34695933595](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34695933595) and deployed as Vercel deployment `dpl_Dbsk719pU7zfNXgckyMZfW838wtJ` at the canonical public URL.
+- The production smoke completed at `2026-09-12T13:28:22Z`, correlation `hisn-c0b37a73-a66c-4870-a2d8-2fe2c80a2bd0`. Live LangGraph reasoning collected four successful Nokia Sandbox responses. The real trace placed the failed location observation before the adaptive evidence-floor expansion and placed that expansion before the SIM Swap request.
+- The 52% request passed the independent 60% hard maximum. Deterministic policy issued `BLOCK_AND_CONTAIN`, the workflow reached `INCIDENT_REPORTED`, and accepted pressure remained 46%.
+- Local release checks passed 100 tests across 14 files, formatting, lint, type checks, and the production build. Browser checks passed 34 tests across desktop, projector, tablet, and mobile profiles, with two intentional small-screen skips.
+- The production smoke now exercises one judged attack per run to conserve the free Groq quota. The separate local browser suite covers the read-only and trusted 52% paths. Earlier current-release execution already proved the primary connected attack before a subsequent auxiliary request received `HTTP_429`; that quota response failed closed.
+- The final ten-slide submission deck and sample incident report now use policy `oil-pressure-safety-2026.8` and the same 52% comparison as the deployed demonstration.
+
 ### 2026-09-12 final connected proof pass
 
 - Canonical production deployment `dpl_7xJFbDQhB3cJZPPYkFgDuktnEDJQ` was Ready at [https://hisn-ot-prototype.vercel.app](https://hisn-ot-prototype.vercel.app). Commit `299b157` passed [CI 34666679572](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34666679572).
