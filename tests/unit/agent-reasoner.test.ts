@@ -17,7 +17,7 @@ const policy = testPolicy();
 describe('bounded evidence planning', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('starts physical control with a larger evidence floor than read-only access', async () => {
+  it('scales the evidence floor with command consequence', async () => {
     const reasoner = new DeterministicAgentReasoner();
     const signal = new AbortController().signal;
     const low = await reasoner.plan(
@@ -42,8 +42,23 @@ describe('bounded evidence planning', () => {
       },
       signal,
     );
+    const elevated = await reasoner.plan(
+      {
+        command: { ...scenario.command, requestedSetpointPercent: 52.01 },
+        principal: scenario.principal,
+        policy,
+        twin: scenario.initialTwin,
+      },
+      signal,
+    );
     expect(low.selectedTools).toEqual(['DEVICE_REACHABILITY']);
     expect(critical.selectedTools).toEqual(['LOCATION_VERIFICATION', 'DEVICE_REACHABILITY']);
+    expect(elevated.selectedTools).toEqual([
+      'LOCATION_VERIFICATION',
+      'DEVICE_REACHABILITY',
+      'SIM_SWAP',
+      'DEVICE_SWAP',
+    ]);
     expect(critical.selectedTools).not.toContain('NUMBER_VERIFICATION');
     expect(critical.selectedTools.length).toBeGreaterThan(low.selectedTools.length);
   });
@@ -72,6 +87,16 @@ describe('bounded evidence planning', () => {
                 name: 'verify_facility_location',
                 arguments: JSON.stringify({
                   reason: 'Confirm the operator is inside the approved facility geofence.',
+                }),
+              },
+            },
+            {
+              id: 'call-sim-swap-premature',
+              type: 'function',
+              function: {
+                name: 'check_recent_sim_swap',
+                arguments: JSON.stringify({
+                  reason: 'Check for takeover before any baseline observation is available.',
                 }),
               },
             },
@@ -168,6 +193,10 @@ describe('bounded evidence planning', () => {
     const simRequest = investigation.trace.findIndex(
       (step) => step.phase === 'TOOL_REQUEST' && step.tool === 'SIM_SWAP',
     );
+    const deferredEscalation = investigation.trace.findIndex(
+      (step) => step.headline === 'Escalation deferred pending baseline evidence',
+    );
+    expect(deferredEscalation).toBeLessThan(locationObservation);
     expect(locationObservation).toBeLessThan(adaptiveExpansion);
     expect(adaptiveExpansion).toBeLessThan(simRequest);
   });

@@ -46,7 +46,7 @@ SIM Swap, Device Swap, Location Verification, Device Reachability, and QoD use a
 
 ### Why not call every API every time?
 
-The evidence floor starts with one signal for read-only access and two for physical control. A failed usable pressure-control observation expands the investigation to SIM Swap and Device Swap. This makes the agent's adaptation visible while deterministic policy still enforces the completed evidence floor.
+The evidence floor starts with one signal for read-only access and two for a pressure request inside the observed safe band. A failed usable observation expands the investigation to SIM Swap and Device Swap; requests above that band require all four signals immediately. This makes the model's post-observation selection visible while deterministic policy still enforces the completed evidence floor.
 
 ### Why is the plant simulated?
 

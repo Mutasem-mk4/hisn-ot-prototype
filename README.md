@@ -49,7 +49,7 @@ The connected agent chooses from five allowlisted, typed tools:
 
 LangGraph executes the model/tool/observation loop. The application injects trusted run context, invokes the existing Nokia adapters, validates every result with Zod, enforces a five-call budget, rejects duplicate calls, and records an inspectable action trace. The graph reminds the model when required evidence is missing; if the model still stops early or becomes unavailable, the workflow fails closed without substituting a rule-based recommendation.
 
-Number Verification remains available in the separate five-API diagnostic with Nokia simulator OAuth. The judged flow does not establish live subscriber possession. It starts pressure control with Location Verification and Device Reachability; a failed usable observation expands the evidence floor to SIM Swap and Device Swap. Unavailable baseline evidence blocks the command without claiming compromise. This assurance profile must be revisited for operator deployment.
+Number Verification remains available in the separate five-API diagnostic with Nokia simulator OAuth. The judged flow does not establish live subscriber possession. A request inside the observed safe band starts with Location Verification and Device Reachability; a failed usable observation expands the evidence floor to SIM Swap and Device Swap. Requests above that band require all four signals from the start. Unavailable baseline evidence blocks the command without claiming compromise. This assurance profile must be revisited for operator deployment.
 
 The final decision remains deterministic. Model output cannot change the 60% command maximum, authorize missing evidence, detach a gateway, or activate backup control by itself.
 

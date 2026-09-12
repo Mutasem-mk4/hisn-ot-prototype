@@ -11,7 +11,7 @@ import type {
 } from '../shared/contracts.js';
 import { assessEvidence, evidenceSummary } from './evidence.js';
 import { evaluatePhysicalSafety } from './safety-engine.js';
-import { minimumEvidenceForCommand } from './agent-plan.js';
+import { evidenceFloorForInvestigation } from './agent-plan.js';
 
 type DecisionInput = {
   command: Command;
@@ -84,7 +84,7 @@ function policyDecisionState(
 
 function missingRequiredEvidence(input: DecisionInput) {
   const collected = new Set(input.evidence.map((call) => call.tool));
-  return minimumEvidenceForCommand(input.command, input.policy).filter(
+  return evidenceFloorForInvestigation(input.command, input.policy, input.evidence).filter(
     (tool) => !collected.has(tool),
   );
 }

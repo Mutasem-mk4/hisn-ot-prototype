@@ -8,7 +8,15 @@ import type {
 import { assessEvidence } from './evidence.js';
 
 export function minimumEvidenceForCommand(command: Command, policy: Policy) {
-  return [...policy.commands[command.kind].requiredEvidence];
+  const required = [...policy.commands[command.kind].requiredEvidence];
+  if (
+    command.kind === 'SET_PRESSURE' &&
+    command.requestedSetpointPercent !== null &&
+    command.requestedSetpointPercent > policy.safePressureBand.maximumPercent
+  ) {
+    return [...new Set([...required, 'SIM_SWAP' as const, 'DEVICE_SWAP' as const])];
+  }
+  return required;
 }
 
 export function evidenceFloorForInvestigation(

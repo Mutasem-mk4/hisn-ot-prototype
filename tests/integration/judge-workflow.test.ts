@@ -161,8 +161,10 @@ describe('complete judge workflow', () => {
       expect(snapshot.run.playbackStatus).toBe('COMPLETE');
       expect(snapshot.artifacts.decision?.state).toBe('BLOCK');
       expect(
-        snapshot.artifacts.evidence?.filter((call) => call.requestStatus === 'UNAVAILABLE'),
-      ).toHaveLength(1);
+        snapshot.artifacts.evidence
+          ?.filter((call) => call.requestStatus === 'UNAVAILABLE')
+          .map((call) => call.tool),
+      ).toEqual(['LOCATION_VERIFICATION', 'SIM_SWAP', 'DEVICE_SWAP']);
       expect(harness.store.enforcementForRun(snapshot.run.id)).toEqual([]);
       expect(snapshot.run.twin.commandHistory[0]?.outcome).toBe('BLOCKED');
     } finally {

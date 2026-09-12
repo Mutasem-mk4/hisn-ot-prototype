@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policyVersion": "oil-pressure-safety-2026.7",
+  "policyVersion": "oil-pressure-safety-2026.8",
   "assetId": "asset-oil-pumping-station-a",
   "safePressureBand": {
     "minimumPercent": 42,
