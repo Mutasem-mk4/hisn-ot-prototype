@@ -10,11 +10,11 @@ Playback starts at 0.5× with a three-second pause on every recorded step, inclu
 
 ### 0:20–0:55 — Run the attack demonstration
 
-Select **Run attack demonstration**. Follow the result: the gateway holds the 58% request, the agent selects telecom checks, deterministic policy issues `BLOCK_AND_CONTAIN`, and the plant keeps its accepted setting. Because 58% is inside the independent 60% hard limit, the adverse network context is the decisive blocker.
+Select **Run attack demonstration**. Follow the result: the gateway holds the 52% request, the agent starts with location and reachability, then a failed location observation expands the investigation to SIM Swap and Device Swap. Deterministic policy issues `BLOCK_AND_CONTAIN`, and the plant keeps its accepted setting. Because 52% is inside the independent 60% hard limit, the adverse network context is the decisive blocker.
 
 ### 0:55–1:20 — Prove the physical outcome
 
-Use the outcome panel to compare **58% requested** with the unchanged accepted value. It explicitly shows that the request passed the independent **60% command hard limit**. The final decision is visible without opening the digital twin.
+Use the outcome panel to compare **52% requested** with the unchanged accepted value. It explicitly shows that the request passed the independent **60% command hard limit**. The final decision is visible without opening the digital twin.
 
 ### 1:20–1:45 — Prove the agent and evidence
 
@@ -26,7 +26,7 @@ Point to the provenance strip and explain whether the current run uses Nokia san
 
 ## Optional comparisons
 
-- **Run safe command** requests 52% and demonstrates `ALLOW` when the required evidence passes.
+- **Run trusted comparison** submits the same 52% command and demonstrates `ALLOW` when location and reachability pass.
 - **Run read-only inspection** demonstrates the one-signal Device Reachability minimum with no process-state change.
 - **Demo controls** exposes pause, playback speed, event stepping, reset, presenter cues, and full-screen mode for technical review.
 
@@ -46,7 +46,7 @@ SIM Swap, Device Swap, Location Verification, Device Reachability, and QoD use a
 
 ### Why not call every API every time?
 
-The evidence floor scales with consequence: one signal for read-only access, two for an in-band physical change, and four for a command above the observed safe band. The model can add proportionate allowlisted evidence and adapts after observations.
+The evidence floor starts with one signal for read-only access and two for physical control. A failed usable pressure-control observation expands the investigation to SIM Swap and Device Swap. This makes the agent's adaptation visible while deterministic policy still enforces the completed evidence floor.
 
 ### Why is the plant simulated?
 

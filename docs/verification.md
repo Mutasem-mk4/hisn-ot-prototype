@@ -28,10 +28,10 @@ The automated suite covers:
 A release is complete only after checking the canonical public URL:
 
 1. `/`, `/healthz`, and `/readyz` return successful responses.
-2. Judge Mode reports policy `oil-pressure-safety-2026.6`.
+2. Judge Mode reports policy `oil-pressure-safety-2026.7`.
 3. Read-only inspection shows LangGraph, its Device Reachability minimum, and live model tool requests.
-4. Safe 52% reaches `ALLOW` and accepted pressure becomes 52%.
-5. The within-limit 58% attack reaches the authoritative blocked/containment result without changing accepted pressure, proving that network context is decisive.
+4. The trusted 52% comparison reaches `ALLOW` after two Nokia checks and accepted pressure becomes 52%.
+5. The same 52% command with compromised context expands from two to four Nokia checks, reaches the authoritative blocked/containment result, and leaves accepted pressure unchanged.
 6. Evidence Trace contains tool requests, observations, adaptations, provenance, timestamps, latency, and correlation IDs.
 7. Incident export contains the agent trace, evidence, policy result, enforcement status, and recovery requirements.
 8. The page has no horizontal overflow and no browser-console errors.

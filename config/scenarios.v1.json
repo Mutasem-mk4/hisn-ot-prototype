@@ -165,8 +165,8 @@
       },
       "command": {
         "kind": "SET_PRESSURE",
-        "requestedSetpointPercent": 58,
-        "reason": "Remote pump pressure adjustment"
+        "requestedSetpointPercent": 52,
+        "reason": "Judge-requested production increase"
       },
       "initialTwin": {
         "actualPressurePercent": 46,
@@ -282,12 +282,11 @@
           "latencyMs": 1200
         },
         "LOCATION_VERIFICATION": {
-          "status": "SUCCEEDED",
+          "status": "UNAVAILABLE",
           "redacted": {
-            "verificationResult": "TRUE",
-            "facility": "Authorized oil-station geofence"
+            "reason": "Provider timeout"
           },
-          "latencyMs": 176
+          "latencyMs": 1200
         },
         "DEVICE_REACHABILITY": {
           "status": "SUCCEEDED",

@@ -39,7 +39,11 @@ import type {
 import { buildIncidentReport } from './incident-report.js';
 import { withDeadline } from './provider-deadline.js';
 import { evidencePurpose } from '../domain/evidence.js';
-import { assertPlanAssurance, minimumEvidenceForCommand } from '../domain/agent-plan.js';
+import {
+  assertInvestigationAssurance,
+  assertPlanAssurance,
+  minimumEvidenceForCommand,
+} from '../domain/agent-plan.js';
 
 const PRESENTATION_STEP_MS = 7_000;
 
@@ -431,7 +435,12 @@ export class JudgeOrchestrator {
       },
       signal,
     );
-    assertPlanAssurance(investigation.plan, run.command, this.policy);
+    assertInvestigationAssurance(
+      investigation.plan,
+      run.command,
+      this.policy,
+      investigation.evidence,
+    );
     const evidence = investigation.evidence;
     return {
       eventType: 'NETWORK_EVIDENCE_COMPLETE',

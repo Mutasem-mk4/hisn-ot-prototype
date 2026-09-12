@@ -80,6 +80,9 @@
   color: var(--ink-1);
   padding-inline: 22px;
 }
+.scenario-action--primary b {
+  color: var(--ink-1);
+}
 .scenario-action--primary:hover {
   background: var(--cyan);
 }

@@ -30,6 +30,9 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
   const plan = snapshot.artifacts.plan;
   const evidence = snapshot.artifacts.evidence ?? [];
   const trace = snapshot.artifacts.agentTrace ?? [];
+  const adaptedAfterObservation = trace.some(
+    (step) => step.headline === 'Suspicious observation expanded the evidence plan',
+  );
   const recommendation = snapshot.artifacts.recommendation;
   const decision = snapshot.artifacts.decision;
   const agentFailed =
@@ -50,9 +53,11 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
     },
     {
       label: 'Choose trusted evidence',
-      detail: plan
-        ? `${plan.selectedTools.length} telecom ${pluralize('check', plan.selectedTools.length)} selected`
-        : 'Select network checks from the safe allowlist',
+      detail: adaptedAfterObservation
+        ? `Nokia observation expanded the plan to ${plan?.selectedTools.length ?? 0} checks`
+        : plan
+          ? `${plan.selectedTools.length} telecom ${pluralize('check', plan.selectedTools.length)} selected`
+          : 'Select network checks from the safe allowlist',
       completeAt: 'EVIDENCE_PLANNED',
     },
     {
@@ -198,6 +203,13 @@ function EvidenceSummary({ evidence }: { evidence: EvidenceCall[] }) {
 function agentSummary(snapshot: RunSnapshot) {
   const plan = snapshot.artifacts.plan;
   if (!plan) return 'The agent will choose evidence before policy decides.';
+  if (
+    snapshot.artifacts.agentTrace?.some(
+      (step) => step.headline === 'Suspicious observation expanded the evidence plan',
+    )
+  ) {
+    return `Suspicious Nokia evidence expanded the investigation to ${plan.selectedTools.length} checks.`;
+  }
   if (snapshot.run.command.kind === 'READ_STATUS') {
     return `Low-risk inspection uses ${plan.selectedTools.length} focused network ${pluralize('check', plan.selectedTools.length)}.`;
   }

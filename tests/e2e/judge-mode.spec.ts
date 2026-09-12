@@ -19,7 +19,7 @@ test('explains the product immediately and exposes the primary action', async ({
   await expect(page.getByRole('button', { name: /Run attack demonstration/i })).toBeVisible();
   await expect(
     page.getByText(
-      'A valid account requests 58%, inside the 60% hard limit. Compromised SIM, device and location evidence must stop it.',
+      'Both operators request 52%, inside the 60% hard limit. Nokia evidence determines which command reaches the digital twin.',
     ),
   ).toBeVisible();
   const workflow = page.locator('.agent-workflow');
@@ -167,7 +167,7 @@ test('supports keyboard stepping while keeping requested and actual pressure dis
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Gateway holds physical command' })).toBeVisible();
   const outcome = page.locator('.outcome-facts');
-  await expect(outcome).toContainText('Requested58%');
+  await expect(outcome).toContainText('Requested52%');
   await expect(outcome).toContainText('Hard limitPassed · ≤60%');
   await expect(outcome).toContainText('Plant state46% current');
 });
@@ -180,7 +180,7 @@ test('shows an allowed plant response followed by an intercepted unsafe command'
     'The full judge interaction is exercised at the presentation viewports.',
   );
   await openDemoControls(page);
-  await page.getByRole('button', { name: /Run safe command/ }).click();
+  await page.getByRole('button', { name: /Run trusted comparison/ }).click();
   await page.getByRole('button', { name: 'Pause simulation' }).click();
   await page.getByLabel('Simulation playback speed').selectOption('4');
   await stepProof(page, 9);
@@ -207,7 +207,7 @@ test('shows an allowed plant response followed by an intercepted unsafe command'
   await stepProof(page, 12);
   await expect(page.getByText('BLOCK AND CONTAIN', { exact: true }).first()).toBeVisible();
   await expect(process).toContainText('Accepted setpoint52%');
-  await expect(process).toContainText('Requested setpoint58%');
+  await expect(process).toContainText('Requested setpoint52%');
   await expect(process).toContainText('BLOCKED');
   await expect(process).toContainText('ControllerBACKUP');
   await expect(process).toContainText('GatewayDETACHED');

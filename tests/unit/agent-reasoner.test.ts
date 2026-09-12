@@ -4,7 +4,10 @@ import {
   LangGraphAgentReasoner,
 } from '../../src/infrastructure/agent-reasoners.js';
 import { evaluatePhysicalSafety } from '../../src/domain/safety-engine.js';
-import { minimumEvidenceForCommand } from '../../src/domain/agent-plan.js';
+import {
+  evidenceFloorForInvestigation,
+  minimumEvidenceForCommand,
+} from '../../src/domain/agent-plan.js';
 import { issueDecision } from '../../src/domain/decision-engine.js';
 import { evidenceCall, testPolicy, testScenario } from '../helpers/fixtures.js';
 
@@ -14,7 +17,7 @@ const policy = testPolicy();
 describe('bounded evidence planning', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('selects stronger evidence for critical control than for read-only access', async () => {
+  it('starts physical control with a larger evidence floor than read-only access', async () => {
     const reasoner = new DeterministicAgentReasoner();
     const signal = new AbortController().signal;
     const low = await reasoner.plan(
@@ -40,35 +43,41 @@ describe('bounded evidence planning', () => {
       signal,
     );
     expect(low.selectedTools).toEqual(['DEVICE_REACHABILITY']);
-    expect(critical.selectedTools).toEqual(
-      expect.arrayContaining([
-        'SIM_SWAP',
-        'DEVICE_SWAP',
-        'LOCATION_VERIFICATION',
-        'DEVICE_REACHABILITY',
-      ]),
-    );
+    expect(critical.selectedTools).toEqual(['LOCATION_VERIFICATION', 'DEVICE_REACHABILITY']);
     expect(critical.selectedTools).not.toContain('NUMBER_VERIFICATION');
     expect(critical.selectedTools.length).toBeGreaterThan(low.selectedTools.length);
   });
 
   it('adapts its LangGraph tool plan after observing earlier evidence', async () => {
-    const lowRequest = {
-      command: {
-        kind: 'READ_STATUS' as const,
-        requestedSetpointPercent: null,
-        reason: 'Read status only',
-      },
+    const attackRequest = {
+      command: scenario.command,
       principal: scenario.principal,
       policy,
       twin: scenario.initialTwin,
     };
     const initialPlan = await new DeterministicAgentReasoner().plan(
-      lowRequest,
+      attackRequest,
       new AbortController().signal,
     );
     const fetchMock = vi
       .fn()
+      .mockResolvedValueOnce(
+        groqResponse({
+          content: null,
+          tool_calls: [
+            {
+              id: 'call-location',
+              type: 'function',
+              function: {
+                name: 'verify_facility_location',
+                arguments: JSON.stringify({
+                  reason: 'Confirm the operator is inside the approved facility geofence.',
+                }),
+              },
+            },
+          ],
+        }),
+      )
       .mockResolvedValueOnce(
         groqResponse({
           content: null,
@@ -79,32 +88,37 @@ describe('bounded evidence planning', () => {
               function: {
                 name: 'get_device_reachability',
                 arguments: JSON.stringify({
-                  reason: 'Confirm the operator device is currently attached for this inspection.',
+                  reason: 'Confirm the operator device remains attached to mobile data.',
                 }),
               },
             },
-          ],
-        }),
-      )
-      .mockResolvedValueOnce(
-        groqResponse({
-          content: null,
-          tool_calls: [
             {
-              id: 'call-number',
+              id: 'call-sim-swap',
               type: 'function',
               function: {
-                name: 'verify_operator_number',
+                name: 'check_recent_sim_swap',
                 arguments: JSON.stringify({
-                  reason: 'Bind the reachable session to the enrolled operator before concluding.',
+                  reason: 'Investigate subscription takeover after the failed location check.',
+                }),
+              },
+            },
+            {
+              id: 'call-device-swap',
+              type: 'function',
+              function: {
+                name: 'check_recent_device_swap',
+                arguments: JSON.stringify({
+                  reason: 'Investigate endpoint replacement after the failed location check.',
                 }),
               },
             },
           ],
         }),
       )
-      .mockResolvedValueOnce(
-        groqResponse({ content: 'Reachability and number binding complete the investigation.' }),
+      .mockImplementation(() =>
+        Promise.resolve(
+          groqResponse({ content: 'The escalated network investigation is complete.' }),
+        ),
       );
     vi.stubGlobal('fetch', fetchMock);
     const reasoner = new LangGraphAgentReasoner(
@@ -115,19 +129,19 @@ describe('bounded evidence planning', () => {
       },
       500,
     );
-    const executor = vi.fn((tool) =>
-      Promise.resolve(
-        evidenceCall(
-          tool,
-          tool === 'NUMBER_VERIFICATION'
-            ? { verified: true, subject: 'redacted' }
-            : { reachable: true, connectivity: ['DATA'] },
-        ),
-      ),
-    );
+    const executor = vi.fn((tool) => {
+      const observations = {
+        LOCATION_VERIFICATION: { verificationResult: 'FALSE' },
+        DEVICE_REACHABILITY: { reachable: true, connectivity: ['DATA'] },
+        SIM_SWAP: { swapped: true, windowHours: 72 },
+        DEVICE_SWAP: { swapped: true, windowHours: 168 },
+        NUMBER_VERIFICATION: { verified: true },
+      };
+      return Promise.resolve(evidenceCall(tool, observations[tool]));
+    });
 
     const investigation = await reasoner.investigate(
-      lowRequest,
+      attackRequest,
       initialPlan,
       executor,
       new AbortController().signal,
@@ -136,15 +150,26 @@ describe('bounded evidence planning', () => {
     expect(investigation.framework).toBe('LANGGRAPH');
     expect(investigation.plan.reasoningProvenance).toBe('LIVE');
     expect(investigation.plan.selectedTools).toEqual([
+      'LOCATION_VERIFICATION',
       'DEVICE_REACHABILITY',
-      'NUMBER_VERIFICATION',
+      'SIM_SWAP',
+      'DEVICE_SWAP',
     ]);
-    expect(executor).toHaveBeenCalledTimes(2);
+    expect(executor).toHaveBeenCalledTimes(4);
     expect(investigation.trace.map((step) => step.phase)).toContain('TOOL_REQUEST');
     expect(investigation.trace.map((step) => step.phase)).toContain('OBSERVATION');
     expect(investigation.trace.map((step) => step.phase)).toContain('ADAPTATION');
-    expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[0]?.[0]).toBe('https://api.groq.com/openai/v1/chat/completions');
+    const locationObservation = investigation.trace.findIndex(
+      (step) => step.phase === 'OBSERVATION' && step.tool === 'LOCATION_VERIFICATION',
+    );
+    const adaptiveExpansion = investigation.trace.findIndex(
+      (step) => step.headline === 'Suspicious observation expanded the evidence plan',
+    );
+    const simRequest = investigation.trace.findIndex(
+      (step) => step.phase === 'TOOL_REQUEST' && step.tool === 'SIM_SWAP',
+    );
+    expect(locationObservation).toBeLessThan(adaptiveExpansion);
+    expect(adaptiveExpansion).toBeLessThan(simRequest);
   });
 
   it('returns control to the model when it stops before the evidence floor', async () => {
@@ -573,10 +598,16 @@ describe('bounded evidence planning', () => {
           }),
       }),
     );
-    const evidence = minimumEvidenceForCommand(scenario.command, policy).map((tool) => {
+    const baselineEvidence = minimumEvidenceForCommand(scenario.command, policy).map((tool) => {
       const fixture = scenario.evidence[tool];
       return evidenceCall(tool, fixture.redacted, fixture.status);
     });
+    const evidence = evidenceFloorForInvestigation(scenario.command, policy, baselineEvidence).map(
+      (tool) => {
+        const fixture = scenario.evidence[tool];
+        return evidenceCall(tool, fixture.redacted, fixture.status);
+      },
+    );
     const reasoner = new LangGraphAgentReasoner(
       { baseUrl: 'https://reasoner.invalid', apiKey: 'redacted-key', model: 'hosted-model' },
       200,

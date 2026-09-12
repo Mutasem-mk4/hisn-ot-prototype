@@ -32,6 +32,23 @@ describe('isolated judge rehearsals', () => {
     const second = allowed.frames.at(-1)!;
     expect(first.artifacts.decision?.state).toBe('BLOCK_AND_CONTAIN');
     expect(second.artifacts.decision?.state).toBe('ALLOW');
+    expect(first.run.command).toEqual(second.run.command);
+    expect(first.artifacts.plan?.selectedTools).toEqual([
+      'LOCATION_VERIFICATION',
+      'DEVICE_REACHABILITY',
+      'SIM_SWAP',
+      'DEVICE_SWAP',
+    ]);
+    expect(second.artifacts.plan?.selectedTools).toEqual([
+      'LOCATION_VERIFICATION',
+      'DEVICE_REACHABILITY',
+    ]);
+    expect(first.artifacts.agentTrace?.map((step) => step.headline)).toContain(
+      'Suspicious observation expanded the evidence plan',
+    );
+    expect(second.artifacts.agentTrace?.map((step) => step.headline)).not.toContain(
+      'Suspicious observation expanded the evidence plan',
+    );
     expect(first.run.twin.acceptedPressurePercent).toBe(46);
     expect(second.run.twin.acceptedPressurePercent).toBe(52);
     expect(first.run.id).not.toBe(second.run.id);

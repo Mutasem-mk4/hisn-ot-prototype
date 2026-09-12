@@ -38,7 +38,7 @@ The evidence agent uses LangGraph `StateGraph`, `MessagesAnnotation`, and `ToolN
 8. Produce a recommendation only after a successful investigation.
 9. Run deterministic authorization.
 
-Read-only status requires Device Reachability. An in-band pressure command requires Number Verification, Location Verification, and Device Reachability. A command above the observed 52% safe band also requires SIM Swap and Device Swap. The 60% hard maximum is independent from this evidence policy.
+Read-only status requires Device Reachability. Pressure control starts with Location Verification and Device Reachability. If a usable observation fails policy, the server expands the evidence floor to SIM Swap and Device Swap before the agent can conclude. Unavailable baseline evidence blocks authorization without triggering compromise containment. The 60% hard maximum is independent from this evidence policy.
 
 ## Workflow states
 

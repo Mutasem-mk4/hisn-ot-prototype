@@ -106,8 +106,8 @@ export function JudgeMode({
             safePressureBand={snapshot.safePressureBand}
           />
           <section className="proof-compact" aria-labelledby="adaptive-heading">
-            <span className="eyebrow">Evidence scales with consequence</span>
-            <h2 id="adaptive-heading">One check for observation. Four for elevated control.</h2>
+            <span className="eyebrow">Evidence adapts to observations</span>
+            <h2 id="adaptive-heading">Two checks establish context. Suspicion expands to four.</h2>
             <div className="plan-compare">
               <div>
                 <span>Read-only inspection</span>

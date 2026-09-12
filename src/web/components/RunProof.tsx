@@ -6,30 +6,21 @@ const displayValue = (value: unknown) => (typeof value === 'string' ? value : ''
 export function RunProof({ snapshot }: { snapshot: RunSnapshot }) {
   const { evidence = [], plan, recommendation, decision } = snapshot.artifacts;
   if (!plan && snapshot.run.playbackStatus !== 'FAILED_SAFE') return null;
-  const required =
-    snapshot.run.command.kind === 'READ_STATUS'
-      ? ['DEVICE_REACHABILITY']
-      : [
-          'LOCATION_VERIFICATION',
-          'DEVICE_REACHABILITY',
-          ...((snapshot.run.command.requestedSetpointPercent ?? 0) >
-          snapshot.safePressureBand.maximumPercent
-            ? ['SIM_SWAP', 'DEVICE_SWAP']
-            : []),
-        ];
   const connected = snapshot.run.runtimeMode === 'SANDBOX';
   const enforcement = snapshot.visibleEvents.flatMap((event) => {
     const result = EnforcementCallSchema.array().safeParse(event.payload.enforcement);
     return result.success ? result.data : [];
   });
-  const complete = required.every((tool) =>
-    evidence.some(
-      (call) =>
-        call.tool === tool &&
-        call.requestStatus === 'SUCCEEDED' &&
-        (!connected || call.provenance === 'SANDBOX'),
-    ),
-  );
+  const complete =
+    plan !== undefined &&
+    plan.selectedTools.every((tool) =>
+      evidence.some(
+        (call) =>
+          call.tool === tool &&
+          call.requestStatus === 'SUCCEEDED' &&
+          (!connected || call.provenance === 'SANDBOX'),
+      ),
+    );
   const writes = snapshot.run.twin.commandHistory.filter(
     (command) =>
       command.kind === 'SET_PRESSURE' &&
@@ -54,7 +45,7 @@ export function RunProof({ snapshot }: { snapshot: RunSnapshot }) {
           </small>
         </span>
         <span>
-          <b>Required evidence {complete ? 'COMPLETE' : 'INCOMPLETE'}</b>
+          <b>Investigation evidence {complete ? 'COMPLETE' : 'INCOMPLETE'}</b>
           <small>Collection completeness does not mean the device is trusted.</small>
         </span>
         <span>

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { JudgeOrchestrator } from '../application/judge-orchestrator.js';
-import { minimumEvidenceForCommand } from '../domain/agent-plan.js';
+import { evidenceFloorForInvestigation } from '../domain/agent-plan.js';
 import { assessEvidence } from '../domain/evidence.js';
 import type { Scenario } from '../shared/contracts.js';
 import { HisnError } from '../shared/errors.js';
@@ -105,7 +105,11 @@ export async function verifyConnectedContext(
       snapshot = await orchestrator.control('NEXT');
     }
     const evidence = snapshot.artifacts.evidence ?? [];
-    const required = minimumEvidenceForCommand(scenario.command, configuration.policy);
+    const required = evidenceFloorForInvestigation(
+      scenario.command,
+      configuration.policy,
+      evidence,
+    );
     return {
       ...connectedPreflight(configuration),
       stage: 'investigation' as const,

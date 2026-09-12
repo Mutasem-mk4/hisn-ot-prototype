@@ -16,11 +16,11 @@ The industrial plant is a clearly labeled digital twin. Nokia responses show the
 
 ### [Open Judge Mode](https://hisn-ot-prototype.vercel.app/#judge)
 
-1. Select **Run attack demonstration**. A valid account requests **58%**, inside the independent **60%** hard limit but above the normal operating band.
+1. Select **Run attack demonstration**. A valid account requests **52%**, inside the independent **60%** hard limit.
 2. Watch the result and compare requested pressure with accepted plant pressure. Open **How was this decision made?** to inspect the four-step protection path and agent evidence.
-3. Confirm the outcome panel shows **58% requested**, **hard limit passed**, and the previous accepted setting unchanged. Network context, not the engineering maximum, is the decisive blocker.
+3. Confirm the outcome panel shows **52% requested**, **hard limit passed**, and the previous accepted setting unchanged. Network context, not the engineering maximum, is the decisive blocker.
 4. Expand **Show technical trace** or open **Evidence Trace** to inspect model-requested tools, observations, provenance, adaptation, recommendation, and the authoritative policy result.
-5. Use **Run safe command** and **Run read-only inspection** as optional comparisons. Open the incident report from the technical view or Evidence Trace after a completed run.
+5. Use **Run trusted comparison** to submit the same 52% command with reassuring network context, then use **Run read-only inspection** to show the one-call path.
 
 Expected invariant: the blocked request never changes the previously accepted control value.
 
@@ -39,8 +39,9 @@ flowchart LR
   F -->|authorized containment| I[Guarded response workflow]
 ```
 
-The primary connected agent chooses from four allowlisted, typed tools:
+The connected agent chooses from five allowlisted, typed tools:
 
+- Number Verification
 - SIM Swap
 - Device Swap
 - Location Verification
@@ -48,7 +49,7 @@ The primary connected agent chooses from four allowlisted, typed tools:
 
 LangGraph executes the model/tool/observation loop. The application injects trusted run context, invokes the existing Nokia adapters, validates every result with Zod, enforces a five-call budget, rejects duplicate calls, and records an inspectable action trace. The graph reminds the model when required evidence is missing; if the model still stops early or becomes unavailable, the workflow fails closed without substituting a rule-based recommendation.
 
-Number Verification remains available in the separate five-API diagnostic with Nokia simulator OAuth. The judged simulator policy does not establish live subscriber possession: it requires location and reachability for 52%, adding SIM Swap and Device Swap above the observed 52% band. This narrower assurance profile must be revisited for operator deployment.
+Number Verification remains available in the separate five-API diagnostic with Nokia simulator OAuth. The judged flow does not establish live subscriber possession. It starts pressure control with Location Verification and Device Reachability; a failed usable observation expands the evidence floor to SIM Swap and Device Swap. Unavailable baseline evidence blocks the command without claiming compromise. This assurance profile must be revisited for operator deployment.
 
 The final decision remains deterministic. Model output cannot change the 60% command maximum, authorize missing evidence, detach a gateway, or activate backup control by itself.
 

@@ -72,7 +72,7 @@ describe('complete judge workflow', () => {
       expect(snapshot.run.playbackStatus).toBe('COMPLETE');
       expect(snapshot.run.workflowState).toBe('INCIDENT_REPORTED');
       expect(snapshot.artifacts.decision?.state).toBe('BLOCK_AND_CONTAIN');
-      expect(snapshot.run.twin.requestedPressurePercent).toBe(58);
+      expect(snapshot.run.twin.requestedPressurePercent).toBe(52);
       expect(snapshot.run.twin.actualPressurePercent).toBeLessThanOrEqual(52);
       expect(snapshot.run.twin.commandHistory[0]?.outcome).toBe('BLOCKED');
       expect(snapshot.run.twin.gatewayAttachment).toBe('DETACHED');
@@ -113,7 +113,7 @@ describe('complete judge workflow', () => {
       }
       expect(snapshot.artifacts.decision?.state).toBe('BLOCK_AND_CONTAIN');
       expect(snapshot.run.twin.acceptedPressurePercent).toBe(52);
-      expect(snapshot.run.twin.requestedPressurePercent).toBe(58);
+      expect(snapshot.run.twin.requestedPressurePercent).toBe(52);
       expect(snapshot.run.twin.commandHistory.at(-1)?.outcome).toBe('BLOCKED');
       expect(snapshot.run.twin.actualPressurePercent).toBeLessThan(52);
     } finally {
@@ -162,7 +162,7 @@ describe('complete judge workflow', () => {
       expect(snapshot.artifacts.decision?.state).toBe('BLOCK');
       expect(
         snapshot.artifacts.evidence?.filter((call) => call.requestStatus === 'UNAVAILABLE'),
-      ).toHaveLength(2);
+      ).toHaveLength(1);
       expect(harness.store.enforcementForRun(snapshot.run.id)).toEqual([]);
       expect(snapshot.run.twin.commandHistory[0]?.outcome).toBe('BLOCKED');
     } finally {

@@ -1,17 +1,28 @@
-import type { AgentPlan, Command, Policy } from '../shared/contracts.js';
+import type {
+  AgentPlan,
+  Command,
+  EvidenceCall,
+  EvidenceTool,
+  Policy,
+} from '../shared/contracts.js';
+import { assessEvidence } from './evidence.js';
 
 export function minimumEvidenceForCommand(command: Command, policy: Policy) {
-  const required = [...policy.commands[command.kind].requiredEvidence];
-  if (
-    command.kind === 'SET_PRESSURE' &&
-    command.requestedSetpointPercent !== null &&
-    command.requestedSetpointPercent > policy.safePressureBand.maximumPercent
-  ) {
-    for (const contextualTool of ['SIM_SWAP', 'DEVICE_SWAP'] as const) {
-      if (!required.includes(contextualTool)) required.push(contextualTool);
-    }
-  }
-  return required;
+  return [...policy.commands[command.kind].requiredEvidence];
+}
+
+export function evidenceFloorForInvestigation(
+  command: Command,
+  policy: Policy,
+  evidence: EvidenceCall[],
+): EvidenceTool[] {
+  const required = minimumEvidenceForCommand(command, policy);
+  if (command.kind !== 'SET_PRESSURE' || evidence.length === 0) return required;
+
+  const assessment = assessEvidence(evidence, policy);
+  if (assessment.failures.length === 0) return required;
+
+  return [...new Set([...required, 'SIM_SWAP' as const, 'DEVICE_SWAP' as const])];
 }
 
 export function assertPlanAssurance(
@@ -31,5 +42,18 @@ export function assertPlanAssurance(
     requiredEvidence.some((tool) => !plan.selectedTools.includes(tool))
   ) {
     throw new TypeError('Agent plan violates server assurance policy');
+  }
+}
+
+export function assertInvestigationAssurance(
+  plan: Omit<AgentPlan, 'reasoningProvenance'>,
+  command: Command,
+  policy: Policy,
+  evidence: EvidenceCall[],
+): void {
+  assertPlanAssurance(plan, command, policy);
+  const requiredEvidence = evidenceFloorForInvestigation(command, policy, evidence);
+  if (requiredEvidence.some((tool) => !plan.selectedTools.includes(tool))) {
+    throw new TypeError('Agent investigation stopped before adaptive evidence was complete');
   }
 }

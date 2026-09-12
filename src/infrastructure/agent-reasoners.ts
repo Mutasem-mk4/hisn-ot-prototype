@@ -19,7 +19,11 @@ import {
 } from '../shared/contracts.js';
 import { HisnError } from '../shared/errors.js';
 import type { LlmCredentials } from './configuration.js';
-import { assertPlanAssurance, minimumEvidenceForCommand } from '../domain/agent-plan.js';
+import {
+  assertPlanAssurance,
+  evidenceFloorForInvestigation,
+  minimumEvidenceForCommand,
+} from '../domain/agent-plan.js';
 import { LangGraphEvidenceAgent } from './langgraph-evidence-agent.js';
 
 const CONSEQUENCES: Record<Command['kind'], string> = {
@@ -75,9 +79,29 @@ export class DeterministicAgentReasoner implements AgentReasoner {
     executeTool: (tool: EvidenceTool, signal: AbortSignal) => Promise<EvidenceCall>,
     signal: AbortSignal,
   ): Promise<AgentInvestigation> {
-    const evidence = await Promise.all(
+    const baselineEvidence = await Promise.all(
       initialPlan.selectedTools.map((evidenceTool) => executeTool(evidenceTool, signal)),
     );
+    const escalationTools = evidenceFloorForInvestigation(
+      request.command,
+      request.policy,
+      baselineEvidence,
+    ).filter((evidenceTool) => !initialPlan.selectedTools.includes(evidenceTool));
+    const escalationEvidence = await Promise.all(
+      escalationTools.map((evidenceTool) => executeTool(evidenceTool, signal)),
+    );
+    const evidence = [...baselineEvidence, ...escalationEvidence];
+    const selectedTools = evidence.map((call) => call.tool);
+    const plan = AgentPlanSchema.parse({
+      ...initialPlan,
+      selectedTools,
+      selectionReasons: Object.fromEntries(
+        selectedTools.map((evidenceTool) => [
+          evidenceTool,
+          initialPlan.selectionReasons[evidenceTool] ?? TOOL_REASONS[evidenceTool],
+        ]),
+      ),
+    });
     const trace: AgentInvestigation['trace'] = [
       {
         sequence: 1,
@@ -87,26 +111,18 @@ export class DeterministicAgentReasoner implements AgentReasoner {
           'Explicit DEMO mode applies the configured minimum-evidence plan without a hosted-model claim.',
       },
     ];
-    for (const [index, evidenceTool] of initialPlan.selectedTools.entries()) {
-      const call = evidence[index]!;
+    appendDemoEvidenceTrace(trace, initialPlan.selectedTools, baselineEvidence, initialPlan);
+    if (escalationTools.length > 0) {
       trace.push({
         sequence: trace.length + 1,
-        phase: 'TOOL_REQUEST',
-        headline: `DEMO reasoner requested ${evidenceTool.replaceAll('_', ' ').toLowerCase()}`,
-        detail: `Configured DEMO reason: ${initialPlan.selectionReasons[evidenceTool] ?? 'Required by policy.'}`,
-        tool: evidenceTool,
+        phase: 'ADAPTATION',
+        headline: 'Suspicious observation expanded the evidence plan',
+        detail: `${escalationTools.map(humanizeEvidenceTool).join(' and ')} added before the investigation could conclude.`,
       });
-      trace.push({
-        sequence: trace.length + 1,
-        phase: 'OBSERVATION',
-        headline: `${evidenceTool.replaceAll('_', ' ')} returned ${call.requestStatus}`,
-        detail: `${call.provenance} evidence recorded by the trusted executor.`,
-        tool: evidenceTool,
-        status: call.requestStatus,
-      });
+      appendDemoEvidenceTrace(trace, escalationTools, escalationEvidence, plan);
     }
     return AgentInvestigationSchema.parse({
-      plan: initialPlan,
+      plan,
       evidence,
       trace,
       framework: 'DETERMINISTIC',
@@ -133,6 +149,36 @@ export class DeterministicAgentReasoner implements AgentReasoner {
       }),
     );
   }
+}
+
+function appendDemoEvidenceTrace(
+  trace: AgentInvestigation['trace'],
+  tools: EvidenceTool[],
+  evidence: EvidenceCall[],
+  plan: AgentPlan,
+): void {
+  for (const [index, evidenceTool] of tools.entries()) {
+    const call = evidence[index]!;
+    trace.push({
+      sequence: trace.length + 1,
+      phase: 'TOOL_REQUEST',
+      headline: `DEMO reasoner requested ${humanizeEvidenceTool(evidenceTool)}`,
+      detail: `Configured DEMO reason: ${plan.selectionReasons[evidenceTool] ?? 'Required by policy.'}`,
+      tool: evidenceTool,
+    });
+    trace.push({
+      sequence: trace.length + 1,
+      phase: 'OBSERVATION',
+      headline: `${evidenceTool.replaceAll('_', ' ')} returned ${call.requestStatus}`,
+      detail: `${call.provenance} evidence recorded by the trusted executor.`,
+      tool: evidenceTool,
+      status: call.requestStatus,
+    });
+  }
+}
+
+function humanizeEvidenceTool(tool: EvidenceTool): string {
+  return tool.replaceAll('_', ' ').toLowerCase();
 }
 
 export class LangGraphAgentReasoner implements AgentReasoner {

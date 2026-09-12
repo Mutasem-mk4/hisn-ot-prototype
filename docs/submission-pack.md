@@ -6,7 +6,7 @@ Keep the submission, video, and live pitch aligned with the deployed application
 
 HISN-Oil is an agentic safety gate for remote oil infrastructure. Valid credentials alone are insufficient for a critical pressure command: a bounded LangGraph agent selects Nokia Network as Code/CAMARA evidence, observes the returned telecom signals, and recommends a response. An independent deterministic policy makes the final authorization decision, so the AI cannot override the engineering maximum or actuate the pump.
 
-The primary demonstration submits a 58% pressure request. It is below the independent 60% command hard maximum, yet compromised SIM, device, and location context causes the command to be blocked before the digital twin accepts it. This makes network intelligence decisive. Every model action, Nokia sandbox result, policy finding, enforcement attempt, and simulated plant outcome is bound to one correlation ID and available in an incident report.
+The primary demonstration submits the same 52% pressure request used by the trusted comparison. It is below the independent 60% command hard maximum, yet compromised SIM, device, and location context causes the attack command to be blocked before the digital twin accepts it. The trusted context allows 52%. This makes network intelligence decisive. Every model action, Nokia sandbox result, policy finding, enforcement attempt, and simulated plant outcome is bound to one correlation ID and available in an incident report.
 
 The prototype targets the Industrial & Enterprise AI Automation theme. Its plant and PLC behavior are explicitly modeled as an illustrative digital twin. Nokia calls identify their sandbox provenance, hosted AI failures remain visible, and no physical deployment or live-subscriber consent is claimed.
 
@@ -14,11 +14,11 @@ The prototype targets the Industrial & Enterprise AI Automation theme. Its plant
 
 1. Open [Judge Mode](https://hisn-ot-prototype.vercel.app/#judge).
 2. Select **Run attack demonstration**.
-3. Confirm the request is 58%, the command hard maximum is 60%, and accepted pressure remains 46%.
-4. Confirm the agent record shows LangGraph, live hosted-model provenance, and four successful Nokia sandbox evidence calls.
+3. Confirm the request is 52%, the command hard maximum is 60%, and accepted pressure remains 46%.
+4. Confirm the agent starts with location and reachability, records the failed location observation, and then expands to four successful Nokia sandbox evidence calls.
 5. Expand **How was this decision made?** to inspect model-selected tool calls and observations.
 6. Open **Evidence Trace** and the incident report to verify matching correlation IDs and provenance.
-7. Use **Run safe command** to show that trusted evidence allows 52% exactly once.
+7. Use **Run trusted comparison** to show that the same 52% command is allowed exactly once when the network evidence is reassuring.
 
 If the hosted model is rate-limited, show the visible `AGENT_UNAVAILABLE` result and explain the fail-closed behavior. Do not present that failure as a successful agent run. Use a previously recorded run only when it is clearly labeled as recorded.
 
@@ -28,7 +28,7 @@ If the hosted model is rate-limited, show the visible `AGENT_UNAVAILABLE` result
 
 **0:15–0:30 — Product.** “HISN-Oil holds the command while a LangGraph agent gathers Nokia/CAMARA network evidence. The AI selects and interprets evidence; deterministic policy retains final control authority.”
 
-**0:30–1:05 — Decisive attack.** Run the 58% attack. Point out that 58% passes the 60% hard maximum. Show SIM Swap, Device Swap, Location Verification, and Device Reachability observations. Finish on the unchanged 46% accepted pressure.
+**0:30–1:05 — Decisive attack.** Run the 52% attack. Point out that 52% passes the 60% hard maximum. Show location and reachability first, the visible adaptation, then SIM Swap and Device Swap. Finish on the unchanged 46% accepted pressure.
 
 **1:05–1:25 — Agent proof.** Expand the decision explanation. Show the sequence from goal to model tool request, Nokia observation, adaptation, recommendation, and policy decision. State that the model has no actuation authority.
 
@@ -50,7 +50,7 @@ The editable final deck is [HISN-Oil MENA Ignite Pitch Deck](../artifacts/HISN-O
 
 1. **HISN-Oil:** network proof before industrial action, with the public Judge Mode URL.
 2. **The command trust gap:** credentials alone do not establish trusted device, SIM, location, or reachability context.
-3. **Network evidence changes the decision:** the 58% request passes the 60% hard maximum, four network calls are recorded, and accepted pressure remains 46%.
+3. **Network evidence changes the decision:** the 52% request passes the 60% hard maximum, four network calls are recorded after adaptive escalation, and accepted pressure remains 46%.
 4. **Safety architecture:** command hold → LangGraph agent → Nokia Network as Code → deterministic policy → illustrative digital twin.
 5. **Verified connected attack:** four successful Nokia Sandbox results share one correlation ID and lead to `BLOCK_AND_CONTAIN`.
 6. **Agent responsibility and policy authority:** the AI selects evidence and recommends; deterministic policy authorizes.
@@ -67,7 +67,7 @@ Use one claim and one visual per slide. Screenshots must come from the final dep
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | Agentic orchestration                 | LangGraph `StateGraph` and `ToolNode` execute a bounded model/tool/observation loop                                              | Hosted Groq availability is quota-dependent                               |
 | CAMARA usage                          | Authenticated Nokia sandbox calls for Number Verification, SIM Swap, Device Swap, Location Verification, and Device Reachability | Simulator identities; Number Verification diagnostic uses simulator OAuth |
-| Network evidence changes the decision | The 58% request passes the 60% maximum but compromised evidence blocks authorization                                             | Demonstrated against an illustrative digital twin                         |
+| Network evidence changes the decision | The same 52% request is allowed with trusted evidence and blocked with compromised evidence                                      | Demonstrated against an illustrative digital twin                         |
 | AI cannot authorize the pump          | Deterministic policy independently evaluates evidence and physical limits                                                        | Production certification is outside prototype scope                       |
 | Containment is honest                 | Slice detachment remains unavailable unless the exact attachment exists; QoD status is shown exactly                             | No physical PLC handover is claimed                                       |
 

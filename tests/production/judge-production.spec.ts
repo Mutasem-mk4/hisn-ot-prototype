@@ -38,7 +38,7 @@ test('production deployment serves the application and completes the attack proo
 
   await page.goto('/#judge', { waitUntil: 'networkidle' });
   await expect(page.getByRole('heading', { name: /Stop compromised commands/i })).toBeVisible();
-  await expect(page.getByText('oil-pressure-safety-2026.6')).toBeVisible();
+  await expect(page.getByText('oil-pressure-safety-2026.7')).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -67,7 +67,7 @@ test('production deployment serves the application and completes the attack proo
   ).toBe(true);
 
   const outcome = (await page.locator('.outcome-facts').innerText()).replaceAll('\n', ' ');
-  expect(outcome).toMatch(/Requested 58%/i);
+  expect(outcome).toMatch(/Requested 52%/i);
   expect(outcome).toMatch(/Hard limit Passed/i);
   expect(outcome).toMatch(/Plant state 46% unchanged/i);
 
@@ -114,7 +114,11 @@ test('production deployment serves the application and completes the attack proo
   await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
   await expect(page.locator('.outcome-facts')).toContainText('No change');
 
-  const safeFrame = await runScenario(page, /Run safe command/i, /Safe command authorized\./);
+  const safeFrame = await runScenario(
+    page,
+    /Run trusted comparison/i,
+    /Safe command authorized\./,
+  );
   expect(safeFrame.run.playbackStatus).toBe('COMPLETE');
   await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
   await expect(page.locator('.outcome-facts')).toContainText('52%');

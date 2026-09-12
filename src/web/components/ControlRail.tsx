@@ -27,10 +27,10 @@ export function ControlRail({
   return (
     <section className="scenario-launcher" aria-labelledby="scenario-launcher-heading">
       <div className="scenario-launcher__intro">
-        <h2 id="scenario-launcher-heading">Try a compromised command</h2>
+        <h2 id="scenario-launcher-heading">Same command. Different network trust.</h2>
         <p>
-          A valid account requests 58%, inside the {snapshot.setPressureMaximumPercent}% hard limit.
-          Compromised SIM, device and location evidence must stop it.
+          Both operators request 52%, inside the {snapshot.setPressureMaximumPercent}% hard limit.
+          Nokia evidence determines which command reaches the digital twin.
         </p>
       </div>
 
@@ -41,13 +41,14 @@ export function ControlRail({
           disabled={busy}
         >
           <span>{busy ? 'Preparing verified run…' : 'Run attack demonstration'}</span>
+          <b>52%</b>
         </button>
         <button
           className="scenario-action"
           onClick={() => onCommand('judge-safe-operating-change')}
           disabled={busy}
         >
-          <span>Run safe command</span>
+          <span>Run trusted comparison</span>
           <b>52%</b>
         </button>
         <button
