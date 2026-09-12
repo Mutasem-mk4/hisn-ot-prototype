@@ -58,6 +58,7 @@ export function rehearsalConfiguration(configuration: AppConfiguration): AppConf
       ...configuration.policy,
       agent: {
         ...configuration.policy.agent,
+        maximumRetries: 0,
         allowedTools: configuration.policy.agent.allowedTools.filter(
           (tool) => tool !== 'NUMBER_VERIFICATION',
         ),

@@ -38,7 +38,7 @@ export function JudgeMode({
       <section className="judge-intro">
         <div>
           <span className="eyebrow">HISN-Oil / Remote oil pumping station</span>
-          <h1>Stop dangerous industrial commands before they reach the plant.</h1>
+          <h1>Stop compromised commands before they reach the pump.</h1>
           <p>{agentIntroduction(displayedAgentStatus)}</p>
         </div>
       </section>
@@ -284,12 +284,12 @@ function agentProofCopy(reasoner: RunSnapshot['integration']['agentReasoner']) {
 
 function agentIntroduction(reasoner: RunSnapshot['integration']['agentReasoner']) {
   if (reasoner === 'LANGGRAPH') {
-    return 'Valid credentials can hide a compromised device. A live LangGraph tool loop gathers Nokia/CAMARA network evidence before deterministic policy can authorize a plant change.';
+    return 'A valid login does not guarantee a safe command. HISN-Oil uses a live LangGraph agent and Nokia/CAMARA network evidence to check the operator’s device and location before allowing a pressure change.';
   }
   if (reasoner === 'DETERMINISTIC') {
-    return 'Valid credentials can hide a compromised device. This reproducible local replay uses the same bounded evidence policy without claiming a live AI run.';
+    return 'A valid login does not guarantee a safe command. This reproducible local replay demonstrates the evidence policy without claiming a live AI run.';
   }
-  return 'Valid credentials can hide a compromised device. With AI unavailable, HISN-Oil keeps the command held and grants no physical authority.';
+  return 'A valid login does not guarantee a safe command. With AI unavailable, HISN-Oil keeps the command held and grants no physical authority.';
 }
 
 function networkProofCopy(source: RunSnapshot['integration']['evidenceSource']) {

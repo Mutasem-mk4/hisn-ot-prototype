@@ -38,6 +38,15 @@ A release is complete only after checking the canonical public URL:
 
 ## Release evidence
 
+### 2026-09-12 submission-readiness pass
+
+- The official AI Resource and Tooling Guide was inspected directly. It lists LangGraph as a code-first agent framework and Groq as a hosted model provider, matching the deployed agent stack.
+- The primary connected rehearsal now sets model retries to zero. A hosted-model quota response produces one explicit fail-closed outcome and does not automatically consume another request.
+- Production configuration was aligned with the repository: distinct primary/backup simulator identities and model `openai/gpt-oss-20b`. No credentials or full identities were printed or committed.
+- Local verification passed 100 tests across 14 files, formatting, lint, type checks, and the production build. Browser verification passed 34 tests with two intentional small-screen skips.
+- The judge-facing headline and introduction now explain the security value before naming implementation details. The submission pack provides aligned portal copy, a two-minute demonstration script, a pitch-deck structure, an evidence-backed claims table, and a final checklist.
+- A new deployment and fresh public connected rehearsal are required before this pass can be marked complete. Do not reuse the earlier Groq `HTTP_429` result as successful evidence.
+
 ### 2026-09-12 HISN-Oil 1.1.0 release audit
 
 - Reviewed clean, pushed commits `516cf7e` (oil scenario and isolated connected rehearsal) and `dc717d0` (version 1.1.0). [CI 34647054617](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34647054617) passed for `dc717d0`.

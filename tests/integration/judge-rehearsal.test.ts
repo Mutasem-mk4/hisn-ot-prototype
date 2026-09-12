@@ -4,12 +4,20 @@ import { loadConfiguration } from '../../src/infrastructure/configuration.js';
 import {
   createRehearsalExecutor,
   executeJudgeRehearsal,
+  rehearsalConfiguration,
 } from '../../src/infrastructure/judge-rehearsal.js';
 
 const configuration = () => loadConfiguration({ HISN_MODE: 'DEMO' }, process.cwd());
 const request = (scenarioId: string) => ({ scenarioId, idempotencyKey: randomUUID() });
 
 describe('isolated judge rehearsals', () => {
+  it('disables automatic hosted-model retries in the connected judge path', () => {
+    // Production regression, 2026-09-12: a Groq 429 must not trigger another quota-consuming call.
+    const config = configuration();
+    config.nokiaSimulatorEnabled = true;
+    expect(rehearsalConfiguration(config).policy.agent.maximumRetries).toBe(0);
+  });
+
   it('keeps simultaneous scenarios and their exported incident evidence isolated', async () => {
     const execute = createRehearsalExecutor(configuration());
     const attack = request('judge-valid-credentials-compromised-context');

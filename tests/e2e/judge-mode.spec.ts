@@ -15,9 +15,7 @@ test.beforeEach(async ({ page, context, baseURL }) => {
 });
 
 test('explains the product immediately and exposes the primary action', async ({ page }) => {
-  await expect(
-    page.getByRole('heading', { name: /Stop dangerous industrial commands/i }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Stop compromised commands/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /Run attack demonstration/i })).toBeVisible();
   await expect(
     page.getByText(

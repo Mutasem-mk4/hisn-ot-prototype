@@ -37,9 +37,7 @@ test('production deployment serves the application and completes the attack proo
   });
 
   await page.goto('/#judge', { waitUntil: 'networkidle' });
-  await expect(
-    page.getByRole('heading', { name: /Stop dangerous industrial commands/i }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Stop compromised commands/i })).toBeVisible();
   await expect(page.getByText('oil-pressure-safety-2026.6')).toBeVisible();
   expect(
     await page.evaluate(

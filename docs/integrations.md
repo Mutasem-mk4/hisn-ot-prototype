@@ -34,6 +34,7 @@ Agent selection:
 - `HISN_AGENT_PROVIDER=GROQ` requires Groq in local operation and fails closed if it is unavailable.
 - `HISN_AGENT_PROVIDER=DETERMINISTIC` remains available for a quota-independent, explicitly labeled replay.
 - The judged rehearsal forces Groq and direct sandbox evidence when Nokia is enabled. No evidence or AI fallback is permitted in that path.
+- The judged rehearsal disables automatic model retries. A quota response produces one explicit fail-closed result instead of consuming another request.
 - The separate connected diagnostic includes Number Verification simulator OAuth; it stops before enforcement.
 
 Groq credentials:
