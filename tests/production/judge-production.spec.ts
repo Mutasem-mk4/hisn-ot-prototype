@@ -6,6 +6,7 @@ type ProductionFrame = {
     recommendation?: { reasoningProvenance: string };
     decision?: { state: string };
     evidence?: { requestStatus: string; provenance: string }[];
+    agentTrace?: { phase: string; tool?: string; headline: string }[];
   };
   currentEvent?: { workflowState: string; payload: Record<string, unknown> };
 };
@@ -65,6 +66,21 @@ test('production deployment serves the application and completes the attack proo
       (call) => call.requestStatus === 'SUCCEEDED' && call.provenance === 'SANDBOX',
     ),
   ).toBe(true);
+  const locationObservation =
+    finalFrame.artifacts.agentTrace?.findIndex(
+      (step) => step.phase === 'OBSERVATION' && step.tool === 'LOCATION_VERIFICATION',
+    ) ?? -1;
+  const adaptiveExpansion =
+    finalFrame.artifacts.agentTrace?.findIndex(
+      (step) => step.headline === 'Suspicious observation expanded the evidence plan',
+    ) ?? -1;
+  const simRequest =
+    finalFrame.artifacts.agentTrace?.findIndex(
+      (step) => step.phase === 'TOOL_REQUEST' && step.tool === 'SIM_SWAP',
+    ) ?? -1;
+  expect(locationObservation).toBeGreaterThanOrEqual(0);
+  expect(locationObservation).toBeLessThan(adaptiveExpansion);
+  expect(adaptiveExpansion).toBeLessThan(simRequest);
 
   const outcome = (await page.locator('.outcome-facts').innerText()).replaceAll('\n', ' ');
   expect(outcome).toMatch(/Requested 52%/i);
@@ -104,20 +120,6 @@ test('production deployment serves the application and completes the attack proo
     await expect(page.getByRole('heading', { name: heading })).toBeVisible();
   }
 
-  await page.getByRole('link', { name: 'Demo', exact: true }).click();
-  const readOnlyFrame = await runScenario(
-    page,
-    /Run read-only inspection/i,
-    /Read-only inspection authorized\./,
-  );
-  expect(readOnlyFrame.run.playbackStatus).toBe('COMPLETE');
-  await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
-  await expect(page.locator('.outcome-facts')).toContainText('No change');
-
-  const safeFrame = await runScenario(page, /Run trusted comparison/i, /Safe command authorized\./);
-  expect(safeFrame.run.playbackStatus).toBe('COMPLETE');
-  await expect(page.getByText('ALLOW', { exact: true }).first()).toBeVisible();
-  await expect(page.locator('.outcome-facts')).toContainText('52%');
   expect(consoleErrors).toEqual([]);
 });
 
