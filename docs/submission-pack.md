@@ -16,9 +16,9 @@ The prototype targets the Industrial & Enterprise AI Automation theme. Its plant
 2. Select **Run attack demonstration**.
 3. Confirm the request is 52%, the command hard maximum is 60%, and accepted pressure remains 46%.
 4. Confirm the agent starts with location and reachability, records the failed location observation, and then expands to four successful Nokia sandbox evidence calls.
-5. Expand **How was this decision made?** to inspect model-selected tool calls and observations.
+5. Expand **How was this decision made?** to inspect the four-stage investigation and model-selected tool calls.
 6. Open **Evidence Trace** and the incident report to verify matching correlation IDs and provenance.
-7. Use **Run trusted comparison** to show that the same 52% command is allowed exactly once when the network evidence is reassuring.
+7. Use **Run trusted comparison** to show that the same 52% command is allowed exactly once when the network evidence is reassuring. Compare the retained results, timing, and correlation IDs side by side.
 
 If the hosted model is rate-limited, show the visible `AGENT_UNAVAILABLE` result and explain the fail-closed behavior. Do not present that failure as a successful agent run. Use a previously recorded run only when it is clearly labeled as recorded.
 

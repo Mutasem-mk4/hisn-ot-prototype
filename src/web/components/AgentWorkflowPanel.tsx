@@ -45,26 +45,32 @@ export function AgentWorkflowPanel({ snapshot }: { snapshot: RunSnapshot }) {
   const failureReason = textPayload(snapshot.currentEvent?.payload.failureReason, 'UNAVAILABLE');
   const stages: WorkflowStage[] = [
     {
-      label: 'Understand the command',
+      label: 'Command held',
       detail: snapshot.artifacts.risk
-        ? `${humanize(snapshot.artifacts.risk)} risk identified`
-        : 'Read the command and its physical consequence',
-      completeAt: 'RISK_CLASSIFIED',
+        ? `${humanize(snapshot.artifacts.risk)} command cannot reach the pump yet`
+        : 'Hold the request before any plant change',
+      completeAt: 'COMMAND_HELD',
     },
     {
-      label: 'Choose trusted evidence',
-      detail: adaptedAfterObservation
-        ? `Nokia observation expanded the plan to ${plan?.selectedTools.length ?? 0} checks`
-        : plan
-          ? `${plan.selectedTools.length} telecom ${pluralize('check', plan.selectedTools.length)} selected`
-          : 'Select network checks from the safe allowlist',
-      completeAt: 'EVIDENCE_PLANNED',
+      label: 'Baseline network checks',
+      detail:
+        evidence.length > 0
+          ? `${Math.min(2, evidence.length)} initial network ${pluralize('result', Math.min(2, evidence.length))} recorded`
+          : 'Check location and device reachability first',
+      completeAt: 'EVIDENCE_COMPLETE',
     },
     {
-      label: 'Observe and recommend',
-      detail: recommendation
-        ? `${humanize(recommendation.recommendedDecision)} recommended from recorded evidence`
-        : 'Review observations and explain the recommendation',
+      label: 'Additional investigation',
+      detail: investigationDetail(evidence, adaptedAfterObservation),
+      completeAt: 'EVIDENCE_COMPLETE',
+    },
+    {
+      label: 'Policy decision',
+      detail: decision
+        ? `${humanize(decision.state)} issued by deterministic policy`
+        : recommendation
+          ? `${humanize(recommendation.recommendedDecision)} is AI advice awaiting policy`
+          : 'AI recommends; deterministic policy authorizes',
       completeAt: 'DECISION_ISSUED',
     },
   ];
@@ -214,6 +220,19 @@ function agentSummary(snapshot: RunSnapshot) {
     return `Low-risk inspection uses ${plan.selectedTools.length} focused network ${pluralize('check', plan.selectedTools.length)}.`;
   }
   return `Physical control requires ${plan.selectedTools.length} network ${pluralize('check', plan.selectedTools.length)}.`;
+}
+
+function investigationDetail(evidence: EvidenceCall[], adapted: boolean) {
+  if (!adapted) {
+    return evidence.length > 0
+      ? 'Baseline evidence did not trigger extra checks'
+      : 'Add SIM and device checks only when an observation is suspicious';
+  }
+  const location = evidence.find((call) => call.tool === 'LOCATION_VERIFICATION');
+  if (location?.redactedResult.verificationResult === 'FALSE') {
+    return 'Outside-facility result triggered SIM and device checks';
+  }
+  return 'A suspicious network result triggered SIM and device checks';
 }
 
 function statesFor(

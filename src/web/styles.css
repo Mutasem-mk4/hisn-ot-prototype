@@ -2196,9 +2196,9 @@
       grid-template-columns: 1fr;
     }
     .agent-workflow__stages {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .agent-workflow__stages li:nth-child(3)::after {
+    .agent-workflow__stages li:nth-child(even)::after {
       display: none;
     }
     .judge-side {
@@ -2887,14 +2887,14 @@
     justify-self: start;
   }
   .agent-workflow__stages {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     padding: 0;
   }
   .agent-workflow__stages li {
     min-height: 116px;
     padding: 1rem;
   }
-  .agent-workflow__stages li:nth-child(3)::after {
+  .agent-workflow__stages li:nth-child(4)::after {
     display: none;
   }
   .agent-evidence,

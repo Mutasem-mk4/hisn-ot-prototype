@@ -28,12 +28,13 @@ Use the existing OKLCH values. Do not introduce isolated hexadecimal colors in c
 
 The Demo screen follows this order:
 
-1. Problem statement
+1. The decision question: should this 52% command reach the pump?
 2. One attack demonstration with two quiet comparison actions
-3. Decision and four physical-outcome facts
-4. Collapsed reasoning and evidence disclosure
-5. Collapsed facility and process disclosure
-6. Compact, honest provider provenance
+3. Decision with requested pressure, hard limit, AI recommendation, policy decision, and accepted plant setting
+4. A retained two-run comparison after the compromised or trusted scenario completes
+5. Collapsed four-step investigation and technical evidence
+6. Collapsed facility and process view
+7. Commercial relevance and compact, honest provider provenance
 
 The outcome panel stays above the detailed proof path so the final decision remains visible at 1366×768 and 1280×720 presentation sizes.
 
@@ -43,6 +44,8 @@ The outcome panel stays above the detailed proof path so the final decision rema
 - Trusted and read-only scenarios remain secondary comparisons.
 - Playback, stepping, reset, presenter cues, and full-screen mode stay inside **Demo controls**.
 - **How was this decision made?** reveals the protection path and agent workflow. The facility schematic remains in a separate technical disclosure.
+- The agent workflow uses four plain-language stages: command held, baseline network checks, additional investigation, and policy decision.
+- Completed compromised and trusted runs retain separate correlation IDs and timing so judges can compare them without losing the current outcome.
 - Every interactive control needs a visible keyboard focus state and a minimum 44-pixel touch target on narrow screens.
 - Motion communicates state only. Reduced-motion preferences must disable nonessential animation.
 

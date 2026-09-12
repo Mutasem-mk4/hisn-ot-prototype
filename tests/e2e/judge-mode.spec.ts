@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { startScenario } from '../../scripts/browser-scenario.mjs';
 
 test.beforeEach(async ({ page, context, baseURL }) => {
@@ -15,11 +15,14 @@ test.beforeEach(async ({ page, context, baseURL }) => {
 });
 
 test('explains the product immediately and exposes the primary action', async ({ page }) => {
-  await expect(page.getByRole('heading', { name: /Stop compromised commands/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Should this operator’s 52%/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /Run attack demonstration/i })).toBeVisible();
   await expect(
+    page.getByRole('heading', { name: 'A safety gate for remote industrial commands' }),
+  ).toBeVisible();
+  await expect(
     page.getByText(
-      'Both operators request 52%, inside the 60% hard limit. Nokia evidence determines which command reaches the digital twin.',
+      'Both operators request 52%, inside the 60% hard limit. Trusted network evidence determines which command reaches the digital twin.',
     ),
   ).toBeVisible();
   const workflow = page.locator('.agent-workflow');
@@ -28,9 +31,10 @@ test('explains the product immediately and exposes the primary action', async ({
   await investigation.focus();
   await page.keyboard.press('Enter');
   await expect(workflow).toBeVisible();
-  await expect(workflow.getByText('Understand the command')).toBeVisible();
-  await expect(workflow.getByText('Choose trusted evidence')).toBeVisible();
-  await expect(workflow.getByText('Observe and recommend')).toBeVisible();
+  await expect(workflow.getByText('Command held')).toBeVisible();
+  await expect(workflow.getByText('Baseline network checks')).toBeVisible();
+  await expect(workflow.getByText('Additional investigation')).toBeVisible();
+  await expect(workflow.getByText('Policy decision')).toBeVisible();
   await expect(workflow.getByText('Ready to investigate')).toBeVisible();
   await expect(page.getByRole('button', { name: /Run read-only inspection/i })).toContainText(
     '1 API',
@@ -73,6 +77,7 @@ test('replay gives judges time to read and respects pause and speed changes', as
   await page.clock.install();
   await page.clock.pauseAt(new Date());
   await page.getByRole('button', { name: /Run attack demonstration/ }).click();
+  await openDemoControls(page);
   await expect(page.getByRole('button', { name: 'Pause simulation' })).toBeEnabled();
   const sequence = page.locator('.event-sequence');
   await expect(sequence).toHaveText('01');
@@ -116,9 +121,11 @@ test('shows an agent failure immediately even when the presentation clock is pau
   await page.clock.pauseAt(new Date());
   await page.getByRole('button', { name: /Run attack demonstration/ }).click();
   await expect(
-    page.getByRole('heading', { name: 'AI unavailable. Command held safely.' }),
+    page.getByRole('heading', {
+      name: 'AI service temporarily unavailable. Command held.',
+    }),
   ).toBeVisible();
-  await expect(page.getByText('AGENT UNAVAILABLE · COMMAND HELD', { exact: true })).toBeVisible();
+  await expect(page.locator('.outcome-facts')).toContainText('Accepted plant setting46% unchanged');
 });
 
 test('runs the adaptive low-risk path with one inspectable evidence call', async ({ page }) => {
@@ -136,10 +143,11 @@ test('runs the adaptive low-risk path with one inspectable evidence call', async
   await workflow.getByText('Show technical trace').click();
   await expect(workflow.getByText(/^Tool request/).first()).toBeVisible();
   await expect(workflow.getByText(/^Observation/).first()).toBeVisible();
-  await expect(workflow.getByText('Allow recommended from recorded evidence')).toBeVisible();
+  await expect(workflow.getByText('Allow issued by deterministic policy')).toBeVisible();
   const outcome = page.locator('.outcome-facts');
-  await expect(outcome).toContainText('Network evidence1 recorded');
-  await expect(outcome).toContainText('Plant stateNo change');
+  await expect(outcome).toContainText('AI recommendationAllow');
+  await expect(outcome).toContainText('Policy decisionAllow');
+  await expect(outcome).toContainText('Accepted plant settingNo change');
 
   await page.getByRole('link', { name: 'Evidence Trace' }).click();
   const table = page.getByRole('table', { name: 'Pre-decision telecom evidence calls' });
@@ -169,7 +177,7 @@ test('supports keyboard stepping while keeping requested and actual pressure dis
   const outcome = page.locator('.outcome-facts');
   await expect(outcome).toContainText('Requested52%');
   await expect(outcome).toContainText('Hard limitPassed · ≤60%');
-  await expect(outcome).toContainText('Plant state46% current');
+  await expect(outcome).toContainText('Accepted plant setting46% current');
 });
 
 test('shows an allowed plant response followed by an intercepted unsafe command', async ({
@@ -180,7 +188,10 @@ test('shows an allowed plant response followed by an intercepted unsafe command'
     'The full judge interaction is exercised at the presentation viewports.',
   );
   await openDemoControls(page);
+  const demoControls = page.locator('.demo-controls');
   await page.getByRole('button', { name: /Run trusted comparison/ }).click();
+  await expect.poll(() => isOpen(demoControls)).toBe(false);
+  await openDemoControls(page);
   await page.getByRole('button', { name: 'Pause simulation' }).click();
   await page.getByLabel('Simulation playback speed').selectOption('4');
   await stepProof(page, 9);
@@ -196,13 +207,18 @@ test('shows an allowed plant response followed by an intercepted unsafe command'
     .filter({ hasText: 'Actual pressure' })
     .locator('strong');
   await expect.poll(async () => Number.parseFloat(await pressure.innerText())).toBeGreaterThan(46);
-  await page.getByRole('button', { name: 'Pause simulation' }).click();
+  const comparison = page.getByRole('region', {
+    name: 'Same 52% command, different authorization',
+  });
+  await expect(comparison).toContainText('Trusted contextALLOW', { timeout: 15_000 });
   await expect(page.getByRole('button', { name: 'Run simulation' })).toBeEnabled();
   const pausedClock = await page.locator('.facility__clock b').innerText();
   await page.waitForTimeout(400);
   await expect(page.locator('.facility__clock b')).toHaveText(pausedClock);
 
   await page.getByRole('button', { name: /Run attack demonstration/ }).click();
+  await expect.poll(() => isOpen(demoControls)).toBe(false);
+  await openDemoControls(page);
   await page.getByRole('button', { name: 'Pause simulation' }).click();
   await stepProof(page, 12);
   await expect(page.getByText('BLOCK AND CONTAIN', { exact: true }).first()).toBeVisible();
@@ -211,6 +227,13 @@ test('shows an allowed plant response followed by an intercepted unsafe command'
   await expect(process).toContainText('BLOCKED');
   await expect(process).toContainText('ControllerBACKUP');
   await expect(process).toContainText('GatewayDETACHED');
+
+  await expect(comparison).toContainText('Compromised context');
+  await expect(comparison).toContainText('BLOCK AND CONTAIN');
+  await expect(comparison).toContainText('Trusted context');
+  await expect(comparison).toContainText('ALLOW');
+  await expect(comparison.getByText(/hisn-/)).toHaveCount(2);
+  await expect(comparison.getByText('IMPLEMENTED LOCALLY')).toHaveCount(2);
 
   const readOnly = page.getByRole('button', { name: /Run read-only inspection/i });
   await expect(readOnly).toBeEnabled();
@@ -235,6 +258,7 @@ test('completes the backend workflow, exposes trace, and exports the incident', 
   await expect(
     page.getByRole('heading', { name: 'Network compromise blocked the command. Plant unchanged.' }),
   ).toBeVisible();
+  await expect(page.locator('.judge-result')).toContainText('Gateway isolation status: Succeeded.');
   await expect(page.getByText('BLOCK AND CONTAIN', { exact: true }).first()).toBeVisible();
   await page.getByRole('link', { name: 'Evidence Trace' }).click();
   await expect(
@@ -299,9 +323,13 @@ async function stepProof(page: Page, steps: number) {
 
 async function openDemoControls(page: Page) {
   const controls = page.locator('.demo-controls');
-  if (!(await controls.evaluate((element) => (element as HTMLDetailsElement).open))) {
+  if (!(await isOpen(controls))) {
     await controls.getByText('Demo controls').click();
   }
+}
+
+async function isOpen(controls: Locator) {
+  return controls.evaluate((element) => (element as HTMLDetailsElement).open);
 }
 
 function connectedPreflight() {

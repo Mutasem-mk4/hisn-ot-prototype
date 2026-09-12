@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { IncidentReport, RunSnapshot } from '../application/ports.js';
 import { Brand } from './components/Brand.js';
+import type { DecisionComparisonRuns } from './components/DecisionComparison.js';
 import { StatusMark } from './components/StatusMark.js';
 import { getJudgeRun, initializeSession, rehearseJudgeRun, type RehearsalResult } from './api.js';
 import { ArchitectureView } from './screens/ArchitectureView.js';
@@ -18,7 +19,12 @@ export function App() {
   const [report, setReport] = useState<IncidentReport | null>(null);
   const [busy, setBusy] = useState(false);
   const [recordedReplay, setRecordedReplay] = useState(false);
+  const [comparisonRuns, setComparisonRuns] = useState<DecisionComparisonRuns>({
+    compromised: null,
+    trusted: null,
+  });
   const lastCompleted = useRef<RehearsalResult | null>(null);
+  const preparedReplay = useRef<RehearsalResult | null>(null);
   const controlPending = useRef(false);
   const rehearsalFrames = useRef<RunSnapshot[]>([]);
   const rehearsalIndex = useRef(0);
@@ -49,7 +55,17 @@ export function App() {
   const showFrame = useCallback(
     (frames: RunSnapshot[], index: number, playing: boolean, speed: number) => {
       rehearsalIndex.current = index;
-      setSnapshot(playbackFrame(frames[index]!, playing && index < frames.length - 1, speed));
+      const frame = frames[index]!;
+      setSnapshot(playbackFrame(frame, playing && index < frames.length - 1, speed));
+      if (index === frames.length - 1 && frame.run.playbackStatus === 'COMPLETE') {
+        if (preparedReplay.current?.frames.at(-1)?.run.correlationId === frame.run.correlationId) {
+          lastCompleted.current = preparedReplay.current;
+        }
+        const comparison = comparisonKey(frame.run.scenarioId);
+        if (comparison) {
+          setComparisonRuns((current) => ({ ...current, [comparison]: frame }));
+        }
+      }
     },
     [],
   );
@@ -83,14 +99,14 @@ export function App() {
       setError(null);
       try {
         const result = await rehearseJudgeRun(scenarioId, continuingTwin);
-        if (result.frames.at(-1)?.run.playbackStatus === 'COMPLETE') lastCompleted.current = result;
+        preparedReplay.current = result;
         rehearsalFrames.current = result.frames;
         rehearsalIndex.current = 0;
         setReport(result.incident);
         showFrame(result.frames, 0, false, result.frames[0]!.run.speed);
         return result.frames;
       } catch (reason) {
-        setError(reason instanceof Error ? reason.message : 'Could not prepare the rehearsal');
+        setError(rehearsalErrorMessage(reason));
         return null;
       } finally {
         setBusy(false);
@@ -241,7 +257,7 @@ export function App() {
                 playFrames(recorded.frames, 0, snapshot.run.speed);
               }}
             >
-              Replay completed recorded run
+              Replay last result (no provider calls)
             </button>
           )}
         </div>
@@ -251,6 +267,7 @@ export function App() {
           snapshot={snapshot}
           busy={busy}
           explained={explained}
+          comparisonRuns={comparisonRuns}
           onControl={(action, speed) => void onControl(action, speed)}
           onCommand={(scenarioId) => void submitCommand(scenarioId)}
           onExplain={() => setExplained((value) => !value)}
@@ -272,6 +289,20 @@ export function App() {
       </div>
     </div>
   );
+}
+
+function comparisonKey(scenarioId: string): keyof DecisionComparisonRuns | null {
+  if (scenarioId === 'judge-valid-credentials-compromised-context') return 'compromised';
+  if (scenarioId === 'judge-safe-operating-change') return 'trusted';
+  return null;
+}
+
+function rehearsalErrorMessage(reason: unknown) {
+  const detail = reason instanceof Error ? reason.message : '';
+  if (/429|rate|quota/i.test(detail)) {
+    return 'The verification service is temporarily unavailable. The command remains held and the plant is unchanged.';
+  }
+  return detail || 'The investigation could not start. No command was accepted by the plant.';
 }
 
 function SystemState({

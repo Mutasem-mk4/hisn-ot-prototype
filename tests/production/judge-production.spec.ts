@@ -38,7 +38,7 @@ test('production deployment serves the application and completes the attack proo
   });
 
   await page.goto('/#judge', { waitUntil: 'networkidle' });
-  await expect(page.getByRole('heading', { name: /Stop compromised commands/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Should this operator’s 52%/i })).toBeVisible();
   await expect(page.getByText('oil-pressure-safety-2026.8')).toBeVisible();
   expect(
     await page.evaluate(
@@ -85,7 +85,8 @@ test('production deployment serves the application and completes the attack proo
   const outcome = (await page.locator('.outcome-facts').innerText()).replaceAll('\n', ' ');
   expect(outcome).toMatch(/Requested 52%/i);
   expect(outcome).toMatch(/Hard limit Passed/i);
-  expect(outcome).toMatch(/Plant state 46% unchanged/i);
+  expect(outcome).toMatch(/Policy decision Block and contain/i);
+  expect(outcome).toMatch(/Accepted plant setting 46% unchanged/i);
 
   const evidence = (await page.locator('.external-proof').innerText()).replaceAll('\n', ' ');
   const headline = await page.locator('#judge-result-heading').innerText();

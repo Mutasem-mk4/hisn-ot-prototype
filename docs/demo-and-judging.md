@@ -14,7 +14,7 @@ Select **Run attack demonstration**. Follow the result: the gateway holds the 52
 
 ### 0:55–1:20 — Prove the physical outcome
 
-Use the outcome panel to compare **52% requested** with the unchanged accepted value. It explicitly shows that the request passed the independent **60% command hard limit**. The final decision is visible without opening the digital twin.
+Use the outcome panel to compare **52% requested** with the unchanged accepted value. It separates the AI recommendation from the deterministic policy decision and reports gateway-isolation status independently. The request passed the **60% command hard limit**, and the final result remains visible without opening the digital twin.
 
 ### 1:20–1:45 — Prove the agent and evidence
 
@@ -26,7 +26,7 @@ Point to the provenance strip and explain whether the current run uses Nokia san
 
 ## Optional comparisons
 
-- **Run trusted comparison** submits the same 52% command and demonstrates `ALLOW` when location and reachability pass.
+- **Run trusted comparison** submits the same 52% command and demonstrates `ALLOW` when location and reachability pass. After either comparison completes, the page retains its result, execution time, and correlation ID; after both complete, judges can verify the two outcomes side by side.
 - **Run read-only inspection** demonstrates the one-signal Device Reachability minimum with no process-state change.
 - **Demo controls** exposes pause, playback speed, event stepping, reset, presenter cues, and full-screen mode for technical review.
 

@@ -17,10 +17,10 @@ The industrial plant is a clearly labeled digital twin. Nokia responses show the
 ### [Open Judge Mode](https://hisn-ot-prototype.vercel.app/#judge)
 
 1. Select **Run attack demonstration**. A valid account requests **52%**, inside the independent **60%** hard limit.
-2. Watch the result and compare requested pressure with accepted plant pressure. Open **How was this decision made?** to inspect the four-step protection path and agent evidence.
+2. Watch the result and compare requested pressure, the AI recommendation, deterministic policy decision, and accepted plant pressure. Open **How was this decision made?** to inspect the four-step protection path and agent evidence.
 3. Confirm the outcome panel shows **52% requested**, **hard limit passed**, and the previous accepted setting unchanged. Network context, not the engineering maximum, is the decisive blocker.
 4. Expand **Show technical trace** or open **Evidence Trace** to inspect model-requested tools, observations, provenance, adaptation, recommendation, and the authoritative policy result.
-5. Use **Run trusted comparison** to submit the same 52% command with reassuring network context, then use **Run read-only inspection** to show the one-call path.
+5. Use **Run trusted comparison** to submit the same 52% command with reassuring network context. The interface retains both results side by side with their execution times and correlation IDs. Then use **Run read-only inspection** to show the one-call path.
 
 Expected invariant: the blocked request never changes the previously accepted control value.
 

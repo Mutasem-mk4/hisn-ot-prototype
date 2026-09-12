@@ -139,7 +139,7 @@
   display: none;
 }
 .outcome-facts {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0;
   padding: 18px 24px;
   background: var(--ink-1);
@@ -161,6 +161,106 @@
 .outcome-facts dd {
   font-size: 1.25rem;
   margin-top: 8px;
+}
+.decision-comparison {
+  margin: 0 0 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--ink-1);
+}
+.decision-comparison > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.decision-comparison h2 {
+  margin: 5px 0 0;
+  font-size: 1.15rem;
+}
+.decision-comparison > header p {
+  max-width: 48ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: right;
+}
+.decision-comparison__runs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.decision-comparison__run {
+  min-width: 0;
+  padding: 18px 24px;
+}
+.decision-comparison__run + .decision-comparison__run {
+  border-left: 1px solid var(--line);
+}
+.decision-comparison__run[data-state='BLOCK_AND_CONTAIN'],
+.decision-comparison__run[data-state='BLOCK'] {
+  background: oklch(97% 0.018 25);
+}
+.decision-comparison__run[data-state='ALLOW'] {
+  background: oklch(97% 0.014 165);
+}
+.decision-comparison__run[data-state='pending'] {
+  color: var(--muted);
+}
+.decision-comparison__run > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.decision-comparison__run > header b {
+  font-size: 0.95rem;
+}
+.decision-comparison__run > p {
+  margin: 20px 0 4px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.decision-comparison__run dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+  margin: 20px 0;
+}
+.decision-comparison__run dt {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+.decision-comparison__run dd {
+  margin: 5px 0 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+.decision-comparison__run dd small {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+.decision-comparison__run footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+.decision-comparison__run footer code {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+  font-size: 0.65rem;
+}
+.decision-comparison__run footer time {
+  grid-column: 2;
+  grid-row: 1;
 }
 .external-proof {
   order: 5;
@@ -387,6 +487,40 @@
 .investigation-details[open] {
   padding-bottom: 20px;
 }
+.impact-summary {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.8fr);
+  gap: 32px;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--line);
+}
+.impact-summary h2 {
+  margin: 6px 0 8px;
+  font-size: 1.15rem;
+}
+.impact-summary p {
+  max-width: 48ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.impact-summary dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+}
+.impact-summary dt {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+.impact-summary dd {
+  margin: 7px 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
 .run-progress {
   order: -1;
 }
@@ -407,6 +541,29 @@
   .outcome-facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
+  }
+  .decision-comparison > header {
+    align-items: start;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .decision-comparison > header p {
+    text-align: left;
+  }
+  .decision-comparison__runs {
+    grid-template-columns: 1fr;
+  }
+  .decision-comparison__run + .decision-comparison__run {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+  .impact-summary {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .impact-summary dl {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
   .outcome-facts div {
     padding: 0;

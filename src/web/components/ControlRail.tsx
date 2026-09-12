@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { RunSnapshot } from '../../application/ports.js';
 
 type ControlAction = 'PLAY' | 'PAUSE' | 'NEXT' | 'PREVIOUS' | 'RESET' | 'SET_SPEED';
@@ -24,28 +25,35 @@ export function ControlRail({
   const terminal = ['COMPLETE', 'FAILED_SAFE'].includes(snapshot.run.playbackStatus);
   const contained = snapshot.run.twin.gatewayAttachment !== 'OPERATIONAL';
   const lowRiskToolCount = snapshot.lowRiskComparison.selectedTools.length;
+  const technicalControls = useRef<HTMLDetailsElement>(null);
+  const runScenario = (scenarioId: string) => {
+    if (technicalControls.current) technicalControls.current.open = false;
+    onCommand(scenarioId);
+  };
   return (
     <section className="scenario-launcher" aria-labelledby="scenario-launcher-heading">
       <div className="scenario-launcher__intro">
         <h2 id="scenario-launcher-heading">Same command. Different network trust.</h2>
         <p>
           Both operators request 52%, inside the {snapshot.setPressureMaximumPercent}% hard limit.
-          Nokia evidence determines which command reaches the digital twin.
+          Trusted network evidence determines which command reaches the digital twin.
         </p>
       </div>
 
       <div className="scenario-actions" role="group" aria-label="Demonstration scenarios">
         <button
           className="scenario-action scenario-action--primary"
-          onClick={() => onCommand('judge-valid-credentials-compromised-context')}
+          onClick={() => runScenario('judge-valid-credentials-compromised-context')}
           disabled={busy}
         >
-          <span>{busy ? 'Preparing verified run…' : 'Run attack demonstration'}</span>
+          <span>
+            {busy ? 'Holding command and collecting evidence…' : 'Run attack demonstration'}
+          </span>
           <b>52%</b>
         </button>
         <button
           className="scenario-action"
-          onClick={() => onCommand('judge-safe-operating-change')}
+          onClick={() => runScenario('judge-safe-operating-change')}
           disabled={busy}
         >
           <span>Run trusted comparison</span>
@@ -53,7 +61,7 @@ export function ControlRail({
         </button>
         <button
           className="scenario-action scenario-action--quiet"
-          onClick={() => onCommand('judge-read-only-inspection')}
+          onClick={() => runScenario('judge-read-only-inspection')}
           disabled={busy}
         >
           <span>Run read-only inspection</span>
@@ -68,7 +76,7 @@ export function ControlRail({
           ? 'Live LangGraph and provider calls run now. The policy decision remains deterministic.'
           : 'Reproducible local replay. Provider provenance is labeled on every result.'}
       </p>
-      <details className="demo-controls">
+      <details className="demo-controls" ref={technicalControls}>
         <summary>Demo controls</summary>
         <div className="demo-controls__body" role="group" aria-label="Simulation playback">
           <button onClick={() => onCommand('judge-hard-limit')} disabled={busy}>

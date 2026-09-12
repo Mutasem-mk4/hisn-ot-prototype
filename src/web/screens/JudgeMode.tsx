@@ -1,7 +1,13 @@
 import type { RunSnapshot } from '../../application/ports.js';
+import { EnforcementCallSchema } from '../../shared/contracts.js';
 import { AgentWorkflowPanel } from '../components/AgentWorkflowPanel.js';
 import { ControlRail } from '../components/ControlRail.js';
+import {
+  DecisionComparison,
+  type DecisionComparisonRuns,
+} from '../components/DecisionComparison.js';
 import { FacilitySchematic } from '../components/FacilitySchematic.js';
+import { ImpactSummary } from '../components/ImpactSummary.js';
 import { JudgeProofFlow } from '../components/JudgeProofFlow.js';
 import { ProcessTwin } from '../components/ProcessTwin.js';
 import { StatusMark } from '../components/StatusMark.js';
@@ -14,6 +20,7 @@ export function JudgeMode({
   snapshot,
   busy,
   explained,
+  comparisonRuns,
   onControl,
   onCommand,
   onExplain,
@@ -21,6 +28,7 @@ export function JudgeMode({
   snapshot: RunSnapshot;
   busy: boolean;
   explained: boolean;
+  comparisonRuns: DecisionComparisonRuns;
   onControl: (action: ControlAction, speed?: string) => void;
   onCommand: (scenarioId: string) => void;
   onExplain: () => void;
@@ -38,7 +46,7 @@ export function JudgeMode({
       <section className="judge-intro">
         <div>
           <span className="eyebrow">HISN-Oil / Remote oil pumping station</span>
-          <h1>Stop compromised commands before they reach the pump.</h1>
+          <h1>Should this operator’s 52% pressure command reach the pump?</h1>
           <p>{agentIntroduction(displayedAgentStatus)}</p>
         </div>
       </section>
@@ -82,7 +90,7 @@ export function JudgeMode({
         </div>
         <OutcomeFacts snapshot={snapshot} />
       </section>
-      <RunProof snapshot={snapshot} />
+      <DecisionComparison runs={comparisonRuns} />
       <details className="investigation-details">
         <summary>
           <span>How was this decision made?</span>
@@ -90,6 +98,7 @@ export function JudgeMode({
         </summary>
         <JudgeProofFlow snapshot={snapshot} />
         <AgentWorkflowPanel snapshot={snapshot} />
+        <RunProof snapshot={snapshot} />
       </details>
       <details className="technical-expansion">
         <summary>
@@ -131,6 +140,7 @@ export function JudgeMode({
           <a href="#incident">Open incident report</a>
         </nav>
       </details>
+      <ImpactSummary />
       <ConnectedProof />
       {explained && (
         <aside className="explain-drawer" aria-label="Current event explanation">
@@ -161,10 +171,9 @@ function OutcomeFacts({ snapshot }: { snapshot: RunSnapshot }) {
   const requested = twin.requestedPressurePercent ?? snapshot.run.command.requestedSetpointPercent;
   const accepted = twin.acceptedPressurePercent;
   const outcome = twin.commandHistory.at(-1)?.outcome ?? 'HELD';
-  const evidenceCount = snapshot.artifacts.evidence?.length ?? 0;
   const safety = snapshot.artifacts.safety;
   return (
-    <dl className="outcome-facts" aria-label="Physical safety outcome">
+    <dl className="outcome-facts" aria-label="Decision and physical outcome">
       <div>
         <dt>Requested</dt>
         <dd>{requested === null ? 'Read only' : `${requested.toFixed(0)}%`}</dd>
@@ -174,11 +183,15 @@ function OutcomeFacts({ snapshot }: { snapshot: RunSnapshot }) {
         <dd>{hardLimitText(snapshot, safety)}</dd>
       </div>
       <div>
-        <dt>Network evidence</dt>
-        <dd>{evidenceCount === 0 ? 'Pending' : `${evidenceCount} recorded`}</dd>
+        <dt>AI recommendation</dt>
+        <dd>{humanize(snapshot.artifacts.recommendation?.recommendedDecision ?? 'PENDING')}</dd>
       </div>
       <div>
-        <dt>Plant state</dt>
+        <dt>Policy decision</dt>
+        <dd>{humanize(snapshot.artifacts.decision?.state ?? 'PENDING')}</dd>
+      </div>
+      <div>
+        <dt>Accepted plant setting</dt>
         <dd>{plantStateText(snapshot, outcome, accepted)}</dd>
       </div>
     </dl>
@@ -213,7 +226,8 @@ function resultHeadline(snapshot: RunSnapshot, fallback?: string) {
   if (decision === 'ALLOW' && snapshot.run.command.kind === 'READ_STATUS')
     return 'Read-only inspection authorized.';
   if (decision === 'ALLOW') return 'Safe command authorized.';
-  if (snapshot.run.playbackStatus === 'FAILED_SAFE') return 'AI unavailable. Command held safely.';
+  if (snapshot.run.playbackStatus === 'FAILED_SAFE')
+    return 'AI service temporarily unavailable. Command held.';
   return fallback ?? 'Ready to prove the safety decision.';
 }
 
@@ -224,17 +238,28 @@ function resultDetail(snapshot: RunSnapshot, fallback?: string) {
   const hardMaximum = snapshot.artifacts.safety?.configuredMaximumPercent;
   if (decision === 'BLOCK_AND_CONTAIN' || decision === 'BLOCK') {
     if (snapshot.artifacts.safety?.permitted) {
-      return `The ${requested}% request passed the ${hardMaximum}% hard limit. Deterministic authorization rejected the network evidence; the plant remains at ${accepted?.toFixed(0) ?? 'its previous'}%.`;
+      return `The ${requested}% request passed the ${hardMaximum}% hard limit. Deterministic authorization rejected the network evidence; the plant remains at ${accepted?.toFixed(0) ?? 'its previous'}%. ${gatewayIsolationText(snapshot)}`;
     }
-    return `The ${requested}% request never became accepted control state. The plant remains at ${accepted?.toFixed(0) ?? 'its previous'}%.`;
+    return `The ${requested}% request never became accepted control state. The plant remains at ${accepted?.toFixed(0) ?? 'its previous'}%. ${gatewayIsolationText(snapshot)}`;
   }
   if (decision === 'ALLOW' && snapshot.run.command.kind === 'SET_PRESSURE') {
     return `Network evidence and policy agreed. The digital twin accepted ${accepted?.toFixed(0) ?? 'the requested'}%.`;
   }
   if (snapshot.run.playbackStatus === 'FAILED_SAFE') {
-    return 'No AI recommendation was substituted. The safety boundary prevented actuation.';
+    return 'The command remains held and the plant is unchanged. No substitute AI recommendation was created.';
   }
   return fallback ?? 'Run the attack demonstration to see each proof step.';
+}
+
+function gatewayIsolationText(snapshot: RunSnapshot) {
+  if (snapshot.artifacts.decision?.state !== 'BLOCK_AND_CONTAIN') return '';
+  const calls = snapshot.visibleEvents.flatMap((event) => {
+    const parsed = EnforcementCallSchema.array().safeParse(event.payload.enforcement);
+    return parsed.success ? parsed.data : [];
+  });
+  const gateway = calls.find((call) => call.action === 'DETACH_GATEWAY');
+  if (!gateway) return 'Gateway isolation has not completed.';
+  return `Gateway isolation status: ${humanize(gateway.status)}.`;
 }
 
 function plainStage(state: string | null) {
