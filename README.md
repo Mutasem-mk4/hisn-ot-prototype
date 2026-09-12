@@ -103,7 +103,7 @@ npm run audit:deps
 - [Safety and security case](docs/safety-and-security.md)
 - [Judge demo and questions](docs/demo-and-judging.md)
 - [Submission description, demo script, and final checklist](docs/submission-pack.md)
-- [Final ten-slide pitch deck](artifacts/HISN-Oil-MENA-Ignite-Pitch-Deck-Final-2026.8-Verified.pptx)
+- [Final ten-slide pitch deck](artifacts/HISN-Oil-MENA-Ignite-Pitch-Deck-Final-2026.8-UX-Verified.pptx)
 - [Strict connected verification and current limitations](docs/connected-verification.md)
 - [Verification evidence](docs/verification.md)
 - [Product definition](PRODUCT.md)

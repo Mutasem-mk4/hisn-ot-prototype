@@ -45,6 +45,7 @@ A release is complete only after checking the canonical public URL:
 - The 52% request passed the independent 60% hard maximum. Deterministic policy issued `BLOCK_AND_CONTAIN`, the workflow reached `INCIDENT_REPORTED`, and accepted pressure remained 46%.
 - The judge view now frames one decision question, separates AI advice from deterministic authorization and accepted plant state, retains the compromised and trusted 52% results side by side, and reports containment status independently. Every retained result includes evidence provenance, elapsed time, and its correlation ID.
 - Local release checks passed 100 tests across 14 files, formatting, lint, type checks, and the production build. Browser checks passed 34 tests across desktop, projector, tablet, and mobile profiles, with two intentional small-screen skips. Refreshed visual evidence covers the initial, allowed, blocked, and incident states at all four viewports.
+- The synchronized ten-slide deck uses the simplified default Judge Mode on slide 1 and the retained 52% comparison on slide 3. Native PowerPoint rendering, package integrity, slide dimensions, heading fit, ten speaker-note pages, and both external links were verified.
 - This release freshly verifies the connected attack only. The trusted and read-only controls remain documented from the preceding compatible release and should be repeated on the final release only when free hosted quota permits.
 
 ### 2026-09-12 policy 2026.8 adaptive proof
