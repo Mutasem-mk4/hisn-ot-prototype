@@ -38,6 +38,15 @@ A release is complete only after checking the canonical public URL:
 
 ## Release evidence
 
+### 2026-09-12 one-minute judge UX release
+
+- Interface commit `6ebe199` passed [CI 34703105072](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34703105072) and deployed as Vercel production deployment `dpl_dE4vFZSTAwNZy1c9pLtRfx5d2EQp` at the canonical public URL.
+- The production attack completed at `2026-09-12T15:45:34Z`, correlation `hisn-33888689-c1b2-4c55-859d-3735a2cd9668`. LangGraph/Groq returned a `LIVE` recommendation after the failed location observation expanded the investigation from location and reachability to SIM Swap and Device Swap. All four Nokia calls succeeded with `SANDBOX` provenance.
+- The 52% request passed the independent 60% hard maximum. Deterministic policy issued `BLOCK_AND_CONTAIN`, the workflow reached `INCIDENT_REPORTED`, and accepted pressure remained 46%.
+- The judge view now frames one decision question, separates AI advice from deterministic authorization and accepted plant state, retains the compromised and trusted 52% results side by side, and reports containment status independently. Every retained result includes evidence provenance, elapsed time, and its correlation ID.
+- Local release checks passed 100 tests across 14 files, formatting, lint, type checks, and the production build. Browser checks passed 34 tests across desktop, projector, tablet, and mobile profiles, with two intentional small-screen skips. Refreshed visual evidence covers the initial, allowed, blocked, and incident states at all four viewports.
+- This release freshly verifies the connected attack only. The trusted and read-only controls remain documented from the preceding compatible release and should be repeated on the final release only when free hosted quota permits.
+
 ### 2026-09-12 policy 2026.8 adaptive proof
 
 - Code commit `94954c0` passed [CI 34695933595](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34695933595) and deployed as Vercel deployment `dpl_Dbsk719pU7zfNXgckyMZfW838wtJ` at the canonical public URL.
