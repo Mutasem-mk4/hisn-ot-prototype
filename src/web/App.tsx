@@ -57,6 +57,10 @@ export function App() {
   const playFrames = useCallback(
     (frames: RunSnapshot[], startIndex: number, speed: number) => {
       const generation = ++playbackGeneration.current;
+      if (frames.at(-1)?.run.playbackStatus === 'FAILED_SAFE') {
+        showFrame(frames, frames.length - 1, false, speed);
+        return;
+      }
       showFrame(frames, startIndex, true, speed);
       const advance = (index: number) => {
         window.setTimeout(() => {

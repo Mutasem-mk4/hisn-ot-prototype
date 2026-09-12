@@ -1,7 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 
 type ProductionFrame = {
-  run: { playbackStatus: string };
+  run: { playbackStatus: string; runtimeMode: string; correlationId: string };
+  artifacts: {
+    recommendation?: { reasoningProvenance: string };
+    decision?: { state: string };
+    evidence?: { requestStatus: string; provenance: string }[];
+  };
   currentEvent?: { workflowState: string; payload: Record<string, unknown> };
 };
 
@@ -50,9 +55,18 @@ test('production deployment serves the application and completes the attack proo
   const finalFrame = await runScenario(
     page,
     /Run attack demonstration/i,
-    /Unsafe command blocked\. Plant setting unchanged\./,
+    /Network compromise blocked the command\. Plant unchanged\./,
   );
   expect(finalFrame.run.playbackStatus).toBe('COMPLETE');
+  expect(finalFrame.run.runtimeMode).toBe('SANDBOX');
+  expect(finalFrame.artifacts.recommendation?.reasoningProvenance).toBe('LIVE');
+  expect(finalFrame.artifacts.decision?.state).toBe('BLOCK_AND_CONTAIN');
+  expect(finalFrame.artifacts.evidence).toHaveLength(4);
+  expect(
+    finalFrame.artifacts.evidence?.every(
+      (call) => call.requestStatus === 'SUCCEEDED' && call.provenance === 'SANDBOX',
+    ),
+  ).toBe(true);
 
   const outcome = (await page.locator('.outcome-facts').innerText()).replaceAll('\n', ' ');
   expect(outcome).toMatch(/Requested 58%/i);
@@ -123,6 +137,17 @@ async function runScenario(page: Page, buttonName: RegExp, expectedHeadline: Reg
   const body = (await response.json()) as { frames: ProductionFrame[] };
   const finalFrame = body.frames.at(-1);
   expect(finalFrame).toBeTruthy();
+  console.log(
+    'CONNECTED_RUN ' +
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        correlationId: finalFrame?.run.correlationId,
+        state: finalFrame?.run.playbackStatus,
+        decision: finalFrame?.artifacts.decision?.state,
+        reasoning: finalFrame?.artifacts.recommendation?.reasoningProvenance,
+        evidence: finalFrame?.artifacts.evidence,
+      }),
+  );
   if (finalFrame?.run.playbackStatus === 'FAILED_SAFE') {
     const failure = {
       errorCode: finalFrame.currentEvent?.payload.errorCode,

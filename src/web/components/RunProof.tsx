@@ -94,22 +94,22 @@ export function RunProof({ snapshot }: { snapshot: RunSnapshot }) {
                   : call.provenance === 'SANDBOX'
                     ? 'NOKIA SANDBOX'
                     : call.provenance}
+                <small>
+                  {displayValue(call.redactedResult.reason ?? call.redactedResult.target)}
+                </small>
+                {Boolean(call.redactedResult.primaryIdentity) && (
+                  <small>
+                    {String(call.redactedResult.primaryIdentity)} →{' '}
+                    {String(call.redactedResult.backupIdentity)}
+                  </small>
+                )}
+                {Boolean(call.redactedResult.cleanup) && (
+                  <small>
+                    QoD cleanup: {String(call.redactedResult.cleanup)} · allocation is not handover
+                    proof
+                  </small>
+                )}
               </dd>
-              <small>
-                {displayValue(call.redactedResult.reason ?? call.redactedResult.target)}
-              </small>
-              {Boolean(call.redactedResult.primaryIdentity) && (
-                <small>
-                  {String(call.redactedResult.primaryIdentity)} →{' '}
-                  {String(call.redactedResult.backupIdentity)}
-                </small>
-              )}
-              {Boolean(call.redactedResult.cleanup) && (
-                <small>
-                  QoD cleanup: {String(call.redactedResult.cleanup)} · allocation is not handover
-                  proof
-                </small>
-              )}
             </div>
           ))}
         </dl>

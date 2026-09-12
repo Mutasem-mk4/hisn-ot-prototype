@@ -248,8 +248,8 @@ function plainStage(state: string | null) {
     SAFETY_EVALUATED: '3 · Safety limits evaluated',
     DECISION_ISSUED: '3 · Decision issued',
     ENFORCEMENT_STARTED: '4 · Containment started',
-    ENDPOINT_CONTAINED: '4 · Command path contained',
-    CONTINUITY_PROTECTED: '4 · Safe operation protected',
+    ENDPOINT_CONTAINED: '4 · Containment result',
+    CONTINUITY_PROTECTED: '4 · Continuity result',
     INCIDENT_REPORTED: 'Proof complete',
     FAILED_SAFE: 'Command held',
   };

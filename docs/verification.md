@@ -38,6 +38,18 @@ A release is complete only after checking the canonical public URL:
 
 ## Release evidence
 
+### 2026-09-12 HISN-Oil 1.1.0 release audit
+
+- Reviewed clean, pushed commits `516cf7e` (oil scenario and isolated connected rehearsal) and `dc717d0` (version 1.1.0). [CI 34647054617](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34647054617) passed for `dc717d0`.
+- The canonical alias resolved to Ready deployment `dpl_FPQGPHgQ4VtAFgzKChKYnDidhRNJ` during this audit. Rendering and health endpoints responded; this alone does not establish provider availability.
+- Fresh local verification passed: 99 tests in 14 files, formatting, lint, type checks, build, and dependency audit (zero vulnerabilities). Ten consecutive local fixture attack rehearsals blocked the request, retained 46%, and returned correctly bound incident reports. These are local simulated runs, not ten connected AI successes.
+- Fresh Nokia-only public comparison at `2026-09-12T01:40:25Z` returned five successful SANDBOX evidence calls in each context, including Number Verification. Correlations: `9527960a-fe29-4259-90c2-7ad63f8fbc6e` and `54387444-51c1-4eab-82d2-19c266efde7d`. This diagnostic does not invoke Groq or enforcement.
+- Public attack at `2026-09-12T01:37:08Z`, correlation `hisn-8bd24283-0212-4967-8b14-75d9b833f883`, failed closed with `AGENT_UNAVAILABLE`, `HTTP_429`, after `EVIDENCE_COLLECTING`. The current connected attack/safe/read-only freeze gate remains incomplete; earlier successful releases do not satisfy it.
+- Follow-up presentation fixes show terminal agent failure immediately, use neutral containment/continuity result headings, and preserve valid definition-list markup. The production test now checks the current 58% headline and requires successful sandbox evidence plus live model recommendation.
+- Follow-up browser suite passed 34 tests with two intentional small-screen skips, including immediate failure visibility with a paused presentation clock and incident JSON downloads.
+
+Do not mark the submission frozen until hosted quota permits the outstanding connected rehearsals and the final deck, video, and signed-in submission fields have been reviewed against the deployed build.
+
 ### 2026-09-11 light-interface and replay follow-up
 
 - Copy refinement commit: `9ea7334`. The hero identifies LangGraph and Nokia/CAMARA, and the 60% boundary is explicitly named the command hard limit.

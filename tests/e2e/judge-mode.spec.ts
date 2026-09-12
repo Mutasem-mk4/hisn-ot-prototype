@@ -96,6 +96,33 @@ test('replay gives judges time to read and respects pause and speed changes', as
   await expect(sequence).toHaveText(finalSequence!);
 });
 
+test('shows an agent failure immediately even when the presentation clock is paused', async ({
+  page,
+}) => {
+  await page.route('**/api/v1/judge-run/rehearsal', async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    const failed = body.frames.at(-1);
+    failed.run.playbackStatus = 'FAILED_SAFE';
+    failed.run.workflowState = 'FAILED_SAFE';
+    failed.integration.agentReasoner = 'UNAVAILABLE';
+    failed.artifacts = {};
+    failed.currentEvent = {
+      ...failed.currentEvent,
+      workflowState: 'FAILED_SAFE',
+      payload: { errorCode: 'AGENT_UNAVAILABLE', failureReason: 'HTTP_429' },
+    };
+    await route.fulfill({ json: { frames: [body.frames[0], failed], incident: null } });
+  });
+  await page.clock.install();
+  await page.clock.pauseAt(new Date());
+  await page.getByRole('button', { name: /Run attack demonstration/ }).click();
+  await expect(
+    page.getByRole('heading', { name: 'AI unavailable. Command held safely.' }),
+  ).toBeVisible();
+  await expect(page.getByText('AGENT UNAVAILABLE · COMMAND HELD', { exact: true })).toBeVisible();
+});
+
 test('runs the adaptive low-risk path with one inspectable evidence call', async ({ page }) => {
   await openDemoControls(page);
   await page.getByLabel('Simulation playback speed').selectOption('4');
