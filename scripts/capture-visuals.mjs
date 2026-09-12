@@ -52,9 +52,13 @@ for (const target of [
     path: new URL(`allowed-${target.name}.png`, output).pathname.slice(1),
     fullPage: true,
   });
-  await page.getByRole('button', { name: /Run attack demonstration/ }).click();
-  await page.getByRole('button', { name: 'Pause simulation' }).click();
-  await expect(page.getByRole('button', { name: 'Run simulation' })).toBeEnabled();
+  // Start the attack from its own 46% baseline so the captured proof cannot
+  // inherit the accepted 52% state from the positive-control scenario above.
+  await startScenario(context, page, baseURL, 'judge-valid-credentials-compromised-context');
+  if (!(await controls.evaluate((element) => /** @type {HTMLDetailsElement} */ (element).open))) {
+    await controls.getByText('Demo controls').click();
+  }
+  await expect(step).toBeEnabled();
   for (let count = 0; count < 8; count += 1) {
     await step.click();
     await expect(step).toBeEnabled();

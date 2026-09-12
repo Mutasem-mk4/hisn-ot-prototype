@@ -38,6 +38,17 @@ A release is complete only after checking the canonical public URL:
 
 ## Release evidence
 
+### 2026-09-12 final connected proof pass
+
+- Canonical production deployment `dpl_7xJFbDQhB3cJZPPYkFgDuktnEDJQ` was Ready at [https://hisn-ot-prototype.vercel.app](https://hisn-ot-prototype.vercel.app). Commit `299b157` passed [CI 34666679572](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34666679572).
+- The primary 58% attack completed at `2026-09-12T02:09:43Z`, correlation `hisn-f67079c8-848f-4505-b998-85e20bf54702`. Live LangGraph reasoning selected four successful Nokia Sandbox calls. Deterministic policy issued `BLOCK_AND_CONTAIN`, and accepted pressure remained 46%.
+- Read-only inspection completed at `2026-09-12T02:14:02Z`, correlation `hisn-d0a8741b-5e97-4a9f-8149-c790eb8b4d2d`. Live reasoning and one successful Nokia Sandbox reachability call produced `ALLOW`; accepted pressure remained 46%.
+- The safe 52% command completed at `2026-09-12T02:17:28Z`, correlation `hisn-680ab711-07e2-4d22-9b61-fc6b6905c0e0`. Live reasoning plus successful Nokia Sandbox location and reachability calls produced `ALLOW`; accepted pressure reached 52%.
+- A combined browser run proved the attack first, then received Groq `HTTP_429` when it immediately started the next scenario. Running the three proofs in separate free-quota windows completed all of them without changing policy, substituting local evidence, or paying for provider access.
+- Fresh local verification passed 100 tests across 14 files, formatting, lint, type checks, and the production build. Dependency audit reported zero vulnerabilities. Visual QA passed at desktop, projector, tablet, and mobile sizes; final screenshots now use the HISN-Oil release copy and start the attack from its independent 46% baseline.
+
+These results establish the connected Nokia Sandbox and hosted Groq prototype path. They do not establish live-subscriber consent, live operator-network access, physical PLC actuation, or production safety certification.
+
 ### 2026-09-12 submission-readiness pass
 
 - The official AI Resource and Tooling Guide was inspected directly. It lists LangGraph as a code-first agent framework and Groq as a hosted model provider, matching the deployed agent stack.

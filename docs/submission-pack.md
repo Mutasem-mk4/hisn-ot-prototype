@@ -72,11 +72,11 @@ Use one claim and one visual per slide. Screenshots must come from the final dep
 ## Final submission checklist
 
 - [ ] Signed-in HackerEarth fields and file limits captured.
-- [ ] Final deployed URL opens directly in Judge Mode without credentials.
-- [ ] GitHub repository is public and points to the same release.
+- [x] Final deployed URL opens directly in Judge Mode without credentials.
+- [x] GitHub repository is public and points to the same release.
 - [ ] Updated pitch deck uses the HISN-Oil name and final screenshots.
 - [ ] Demo video uses the deployed build, English narration or captions, and the verified two-minute path.
-- [ ] At least one fresh successful public attack, safe, and read-only run is recorded after the latest deployment.
+- [x] At least one fresh successful public attack, safe, and read-only run is recorded after the latest deployment.
 - [ ] Groq quota availability is checked before recording and before the live presentation.
 - [ ] Nokia sandbox provenance and digital-twin boundaries are spoken and visible.
 - [ ] No API keys, phone numbers, tokens, or raw provider payloads appear in the repository, deck, video, or incident export.
