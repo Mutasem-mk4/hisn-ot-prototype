@@ -46,7 +46,7 @@ The product can be offered as a per-site subscription with integration and assur
 
 ## Pitch deck structure
 
-The editable final deck is [HISN-Oil MENA Ignite Pitch Deck](../artifacts/HISN-Oil-MENA-Ignite-Pitch-Deck-Submission.pptx). It contains ten slides, speaker notes on every slide, a QR code to Judge Mode, and clickable demo and source links.
+The editable final deck is [HISN-Oil MENA Ignite Pitch Deck](../artifacts/HISN-Oil-MENA-Ignite-Pitch-Deck-Final-2026.8-Verified.pptx). It contains ten slides, speaker notes on every slide, a QR code to Judge Mode, clickable demo and source links, and the correlation ID from the recorded policy 2026.8 connected attack.
 
 1. **HISN-Oil:** network proof before industrial action, with the public Judge Mode URL.
 2. **The command trust gap:** credentials alone do not establish trusted device, SIM, location, or reachability context.
@@ -78,7 +78,7 @@ Use one claim and one visual per slide. Screenshots must come from the final dep
 - [x] GitHub repository is public and points to the same release.
 - [x] Updated pitch deck uses the HISN-Oil name and final screenshots.
 - [ ] Demo video uses the deployed build, English narration or captions, and the verified two-minute path.
-- [x] At least one fresh successful public attack, safe, and read-only run is recorded after the latest deployment.
+- [ ] Repeat the connected safe and read-only controls on the final code release when hosted quota permits. The policy 2026.8 attack is freshly verified; the existing positive controls are recorded on the preceding compatible release.
 - [ ] Groq quota availability is checked before recording and before the live presentation.
 - [ ] Nokia sandbox provenance and digital-twin boundaries are spoken and visible.
 - [ ] No API keys, phone numbers, tokens, or raw provider payloads appear in the repository, deck, video, or incident export.

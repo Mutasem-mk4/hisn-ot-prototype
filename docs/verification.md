@@ -46,6 +46,8 @@ A release is complete only after checking the canonical public URL:
 - Local release checks passed 100 tests across 14 files, formatting, lint, type checks, and the production build. Browser checks passed 34 tests across desktop, projector, tablet, and mobile profiles, with two intentional small-screen skips.
 - The production smoke now exercises one judged attack per run to conserve the free Groq quota. The separate local browser suite covers the read-only and trusted 52% paths. Earlier current-release execution already proved the primary connected attack before a subsequent auxiliary request received `HTTP_429`; that quota response failed closed.
 - The final ten-slide submission deck and sample incident report now use policy `oil-pressure-safety-2026.8` and the same 52% comparison as the deployed demonstration.
+- Documentation/artifact commit `fb8e330` passed [CI 34696577181](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34696577181) and deployed as `dpl_DXa5WYniNfZHjoiP2AsR2GDnke2M`. A fresh canonical-URL browser check returned healthy readiness, rendered the policy 2026.8 comparison with zero horizontal overflow at 1536 pixels, and loaded JavaScript bundle `/assets/index-DkxxxbAy.js`. This check did not repeat hosted provider calls because the deployed application code is unchanged from the successful adaptive proof.
+- The verified final deck names correlation `hisn-c0b37a73-a66c-4870-a2d8-2fe2c80a2bd0`, matching the recorded connected attack above. The submission checklist keeps final-release safe and read-only reruns open instead of presenting earlier positive controls as fresh final-deployment evidence.
 
 ### 2026-09-12 final connected proof pass
 
