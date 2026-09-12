@@ -47,6 +47,7 @@ A release is complete only after checking the canonical public URL:
 - Public attack at `2026-09-12T01:37:08Z`, correlation `hisn-8bd24283-0212-4967-8b14-75d9b833f883`, failed closed with `AGENT_UNAVAILABLE`, `HTTP_429`, after `EVIDENCE_COLLECTING`. The current connected attack/safe/read-only freeze gate remains incomplete; earlier successful releases do not satisfy it.
 - Follow-up presentation fixes show terminal agent failure immediately, use neutral containment/continuity result headings, and preserve valid definition-list markup. The production test now checks the current 58% headline and requires successful sandbox evidence plus live model recommendation.
 - Follow-up browser suite passed 34 tests with two intentional small-screen skips, including immediate failure visibility with a paused presentation clock and incident JSON downloads.
+- Follow-up code commit `a442bb9` passed [CI 34665646915](https://github.com/Mutasem-mk4/hisn-ot-prototype/actions/runs/34665646915) and deployed as `dpl_FiQRT4M8GDh39SgEEfJLCKqpXVpz`. A fresh canonical-URL browser check confirmed bundle `/assets/index-Bk_ZvABL.js`, HTTP 200 health/readiness, rendered Judge Mode, no overflow at 390/1280 pixels, and no page errors. This post-deployment rendering check did not repeat provider calls or resolve the recorded Groq quota failure.
 
 Do not mark the submission frozen until hosted quota permits the outstanding connected rehearsals and the final deck, video, and signed-in submission fields have been reviewed against the deployed build.
 
