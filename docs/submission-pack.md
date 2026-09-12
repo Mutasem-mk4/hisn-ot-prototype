@@ -46,16 +46,18 @@ The product can be offered as a per-site subscription with integration and assur
 
 ## Pitch deck structure
 
-1. **Title:** HISN-Oil — network proof before industrial action. Include the public demo URL and one sentence describing the 58% attack.
-2. **Regional problem:** remote critical infrastructure increasingly depends on cellular command paths; credentials alone do not establish trustworthy command context.
-3. **Failure scenario:** show the valid-login, compromised-device path and its possible physical consequence.
-4. **Solution:** command hold, LangGraph agent, Nokia/CAMARA evidence, deterministic authorization, and the digital-twin outcome.
-5. **Why Open Gateway:** explain what SIM, device, location, and reachability signals add that application credentials cannot provide.
-6. **Agent workflow:** show goal → model-selected tool → Nokia observation → adaptation → recommendation, with the deterministic policy boundary beside it.
-7. **Working proof:** use one final-build screenshot showing 58% requested, ≤60% passed, four recorded network checks, and 46% unchanged.
-8. **Safety and trust:** provenance labels, correlation-bound audit, no silent model fallback, no physical-authority claim, and explicit sandbox/digital-twin boundaries.
-9. **Market entry:** one-site industrial pilot, per-site subscription, integration services, and expansion across remote critical assets.
-10. **Roadmap and ask:** operator identity, durable audit storage, approved slice attachments, certified controller integration, and a pilot partner.
+The editable final deck is [HISN-Oil MENA Ignite Pitch Deck](../artifacts/HISN-Oil-MENA-Ignite-Pitch-Deck-Submission.pptx). It contains ten slides, speaker notes on every slide, a QR code to Judge Mode, and clickable demo and source links.
+
+1. **HISN-Oil:** network proof before industrial action, with the public Judge Mode URL.
+2. **The command trust gap:** credentials alone do not establish trusted device, SIM, location, or reachability context.
+3. **Network evidence changes the decision:** the 58% request passes the 60% hard maximum, four network calls are recorded, and accepted pressure remains 46%.
+4. **Safety architecture:** command hold → LangGraph agent → Nokia Network as Code → deterministic policy → illustrative digital twin.
+5. **Verified connected attack:** four successful Nokia Sandbox results share one correlation ID and lead to `BLOCK_AND_CONTAIN`.
+6. **Agent responsibility and policy authority:** the AI selects evidence and recommends; deterministic policy authorizes.
+7. **Positive controls:** connected safe and read-only runs prove the system does not simply block every command.
+8. **One-site pilot:** buyer, scope, commercial hypothesis, and a four-stage adoption path.
+9. **Scale roadmap:** operator identity, durable assurance, certified integration, and expansion across remote critical assets.
+10. **Pilot partner:** one-site validation request, QR code, live demo link, source link, and explicit prototype boundaries.
 
 Use one claim and one visual per slide. Screenshots must come from the final deployed version. Put technical detail in speaker notes unless it directly proves a judging criterion.
 
@@ -74,7 +76,7 @@ Use one claim and one visual per slide. Screenshots must come from the final dep
 - [ ] Signed-in HackerEarth fields and file limits captured.
 - [x] Final deployed URL opens directly in Judge Mode without credentials.
 - [x] GitHub repository is public and points to the same release.
-- [ ] Updated pitch deck uses the HISN-Oil name and final screenshots.
+- [x] Updated pitch deck uses the HISN-Oil name and final screenshots.
 - [ ] Demo video uses the deployed build, English narration or captions, and the verified two-minute path.
 - [x] At least one fresh successful public attack, safe, and read-only run is recorded after the latest deployment.
 - [ ] Groq quota availability is checked before recording and before the live presentation.
